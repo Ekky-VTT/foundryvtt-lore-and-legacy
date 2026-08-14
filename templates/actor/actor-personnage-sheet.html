@@ -1,0 +1,84 @@
+<form class="{{cssClass}} flexcol" autocomplete="off">
+
+  <header class="sheet-header flexrow">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage"/></h1>
+      
+      <div class="ressources flexrow">
+        <div class="ressource flexcol">
+          <label>Points de Vie (PV)</label>
+          <div class="ressource-value">
+            <input type="text" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}" data-dtype="Number"/>
+            <span> / {{system.secondaires.pv.max}}</span>
+          </div>
+        </div>
+
+        <div class="ressource flexcol">
+          <label>Points de Magie (PM)</label>
+          <div class="ressource-value">
+            <input type="text" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}" data-dtype="Number"/>
+            <span> / {{system.secondaires.pm.max}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    
+    <h2>Attributs</h2>
+    <div class="attributs-grid">
+      
+      <div class="attribut">
+        <label>Caractère</label>
+        <input type="text" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Discernement</label>
+        <input type="text" name="system.attributs.discernement.value" value="{{system.attributs.discernement.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Maîtrise</label>
+        <input type="text" name="system.attributs.maitrise.value" value="{{system.attributs.maitrise.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Prestance</label>
+        <input type="text" name="system.attributs.prestance.value" value="{{system.attributs.prestance.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Robustesse</label>
+        <input type="text" name="system.attributs.robustesse.value" value="{{system.attributs.robustesse.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Vigueur</label>
+        <input type="text" name="system.attributs.vigueur.value" value="{{system.attributs.vigueur.value}}" data-dtype="Number"/>
+      </div>
+      
+      <div class="attribut">
+        <label>Fortune</label>
+        <input type="text" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" data-dtype="Number"/>
+      </div>
+
+    </div>
+
+    <hr>
+    
+    <h2>Caractéristiques Secondaires</h2>
+    <ul>
+      <li><strong>Résistance Physique :</strong> {{system.secondaires.resPhys.value}}</li>
+      <li><strong>Résistance Magique :</strong> {{system.secondaires.resMag.value}}</li>
+      <li><strong>Résistance Mentale :</strong> {{system.secondaires.resMent.value}}</li>
+      <li><strong>Seuil de Blessure :</strong> {{system.secondaires.sb.value}}</li>
+      <li><strong>Rapidité :</strong> {{system.secondaires.rapidite.value}}</li>
+      <li><strong>Poids :</strong> {{system.secondaires.poids.value}} kg</li>
+      <li><strong>RDC :</strong> {{system.secondaires.rdc.max}}</li>
+    </ul>
+
+  </section>
+</form>
