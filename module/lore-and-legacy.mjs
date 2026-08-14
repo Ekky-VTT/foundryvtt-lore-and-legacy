@@ -1,6 +1,7 @@
 import { LoreAndLegacyActor } from "./documents/actor.mjs";
 import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
 import { PersonnageData } from "./data/actor-data.mjs"; // On importe le Data Model
+import { CapaciteData } from "./data/item-data.mjs"; // Import du Data Model des Capacités
 
 /**
  * Initialisation du système Lore & Legacy
