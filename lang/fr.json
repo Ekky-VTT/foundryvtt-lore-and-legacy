@@ -1,0 +1,9 @@
+{
+  "LOREANDLEGACY": {
+    "Nom": "Nom du Personnage",
+    "Attributs": "Attributs",
+    "CaracteristiquesSecondaires": "Caractéristiques Secondaires",
+    "PV": "Points de Vie",
+    "PM": "Points de Magie"
+  }
+}
