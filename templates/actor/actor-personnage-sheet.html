@@ -118,10 +118,10 @@
           
           <span class="item-name">{{capacite.name}}</span>
           <span class="attr-badge">{{#if capacite.system.attributLie}}{{capacite.system.attributLie}}{{else}}aucun{{/if}}</span>
-          
+            
           <div class="score-input-wrap" title="Score de la capacité (1 à 15)">
             <label>SCORE :</label>
-            <input type="number" class="item-valeur" name="items.{{capacite._id}}.system.valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
+            <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
           </div>
 
           <label class="checkbox-label fortune-label" title="Dé de Fortune (+1D6)">
