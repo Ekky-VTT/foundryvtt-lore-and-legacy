@@ -1,0 +1,32 @@
+{
+  "id": "lore-and-legacy",
+  "title": "Lore & Legacy",
+  "description": "Système non-officiel pour le jeu de rôle Lore & Legacy sur Foundry VTT. Lore and Legacy est un excellent jeu de rôle développé par Julien Pirou dont le site officiel est le suivant : https://empyreal.pirou.games/lore-legacy/",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "Ekky",
+      "url": "https://github.com/Ekky-VTT"
+    }
+  ],
+  "esmodules": [
+    "module/lore-and-legacy.mjs"
+  ],
+  "styles": [
+    "css/lore-and-legacy.css"
+  ],
+  "languages": [
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "lang/fr.json"
+    }
+  ],
+  "url": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy",
+  "manifest": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy/releases/latest/download/system.json",
+  "download": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy/releases/latest/download/system.zip"
+}
