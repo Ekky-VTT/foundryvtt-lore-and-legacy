@@ -101,7 +101,30 @@
 
     </div>
   </section>
+  
+  <section class="section-block capacities-block">
+    <div class="block-header flexrow">
+      <h2 class="block-title">CAPACITÉS <span>(Jet : 1D10 + Score)</span></h2>
+      <a class="item-create" data-type="capacite" title="Ajouter une Capacité"><i class="fas + fa-plus"></i> Ajouter</a>
+    </div>
 
+    <div class="capacities-list">
+      {{#each capacites as |capacite id|}}
+        <div class="capacity-row item flexrow" data-item-id="{{capacite._id}}">
+          <button type="button" class="capacite-roll roll-button" title="Lancer le jet">
+            <i class="fas fa-dice-d10"></i>
+          </button>
+          <span class="item-name">{{capacite.name}}</span>
+          <span class="attr-badge">{{capacite.system.attributLie}}</span>
+          <input type="number" class="item-valeur" name="items.{{capacite._id}}.system.valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
+          <a class="item-delete" title="Supprimer"><i class="fas fa-trash"></i></a>
+        </div>
+      {{else}}
+        <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter" ou glissez-déposez un objet Capacité.</p>
+      {{/each}}
+    </div>
+  </section>
+  
   <section class="section-block derived-block">
     <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
     <div class="derived-grid">
