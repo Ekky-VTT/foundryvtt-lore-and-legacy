@@ -227,3 +227,90 @@
   font-weight: bold;
   color: #0e3a47;
 }
+/* --- CAPACITÉS --- */
+.capacities-block .block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #c19a5b;
+  margin-bottom: 8px;
+}
+
+.capacities-block .block-title {
+  border-bottom: none;
+  margin: 0;
+}
+
+.item-create {
+  font-size: 11px;
+  font-weight: bold;
+  color: #0e3a47;
+  cursor: pointer;
+}
+
+.capacity-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #dcd3c8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.roll-button {
+  background: #0e3a47;
+  color: #e2c98d;
+  border: 1px solid #c19a5b;
+  border-radius: 3px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roll-button:hover {
+  background: #1b5b6d;
+  color: #fff;
+}
+
+.capacity-row .item-name {
+  flex: 1;
+  font-weight: bold;
+  color: #0e3a47;
+  font-size: 13px;
+}
+
+.attr-badge {
+  font-size: 10px;
+  background: #e2c98d;
+  color: #0e3a47;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.item-valeur {
+  width: 35px;
+  height: 24px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #c19a5b;
+  border-radius: 3px;
+}
+
+.item-delete {
+  color: #a00;
+  cursor: pointer;
+}
+
+.empty-notice {
+  font-size: 11px;
+  color: #777;
+  font-style: italic;
+  text-align: center;
+}
