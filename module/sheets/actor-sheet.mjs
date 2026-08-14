@@ -97,6 +97,9 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     html.find('.item-create-capacite').click(this._onOpenCapaciteDialog.bind(this));
     html.find('.item-delete').click(this._onItemDelete.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
+    
+    // NOUVEAU : Sauvegarde immédiate du score de capacité dès qu'il est modifié
+    html.find('.item-valeur').change(this._onItemValueChange.bind(this));
   }
 
   async _onRollCapacite(event) {
@@ -111,7 +114,6 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
   async _onOpenCapaciteDialog(event) {
     event.preventDefault();
 
-    // Génération des options du menu déroulant
     let optionsHtml = LISTE_CAPACITES.map((c, index) => {
       const attrLabel = c.attr ? ` (${c.attr.toUpperCase()})` : " (AUCUN)";
       return `<option value="${index}">${c.name}${attrLabel}</option>`;
@@ -139,19 +141,17 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
             const selectedIndex = html.find('#capacite-select').val();
             const selectedCapa = LISTE_CAPACITES[selectedIndex];
 
-            // Vérification si la capacité existe déjà sur l'acteur
             const existing = this.actor.items.find(i => i.type === "capacite" && i.name === selectedCapa.name);
             if (existing) {
               ui.notifications.warn(`La capacité ${selectedCapa.name} est déjà présente sur la fiche.`);
               return;
             }
 
-            // Création de la capacité
             await Item.create({
               name: selectedCapa.name,
               type: "capacite",
               system: {
-                valeur: 1, // On met 1 par défaut quand le joueur l'ajoute
+                valeur: 1,
                 attributLie: selectedCapa.attr
               }
             }, { parent: this.actor });
@@ -164,6 +164,22 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       },
       default: "add"
     }).render(true);
+  }
+
+  /**
+   * Sauvegarde directement le score de la capacité dans l'Item
+   */
+  async _onItemValueChange(event) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    const itemId = $(input).closest('.item').data('item-id');
+    const item = this.actor.items.get(itemId);
+    if (item) {
+      let val = parseInt(input.value, 10);
+      if (isNaN(val)) val = 0;
+      val = Math.min(Math.max(val, 0), 15); // Borne la valeur entre 0 et 15
+      await item.update({ "system.valeur": val });
+    }
   }
 
   async _onToggleCheckbox(event) {
