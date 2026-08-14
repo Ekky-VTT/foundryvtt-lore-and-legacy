@@ -102,25 +102,42 @@
     </div>
   </section>
   
-  <section class="section-block capacities-block">
+<section class="section-block capacities-block">
     <div class="block-header flexrow">
-      <h2 class="block-title">CAPACITÉS <span>(Jet : 1D10 + Score)</span></h2>
-      <a class="item-create" data-type="capacite" title="Ajouter une Capacité"><i class="fas + fa-plus"></i> Ajouter</a>
+      <h2 class="block-title">CAPACITÉS <span>(1D10 + Score)</span></h2>
+      <a class="item-create-capacite" title="Ajouter une Capacité"><i class="fas fa-plus-circle"></i> Ajouter une Capacité</a>
     </div>
 
     <div class="capacities-list">
       {{#each capacites as |capacite id|}}
         <div class="capacity-row item flexrow" data-item-id="{{capacite._id}}">
-          <button type="button" class="capacite-roll roll-button" title="Lancer le jet">
+          
+          <button type="button" class="capacite-roll roll-button" title="Lancer le jet (1D10 + score ou 1D6 + Attribut si score = 0)">
             <i class="fas fa-dice-d10"></i>
           </button>
+          
           <span class="item-name">{{capacite.name}}</span>
-          <span class="attr-badge">{{capacite.system.attributLie}}</span>
-          <input type="number" class="item-valeur" name="items.{{capacite._id}}.system.valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
-          <a class="item-delete" title="Supprimer"><i class="fas fa-trash"></i></a>
+          <span class="attr-badge">{{#if capacite.system.attributLie}}{{capacite.system.attributLie}}{{else}}aucun{{/if}}</span>
+          
+          <div class="score-input-wrap" title="Score de la capacité (1 à 15)">
+            <label>SCORE :</label>
+            <input type="number" class="item-valeur" name="items.{{capacite._id}}.system.valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
+          </div>
+
+          <label class="checkbox-label fortune-label" title="Dé de Fortune (+1D6)">
+            <input type="checkbox" class="inline-checkbox" data-field="fortune" {{checked capacite.system.fortune}}/>
+            <span>Fort.</span>
+          </label>
+
+          <label class="checkbox-label adversite-label" title="Dé d'Adversité (-1D6)">
+            <input type="checkbox" class="inline-checkbox" data-field="adversite" {{checked capacite.system.adversite}}/>
+            <span>Adv.</span>
+          </label>
+
+          <a class="item-delete" title="Supprimer la capacité"><i class="fas fa-trash"></i></a>
         </div>
       {{else}}
-        <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter" ou glissez-déposez un objet Capacité.</p>
+        <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter une Capacité" pour ouvrir le menu de sélection.</p>
       {{/each}}
     </div>
   </section>
