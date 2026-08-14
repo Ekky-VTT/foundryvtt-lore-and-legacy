@@ -6,35 +6,23 @@ export class LoreAndLegacyActor extends Actor {
 
   /** @override */
   prepareData() {
-    // Exécute d'abord les préparations de base de Foundry
     super.prepareData();
   }
 
-  /**
-   * Méthode appelée automatiquement par Foundry pour calculer les données dérivées
-   * @override
-   */
+  /** @override */
   prepareDerivedData() {
     super.prepareDerivedData();
-
     const systemData = this.system;
-
-    // On ne calcule les statistiques dérivées que pour le type "personnage" (ou pnj)
     if (this.type === "personnage" || this.type === "pnj") {
       this._preparePersonnageData(systemData);
     }
   }
 
-  /**
-   * Calculs spécifiques aux formules de Lore & Legacy
-   * @param {Object} systemData - Les données système de l'acteur
-   * @private
-   */
+  /** @private */
   _preparePersonnageData(systemData) {
     const attr = systemData.attributs;
     const sec = systemData.secondaires;
 
-    // Raccourcis pour lire facilement les valeurs d'attributs
     const caractere = attr.caractere.value || 0;
     const discernement = attr.discernement.value || 0;
     const maitrise = attr.maitrise.value || 0;
@@ -43,36 +31,58 @@ export class LoreAndLegacyActor extends Actor {
     const vigueur = attr.vigueur.value || 0;
     const fortune = attr.fortune.value || 0;
 
-    // --- CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
-
-    // Points de Vie (PV) = (Robustesse + Vigueur) * 2
     sec.pv.max = (robustesse + vigueur) * 2;
-
-    // Points de Magie (PM) = (Caractère + Discernement) * 2
     sec.pm.max = (caractere + discernement) * 2;
-
-    // Résistance Physique (Res. Phys.) = Robustesse * 3
     sec.resPhys.value = robustesse * 3;
-
-    // Résistance Magique (Res. Mag.) = (Discernement + Maîtrise) * 2
     sec.resMag.value = (discernement + maitrise) * 2;
-
-    // Résistance Mentale (Res. Ment.) = (Caractère + Prestance) * 2
     sec.resMent.value = (caractere + prestance) * 2;
-
-    // Réserve de la Dernière Chance (RDC) = Fortune + Vigueur
     sec.rdc.max = fortune + vigueur;
-
-    // Seuil de Blessure (SB) = Robustesse * 2
     sec.sb.value = robustesse * 2;
-
-    // Rapidité = Maîtrise + Vigueur
     sec.rapidite.value = maitrise + vigueur;
-
-    // Poids = Résistance Physique * 10
     sec.poids.value = sec.resPhys.value * 10;
-
-    // Bagage : Valeur de base à 9 (Maximum absolu fixé à 18)
     sec.bagage.max = 18;
+  }
+
+  /**
+   * Effectue un jet de Capacité (ou d'Attribut en repli)
+   * @param {string} itemId - L'ID de l'objet Capacité cliqué
+   */
+  async rollCapacite(itemId) {
+    // 1. On récupère la capacité depuis l'inventaire du personnage
+    const capacite = this.items.get(itemId);
+    if (!capacite || capacite.type !== "capacite") return;
+
+    // 2. On récupère les valeurs nécessaires
+    const capaciteValue = capacite.system.valeur;
+    const attributLieKey = capacite.system.attributLie; 
+    
+    // Si la capacité n'a pas d'attribut lié (ex: Passion), on met 0 par défaut
+    const attributValue = attributLieKey ? this.system.attributs[attributLieKey].value : 0;
+    
+    // On prépare le nom de l'attribut pour l'affichage (ex: "caractere" devient "Caractere")
+    const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
+
+    // 3. Construction de la formule selon les règles du Moteur 3d
+    let formula = "";
+    let flavorText = "";
+
+    if (capaciteValue > 0) {
+      // Le personnage a la capacité : 1D10 + Capacité
+      formula = `1d10 + ${capaciteValue}`;
+      flavorText = `Jet de Capacité : <b>${capacite.name}</b>`;
+    } else {
+      // Le personnage n'a pas la capacité : Jet de repli sur l'attribut (1D6 + Attribut)
+      formula = `1d6 + ${attributValue}`;
+      flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
+    }
+
+    // 4. Lancement des dés et envoi dans le chat
+    let roll = new Roll(formula);
+    await roll.evaluate(); // .evaluate({async: true}) n'est plus nécessaire en v12+
+
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      flavor: flavorText
+    });
   }
 }
