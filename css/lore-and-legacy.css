@@ -241,17 +241,26 @@
   margin: 0;
 }
 
-.item-create {
-  font-size: 11px;
+.item-create-capacite {
+  font-size: 12px;
   font-weight: bold;
   color: #0e3a47;
   cursor: pointer;
+  background: #e2c98d;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #c19a5b;
+}
+
+.item-create-capacite:hover {
+  background: #c19a5b;
+  color: #fff;
 }
 
 .capacity-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #fff;
   border: 1px solid #dcd3c8;
   padding: 4px 8px;
@@ -264,12 +273,13 @@
   color: #e2c98d;
   border: 1px solid #c19a5b;
   border-radius: 3px;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
 }
 
 .roll-button:hover {
@@ -286,31 +296,68 @@
 
 .attr-badge {
   font-size: 10px;
-  background: #e2c98d;
-  color: #0e3a47;
+  background: #0e3a47;
+  color: #e2c98d;
   padding: 2px 6px;
   border-radius: 3px;
   text-transform: uppercase;
   font-weight: bold;
 }
 
+.score-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.score-input-wrap label {
+  font-size: 10px;
+  font-weight: bold;
+  color: #555;
+}
+
 .item-valeur {
-  width: 35px;
+  width: 38px;
   height: 24px;
   text-align: center;
   font-weight: bold;
   border: 1px solid #c19a5b;
   border-radius: 3px;
+  background: #fdfbf7;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: #f4f0ea;
+  border: 1px solid #ccc;
+}
+
+.fortune-label {
+  color: #2a7b36;
+}
+
+.adversite-label {
+  color: #b32424;
+}
+
+.checkbox-label input {
+  margin: 0;
+  cursor: pointer;
 }
 
 .item-delete {
   color: #a00;
   cursor: pointer;
+  padding: 2px 4px;
 }
 
-.empty-notice {
-  font-size: 11px;
-  color: #777;
-  font-style: italic;
-  text-align: center;
+.item-delete:hover {
+  color: #f00;
 }
