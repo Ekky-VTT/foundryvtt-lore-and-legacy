@@ -1,55 +1,8 @@
 {
   "Actor": {
-    "types": ["personnage", "pnj"],
-    "personnage": {
-      "attributs": {
-        "caractere": { "value": 1, "min": 1, "max": 10 },
-        "discernement": { "value": 1, "min": 1, "max": 10 },
-        "maitrise": { "value": 1, "min": 1, "max": 10 },
-        "prestance": { "value": 1, "min": 1, "max": 10 },
-        "robustesse": { "value": 1, "min": 1, "max": 10 },
-        "vigueur": { "value": 1, "min": 1, "max": 10 },
-        "fortune": { "value": 1, "min": 1, "max": 10 }
-      },
-      "secondaires": {
-        "pv": { "value": 0, "max": 0 },
-        "pm": { "value": 0, "max": 0 },
-        "resPhys": { "value": 0 },
-        "resMag": { "value": 0 },
-        "resMent": { "value": 0 },
-        "rdc": { "value": 0, "max": 0 },
-        "sb": { "value": 0 },
-        "rapidite": { "value": 0 },
-        "bagage": { "value": 0, "max": 18 },
-        "poids": { "value": 0 }
-      },
-      "biographie": {
-        "concept": "",
-        "notes": ""
-      }
-    },
-    "pnj": {
-      "templates": ["personnage"]
-    }
+    "types": ["personnage", "pnj"]
   },
   "Item": {
-    "types": ["capacite", "trait", "race", "equipement"],
-    "capacite": {
-      "valeur": 0,
-      "attributLie": "caractere",
-      "description": ""
-    },
-    "trait": {
-      "typeTrait": "avantage",
-      "description": ""
-    },
-    "race": {
-      "description": ""
-    },
-    "equipement": {
-      "quantite": 1,
-      "encombrement": 0,
-      "description": ""
-    }
+    "types": ["capacite", "trait", "race", "equipement"]
   }
 }
