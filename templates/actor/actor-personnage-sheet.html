@@ -1,84 +1,135 @@
-<form class="{{cssClass}} flexcol" autocomplete="off">
+<form class="{{cssClass}} lore-sheet flexcol" autocomplete="off">
 
-  <header class="sheet-header flexrow">
-    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
-    <div class="header-fields">
-      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage"/></h1>
-      
-      <div class="ressources flexrow">
-        <div class="ressource flexcol">
-          <label>Points de Vie (PV)</label>
-          <div class="ressource-value">
-            <input type="text" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}" data-dtype="Number"/>
-            <span> / {{system.secondaires.pv.max}}</span>
-          </div>
+  <header class="sheet-header">
+    <div class="profile-section">
+      <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+    </div>
+    
+    <div class="identity-section">
+      <div class="form-group name-group">
+        <label>NOM :</label>
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>PEUPLE :</label>
+          <input type="text" name="system.biographie.concept" value="{{system.biographie.concept}}" placeholder="Humain, Ælfyn, Dakti..."/>
         </div>
-
-        <div class="ressource flexcol">
-          <label>Points de Magie (PM)</label>
-          <div class="ressource-value">
-            <input type="text" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}" data-dtype="Number"/>
-            <span> / {{system.secondaires.pm.max}}</span>
-          </div>
+        <div class="form-group currency-group">
+          <label>TAELS :</label>
+          <input type="number" name="system.secondaires.bagage.value" value="{{system.secondaires.bagage.value}}" data-dtype="Number"/>
         </div>
       </div>
     </div>
   </header>
 
-  <section class="sheet-body">
-    
-    <h2>Attributs</h2>
-    <div class="attributs-grid">
-      
-      <div class="attribut">
-        <label>Caractère</label>
-        <input type="text" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" data-dtype="Number"/>
+  <section class="resources-bar">
+    <div class="resource-box pv-box">
+      <span class="resource-label">POINTS DE VIE</span>
+      <div class="resource-inputs">
+        <input type="number" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}"/>
+        <span class="sep">/</span>
+        <span class="max-val">{{system.secondaires.pv.max}}</span>
       </div>
-      
-      <div class="attribut">
-        <label>Discernement</label>
-        <input type="text" name="system.attributs.discernement.value" value="{{system.attributs.discernement.value}}" data-dtype="Number"/>
+    </div>
+
+    <div class="resource-box pm-box">
+      <span class="resource-label">POINTS DE MAGIE</span>
+      <div class="resource-inputs">
+        <input type="number" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}"/>
+        <span class="sep">/</span>
+        <span class="max-val">{{system.secondaires.pm.max}}</span>
       </div>
-      
-      <div class="attribut">
-        <label>Maîtrise</label>
-        <input type="text" name="system.attributs.maitrise.value" value="{{system.attributs.maitrise.value}}" data-dtype="Number"/>
+    </div>
+
+    <div class="resource-box rdc-box">
+      <span class="resource-label">DERNIÈRE CHANCE</span>
+      <div class="resource-inputs">
+        <input type="number" name="system.secondaires.rdc.value" value="{{system.secondaires.rdc.value}}"/>
+        <span class="sep">/</span>
+        <span class="max-val">{{system.secondaires.rdc.max}}</span>
       </div>
+    </div>
+  </section>
+
+  <section class="section-block attributes-block">
+    <h2 class="block-title">ATTRIBUTS <span>(Jet : 1D6 + Valeur)</span></h2>
+    <div class="attributes-grid">
       
-      <div class="attribut">
-        <label>Prestance</label>
-        <input type="text" name="system.attributs.prestance.value" value="{{system.attributs.prestance.value}}" data-dtype="Number"/>
+      <div class="attribute-card">
+        <label>CARACTÈRE</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" min="1" max="10"/>
       </div>
-      
-      <div class="attribut">
-        <label>Robustesse</label>
-        <input type="text" name="system.attributs.robustesse.value" value="{{system.attributs.robustesse.value}}" data-dtype="Number"/>
+
+      <div class="attribute-card">
+        <label>DISCERN.</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.discernement.value" value="{{system.attributs.discernement.value}}" min="1" max="10"/>
       </div>
-      
-      <div class="attribut">
-        <label>Vigueur</label>
-        <input type="text" name="system.attributs.vigueur.value" value="{{system.attributs.vigueur.value}}" data-dtype="Number"/>
+
+      <div class="attribute-card">
+        <label>MAÎTRISE</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.maitrise.value" value="{{system.attributs.maitrise.value}}" min="1" max="10"/>
       </div>
-      
-      <div class="attribut">
-        <label>Fortune</label>
-        <input type="text" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" data-dtype="Number"/>
+
+      <div class="attribute-card">
+        <label>PRESTANCE</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.prestance.value" value="{{system.attributs.prestance.value}}" min="1" max="10"/>
+      </div>
+
+      <div class="attribute-card">
+        <label>ROBUST.</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.robustesse.value" value="{{system.attributs.robustesse.value}}" min="1" max="10"/>
+      </div>
+
+      <div class="attribute-card">
+        <label>VIGUEUR</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.vigueur.value" value="{{system.attributs.vigueur.value}}" min="1" max="10"/>
+      </div>
+
+      <div class="attribute-card fortune-card">
+        <label>FORTUNE</label>
+        <div class="attr-formula">1D6 +</div>
+        <input type="number" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" min="1" max="10"/>
       </div>
 
     </div>
-
-    <hr>
-    
-    <h2>Caractéristiques Secondaires</h2>
-    <ul>
-      <li><strong>Résistance Physique :</strong> {{system.secondaires.resPhys.value}}</li>
-      <li><strong>Résistance Magique :</strong> {{system.secondaires.resMag.value}}</li>
-      <li><strong>Résistance Mentale :</strong> {{system.secondaires.resMent.value}}</li>
-      <li><strong>Seuil de Blessure :</strong> {{system.secondaires.sb.value}}</li>
-      <li><strong>Rapidité :</strong> {{system.secondaires.rapidite.value}}</li>
-      <li><strong>Poids :</strong> {{system.secondaires.poids.value}} kg</li>
-      <li><strong>RDC :</strong> {{system.secondaires.rdc.max}}</li>
-    </ul>
-
   </section>
+
+  <section class="section-block derived-block">
+    <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
+    <div class="derived-grid">
+      <div class="derived-item">
+        <span class="label">Rapidité :</span>
+        <span class="value">{{system.secondaires.rapidite.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Physique :</span>
+        <span class="value">{{system.secondaires.resPhys.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Magique :</span>
+        <span class="value">{{system.secondaires.resMag.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Mentale :</span>
+        <span class="value">{{system.secondaires.resMent.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Seuil de Blessure :</span>
+        <span class="value">{{system.secondaires.sb.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Poids Max :</span>
+        <span class="value">{{system.secondaires.poids.value}} kg</span>
+      </div>
+    </div>
+  </section>
+
 </form>
