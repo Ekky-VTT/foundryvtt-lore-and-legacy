@@ -19,18 +19,19 @@
     </div>
   </header>
 
-  <!-- CORPS DE LA FICHE : DESCRIPTION -->
+<!-- CORPS DE LA FICHE : DESCRIPTION -->
   <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
     <h3 style="flex: 0 0 auto; font-size: 14px; font-weight: bold; color: #0e3a47; border-bottom: 1px solid #c19a5b; margin: 0 0 8px 0; padding-bottom: 3px;">DESCRIPTION & EFFETS</h3>
     
-    <!-- Zone de texte avec un fond uni pour garantir la lisibilité -->
-    <div style="flex: 1; background: #fdfbf7; border: 1px solid #dcd3c8; border-radius: 4px; padding: 8px; color: #1a252c; overflow-y: auto; font-size: 14px;">
+    <!-- Zone de texte avec "position: relative" ajoutée -->
+    <div style="flex: 1; background: #fdfbf7; border: 1px solid #dcd3c8; border-radius: 4px; padding: 8px; color: #1a252c; overflow-y: auto; font-size: 14px; position: relative;">
       
-      <!-- Si MJ : Affichage de l'éditeur (on utilise la variable native 'editable') -->
       {{#if isGM}}
-        {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable engine="prosemirror"}}
+        <!-- On force "editable=true" car on a déjà vérifié que c'est le MJ -->
+        <div style="height: 100%; min-height: 100px;">
+          {{editor enrichedDescription target="system.description" button=true editable=true engine="prosemirror"}}
+        </div>
       
-      <!-- Si Joueur : Affichage en lecture seule -->
       {{else}}
         <div style="padding: 5px;">
           {{{enrichedDescription}}}
