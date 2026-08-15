@@ -15,14 +15,20 @@ function creerAttribut() {
 export class PersonnageData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
-      attributs: new SchemaField({
+attributs: new SchemaField({
         caractere: creerAttribut(),
         discernement: creerAttribut(),
         maitrise: creerAttribut(),
         prestance: creerAttribut(),
         robustesse: creerAttribut(),
         vigueur: creerAttribut(),
-        fortune: creerAttribut()
+        // NOUVEAU : La Fortune obtient un schéma spécifique avec 'value' (actuel) et 'max' (score total)
+        fortune: new SchemaField({
+          value: new NumberField({ initial: 1, min: 0, integer: true }),
+          max: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
+          fortune: new BooleanField({ initial: false }),
+          adversite: new BooleanField({ initial: false })
+        })
       }),
       secondaires: new SchemaField({
         pv: new SchemaField({ value: new NumberField({ initial: 0 }), max: new NumberField({ initial: 0 }) }),
