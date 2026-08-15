@@ -112,9 +112,14 @@
       {{#each capacites as |capacite id|}}
         <div class="capacity-row item flexrow" data-item-id="{{capacite._id}}">
           
-          <button type="button" class="capacite-roll roll-button" title="Lancer le jet (1D10 + score ou 1D6 + Attribut si score = 0)">
+    <!-- Bouton de Jet (Caché si Passif) -->
+          {{#unless capacite.system.passif}}
+          <button type="button" class="capacite-roll roll-button" title="Lancer le jet">
             <i class="fas fa-dice-d10"></i>
           </button>
+          {{else}}
+          <div style="width: 28px;" title="Capacité Passive"></div>
+          {{/unless}}
           
           <span class="item-name">{{capacite.name}}</span>
           <span class="attr-badge">{{#if capacite.system.attributLie}}{{capacite.system.attributLie}}{{else}}aucun{{/if}}</span>
@@ -144,6 +149,13 @@
   
   <section class="section-block derived-block">
     <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
+    
+    <div class="equipment-toggles" style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #0e3a47;">
+      <label><input type="checkbox" name="system.equipementActif.armureLegere" {{checked system.equipementActif.armureLegere}}/> Armure Légère Équipée</label>
+      <label><input type="checkbox" name="system.equipementActif.armureLourde" {{checked system.equipementActif.armureLourde}}/> Armure Lourde Équipée</label>
+      <label><input type="checkbox" name="system.equipementActif.bouclier" {{checked system.equipementActif.bouclier}}/> Bouclier Équipé</label>
+    </div>
+    
     <div class="derived-grid">
       <div class="derived-item">
         <span class="label">Rapidité :</span>
