@@ -1,9 +1,9 @@
 /* --- THEME ET FOND GENERAUX --- */
-.vtt.system-lore-and-legacy .sheet.actor {
+.vtt.system-lore-and-legacy .sheet.actor,
+.vtt.system-lore-and-legacy .sheet.item {
   background: #f4f0ea url('../../ui/parchment.jpg') repeat;
   color: #1a252c;
   font-family: 'Signika', 'Palatino Linotype', serif;
-  min-width: 650px;
 }
 
 .lore-sheet {
