@@ -30,7 +30,7 @@ export class LoreAndLegacyActor extends Actor {
     const prestance = attr.prestance.value || 0;
     const robustesse = attr.robustesse.value || 0;
     const vigueur = attr.vigueur.value || 0;
-    const fortune = attr.fortune.value || 0;
+    const fortune = attr.fortune.max || 0;
 
     // --- 1. SCAN DE TOUTES LES CAPACITÉS PASSIVES ---
     let bonusEndurance = 0;
@@ -178,7 +178,7 @@ export class LoreAndLegacyActor extends Actor {
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    const attrScore = attribut.value || 0;
+    const attrScore = (attrKey === "fortune") ? (attribut.max || 0) : (attribut.value || 0);
     
     // Formatage du nom pour un bel affichage (ex: "caractere" -> "Caractère")
     const nomsFormates = {
