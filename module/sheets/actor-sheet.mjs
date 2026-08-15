@@ -152,7 +152,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
               type: "capacite",
               system: {
                 valeur: 1,
-                attributLie: selectedCapa.attr
+                attributLie: selectedCapa.attr,
+                passif: selectedCapa.passif || false
               }
             }, { parent: this.actor });
           }
