@@ -191,6 +191,38 @@
     </div>
   </section>
   
+  <!-- BLOC TRAITS -->
+  <section class="section-block traits-block">
+    <div class="block-header flexrow">
+      <h2 class="block-title">TRAITS</h2>
+      <a class="item-create" data-type="trait" title="Créer un nouveau Trait vierge"><i class="fas fa-plus-circle"></i> Ajouter un Trait</a>
+    </div>
+
+    <div class="traits-list">
+      {{#each traits as |trait id|}}
+        <div class="trait-row item flexrow" data-item-id="{{trait._id}}">
+          
+          <!-- Icône purement décorative -->
+          <div class="trait-icon"><i class="fas fa-fingerprint"></i></div>
+          
+          <!-- Nom du Trait -->
+          <span class="item-name" title="{{trait.system.description}}">{{trait.name}}</span>
+          
+          <!-- Case Soigné (Annulation des malus) -->
+          <label class="checkbox-label" title="Effets négatifs annulés (Cellule de soutien ou Atout)">
+            <input type="checkbox" class="inline-checkbox" data-field="soigne" {{checked trait.system.soigne}}/>
+            <span>Soigné</span>
+          </label>
+
+          <!-- Bouton Supprimer -->
+          <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
+        </div>
+      {{else}}
+        <p class="empty-notice">Aucun trait. Cliquez sur "+ Ajouter" ou glissez-déposez un Trait.</p>
+      {{/each}}
+    </div>
+  </section>
+  
   <section class="section-block derived-block">
     <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
     
