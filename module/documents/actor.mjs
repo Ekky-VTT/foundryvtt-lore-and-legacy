@@ -102,7 +102,6 @@ export class LoreAndLegacyActor extends Actor {
 
 /**
    * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
-   * @param {string} itemId - L'ID de l'objet Capacité cliqué
    */
   async rollCapacite(itemId) {
     const capacite = this.items.get(itemId);
@@ -110,8 +109,15 @@ export class LoreAndLegacyActor extends Actor {
 
     const capaciteValue = capacite.system.valeur;
     const attributLieKey = capacite.system.attributLie; 
-    const attributValue = (attributLieKey && this.system.attributs[attributLieKey]) ? this.system.attributs[attributLieKey].value : 0;
+    
+    // Récupération de l'attribut complet parent (pour lire sa valeur ET ses cases cochées)
+    const attributParent = attributLieKey ? this.system.attributs[attributLieKey] : null;
+    const attributValue = attributParent ? attributParent.value : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
+
+    // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
+    const isFortune = capacite.system.fortune || (attributParent && attributParent.fortune);
+    const isAdversite = capacite.system.adversite || (attributParent && attributParent.adversite);
 
     let formula = "";
     let flavorText = "";
@@ -126,13 +132,13 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     // 2. Gestion du Dé de Fortune (+1D6)
-    if (capacite.system.fortune) {
+    if (isFortune) {
       formula += ` + 1d6`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
     // 3. Gestion du Dé d'Adversité (-1D6)
-    if (capacite.system.adversite) {
+    if (isAdversite) {
       formula += ` - 1d6`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
