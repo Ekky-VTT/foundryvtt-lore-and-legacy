@@ -116,14 +116,25 @@ _prepareItems(context) {
     html.find('.item-delete').click(this._onItemDelete.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
     
-    // NOUVEAU : Sauvegarde immédiate du score de capacité dès qu'il est modifié
+    // Sauvegarde immédiate du score de capacité dès qu'il est modifié
     html.find('.item-valeur').change(this._onItemValueChange.bind(this));
+    // Clic sur le nom d'un Attribut
+    html.find('.attribut-roll').click(this._onRollAttribut.bind(this));
   }
 
   async _onRollCapacite(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
     await this.actor.rollCapacite(itemId);
+  }
+
+  /**
+   * Gestionnaire pour le lancer d'un Attribut pur
+   */
+  async _onRollAttribut(event) {
+    event.preventDefault();
+    const attrKey = event.currentTarget.dataset.attr;
+    await this.actor.rollAttribut(attrKey);
   }
 
   /**
