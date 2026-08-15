@@ -18,10 +18,11 @@ export class LoreAndLegacyActor extends Actor {
     }
   }
 
-  /** @private */
+/** @private */
   _preparePersonnageData(systemData) {
     const attr = systemData.attributs;
     const sec = systemData.secondaires;
+    const eq = systemData.equipementActif;
 
     const caractere = attr.caractere.value || 0;
     const discernement = attr.discernement.value || 0;
@@ -31,16 +32,72 @@ export class LoreAndLegacyActor extends Actor {
     const vigueur = attr.vigueur.value || 0;
     const fortune = attr.fortune.value || 0;
 
-    sec.pv.max = (robustesse + vigueur) * 2;
-    sec.pm.max = (caractere + discernement) * 2;
-    sec.resPhys.value = robustesse * 3;
-    sec.resMag.value = (discernement + maitrise) * 2;
-    sec.resMent.value = (caractere + prestance) * 2;
+    // --- 1. SCAN DE TOUTES LES CAPACITÉS PASSIVES ---
+    let bonusEndurance = 0;
+    let bonusConcentration = 0;
+    let bonusMysticisme = 0;
+    let bonusOptimisation = 0;
+    let bonusEspritCritique = 0;
+    let bonusEsquive = 0;
+    let bonusArmureLegere = 0;
+    let bonusArmureLourde = 0;
+    let bonusBouclier = 0;
+    let bonusMusculation = 0;
+
+    for (let item of this.items) {
+      if (item.type === "capacite") {
+        const val = item.system.valeur || 0;
+        const nom = item.name.toLowerCase();
+        
+        if (nom.includes("endurance")) bonusEndurance += val;
+        if (nom.includes("concentration")) bonusConcentration += val;
+        if (nom.includes("mysticisme")) bonusMysticisme += val;
+        if (nom.includes("optimisation")) bonusOptimisation += val;
+        if (nom.includes("esprit critique")) bonusEspritCritique += val;
+        if (nom.includes("esquive")) bonusEsquive += val;
+        if (nom.includes("armure légère") || nom.includes("armure legere")) bonusArmureLegere += val;
+        if (nom.includes("armure lourde")) bonusArmureLourde += val;
+        if (nom.includes("bouclier")) bonusBouclier += val;
+        if (nom.includes("musculation")) bonusMusculation += val;
+      }
+    }
+
+    // --- 2. CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
+    
+    // PV = (Robustesse + Vigueur) * 2 + Endurance
+    sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance;
+
+    // PM = (Caractère + Discernement) * 2 + Concentration + (Mysticisme * 2)
+    sec.pm.max = (caractere + discernement) * 2 + bonusConcentration + (bonusMysticisme * 2);
+
+    // Seuil de Blessure = (Robustesse * 2) + Endurance
+    sec.sb.value = (robustesse * 2) + bonusEndurance;
+
+    // Résistance Magique = (Discernement + Maîtrise) * 2 + Concentration
+    sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration;
+
+    // Résistance Mentale = (Caractère + Prestance) * 2 + Esprit Critique
+    sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique;
+
+    // Résistance Physique = (Robustesse * 3) + Esquive + Armures (si équipées)
+    let resPhysBase = (robustesse * 3) + bonusEsquive;
+    if (eq.armureLegere) resPhysBase += bonusArmureLegere;
+    if (eq.armureLourde) resPhysBase += bonusArmureLourde;
+    if (eq.bouclier) resPhysBase += bonusBouclier;
+    sec.resPhys.value = resPhysBase;
+
+    // Bagage = Base de 9 + Optimisation (Plafonné à 18 maximum)
+    sec.bagage.max = Math.min(18, 9 + bonusOptimisation);
+
+    // Reste des statistiques (inchangées)
     sec.rdc.max = fortune + vigueur;
-    sec.sb.value = robustesse * 2;
     sec.rapidite.value = maitrise + vigueur;
     sec.poids.value = sec.resPhys.value * 10;
-    sec.bagage.max = 18;
+
+    // --- 3. STOCKAGE DES BONUS DE MUSCULATION POUR PLUS TARD ---
+    // Ces valeurs ne s'affichent pas directement, mais seront très utiles pour les macros d'armes !
+    sec.bonusDegatsCaC = bonusMusculation;
+    sec.bonusChargeEffort = Math.ceil(bonusMusculation / 2);
   }
 
 /**
