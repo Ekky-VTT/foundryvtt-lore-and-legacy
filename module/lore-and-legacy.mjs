@@ -16,3 +16,28 @@ Hooks.once("init", async function() {
   Actors.unregisterSheet("core", ActorSheet);
   Actors.registerSheet("lore-and-legacy", LoreAndLegacyActorSheet, { makeDefault: true });
 });
+
+// --- INTÉGRATION AVEC LE MODULE DICE SO NICE! ---
+Hooks.once("diceSoNiceReady", (dice3d) => {
+  // Création du thème visuel pour le Dé de Fortune (Vert)
+  dice3d.addColorset({
+    name: "fortune",
+    description: "Dé de Fortune",
+    category: "Lore & Legacy",
+    foreground: "#ffffff",
+    background: "#2a7b36",
+    outline: "#2a7b36",
+    edge: "#2a7b36"
+  });
+
+  // Création du thème visuel pour le Dé d'Adversité (Rouge)
+  dice3d.addColorset({
+    name: "adversite",
+    description: "Dé d'Adversité",
+    category: "Lore & Legacy",
+    foreground: "#ffffff",
+    background: "#b32424",
+    outline: "#b32424",
+    edge: "#b32424"
+  });
+});
