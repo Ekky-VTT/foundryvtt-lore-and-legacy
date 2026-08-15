@@ -81,29 +81,35 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
 
 _prepareItems(context) {
     const capacities = [];
+    const traits = [];
     const attributs = context.system.attributs;
 
     for (let item of context.items) {
+      // Tri des Capacités
       if (item.type === "capacite") {
         const attrLie = item.system.attributLie;
-        
-        // On vérifie l'état de l'attribut parent
         const parentFortune = (attrLie && attributs[attrLie]) ? attributs[attrLie].fortune : false;
         const parentAdversite = (attrLie && attributs[attrLie]) ? attributs[attrLie].adversite : false;
 
-        // On injecte des variables temporaires pour l'affichage HTML
         item.displayFortune = item.system.fortune || parentFortune;
         item.displayAdversite = item.system.adversite || parentAdversite;
-        
-        // Si ça vient du parent, on empêchera le joueur de cliquer sur la case de la capacité
         item.lockFortune = parentFortune; 
         item.lockAdversite = parentAdversite;
 
         capacities.push(item);
       }
+      
+      // Tri des Traits
+      if (item.type === "trait") {
+        traits.push(item);
+      }
     }
+    
     capacities.sort((a, b) => a.name.localeCompare(b.name));
+    traits.sort((a, b) => a.name.localeCompare(b.name));
+    
     context.capacites = capacities;
+    context.traits = traits;
   }
 
   /** @override */
