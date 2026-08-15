@@ -10,6 +10,7 @@ export class CapaciteData extends foundry.abstract.TypeDataModel {
       attributLie: new StringField({ initial: "caractere" }),
       fortune: new BooleanField({ initial: false }),
       adversite: new BooleanField({ initial: false }),
+      passif: new BooleanField({ initial: false }), 
       description: new HTMLField({ initial: "" })
     };
   }
