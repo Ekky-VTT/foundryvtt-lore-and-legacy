@@ -1,7 +1,7 @@
 import { LoreAndLegacyActor } from "./documents/actor.mjs";
 import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
-import { PersonnageData } from "./data/actor-data.mjs"; // On importe le Data Model
-import { CapaciteData } from "./data/item-data.mjs"; // Import du Data Model des Capacités
+import { PersonnageData } from "./data/actor-data.mjs";
+import { CapaciteData } from "./data/item-data.mjs";
 
 /**
  * Initialisation du système Lore & Legacy
@@ -9,7 +9,11 @@ import { CapaciteData } from "./data/item-data.mjs"; // Import du Data Model des
 Hooks.once("init", async function() {
   console.log("Lore & Legacy | Initialisation du système Lore & Legacy");
 
-  // Déclaration de la classe personnalisée d'Actor
+  // Déclaration des Data Models
+  CONFIG.Actor.dataModels.personnage = PersonnageData;
+  CONFIG.Item.dataModels.capacite = CapaciteData;
+
+  // Déclaration des Classes de Documents
   CONFIG.Actor.documentClass = LoreAndLegacyActor;
 
   // Enregistrement de la fiche de personnage
