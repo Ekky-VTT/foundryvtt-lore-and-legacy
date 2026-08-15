@@ -252,7 +252,8 @@
   margin-bottom: 8px;
 }
 
-.capacities-block .block-title {
+.capacities-block .block-title,
+.traits-block .block-title {
   border-bottom: none;
   margin: 0;
 }
