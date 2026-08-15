@@ -16,8 +16,6 @@ export class CapaciteData extends foundry.abstract.TypeDataModel {
   }
 }
 
-const { HTMLField, NumberField, BooleanField } = foundry.data.fields;
-
 /**
  * Modèle de données pour les Traits
  */
