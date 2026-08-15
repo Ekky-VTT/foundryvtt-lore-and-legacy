@@ -1,9 +1,11 @@
-const { SchemaField, NumberField, StringField, HTMLField } = foundry.data.fields;
+const { SchemaField, NumberField, StringField, HTMLField, BooleanField } = foundry.data.fields;
 
 // Petite fonction maison pour éviter de répéter le code pour chaque attribut
 function creerAttribut() {
   return new SchemaField({
-    value: new NumberField({ initial: 1, min: 1, max: 10, integer: true })
+    value: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
+    fortune: new BooleanField({ initial: false }),   
+    adversite: new BooleanField({ initial: false })  
   });
 }
 
