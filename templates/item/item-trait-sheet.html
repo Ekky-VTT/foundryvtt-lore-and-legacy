@@ -1,36 +1,38 @@
-<form class="{{cssClass}} flexcol" autocomplete="off">
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%;">
   
-  <!-- EN-TÊTE DE L'OBJET -->
-  <header class="sheet-header flexrow" style="border-bottom: 2px solid #c19a5b; padding-bottom: 10px; margin-bottom: 10px; align-items: center; gap: 15px;">
-    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 64px; height: 64px; border: 2px solid #0e3a47; border-radius: 4px; background: #fff;"/>
+  <!-- EN-TÊTE DE L'OBJET (On retire la classe sheet-header pour éviter les bugs) -->
+  <header style="display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #c19a5b; padding-bottom: 10px; margin-bottom: 10px; flex: 0 0 auto;">
     
-    <div class="header-details flexcol" style="flex: 1; gap: 5px;">
-      <!-- Nom du Trait (Verrouillé si joueur) -->
-      <h1 class="charname" style="margin: 0; border: none; padding: 0;">
-        <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Trait" {{#unless isGM}}disabled{{/unless}} style="font-size: 24px; font-weight: bold; color: #0e3a47; background: transparent; border: none;"/>
-      </h1>
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="flex: 0 0 64px; width: 64px; height: 64px; border: 2px solid #0e3a47; border-radius: 4px; background: #fff; cursor: pointer;"/>
+    
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+      
+      <!-- Nom du Trait -->
+      <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Trait" {{#unless isGM}}disabled{{/unless}} style="font-size: 20px; font-weight: bold; color: #0e3a47; background: rgba(255, 255, 255, 0.7); border: 1px solid #c19a5b; padding: 4px; border-radius: 3px;"/>
       
       <!-- Coût du Trait -->
-      <div class="item-subtitle" style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #555;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #333;">
         <label>Coût (Points de Création) :</label>
-        <input type="number" name="system.cout" value="{{system.cout}}" {{#unless isGM}}disabled{{/unless}} style="width: 40px; text-align: center; border: 1px solid #c19a5b; border-radius: 3px;"/>
+        <input type="number" name="system.cout" value="{{system.cout}}" {{#unless isGM}}disabled{{/unless}} style="width: 50px; text-align: center; border: 1px solid #c19a5b; border-radius: 3px; background: #fff;"/>
       </div>
+
     </div>
   </header>
 
   <!-- CORPS DE LA FICHE : DESCRIPTION -->
-  <div class="sheet-body" style="flex: 1; display: flex; flex-direction: column;">
-    <h3 style="font-size: 14px; font-weight: bold; color: #0e3a47; border-bottom: 1px solid #c19a5b; margin-bottom: 5px;">DESCRIPTION & EFFETS</h3>
+  <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+    <h3 style="flex: 0 0 auto; font-size: 14px; font-weight: bold; color: #0e3a47; border-bottom: 1px solid #c19a5b; margin: 0 0 8px 0; padding-bottom: 3px;">DESCRIPTION & EFFETS</h3>
     
-    <div class="description-content" style="flex: 1; background: rgba(255, 255, 255, 0.6); border: 1px solid #dcd3c8; border-radius: 4px; padding: 5px; overflow-y: auto;">
+    <!-- Zone de texte avec un fond uni pour garantir la lisibilité -->
+    <div style="flex: 1; background: #fdfbf7; border: 1px solid #dcd3c8; border-radius: 4px; padding: 8px; color: #1a252c; overflow-y: auto; font-size: 14px;">
       
-      <!-- Si MJ : Affichage de l'éditeur de texte riche de Foundry -->
+      <!-- Si MJ : Affichage de l'éditeur (on utilise la variable native 'editable') -->
       {{#if isGM}}
-        {{editor enrichedDescription target="system.description" button=true editable=true engine="prosemirror"}}
+        {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable engine="prosemirror"}}
       
       <!-- Si Joueur : Affichage en lecture seule -->
       {{else}}
-        <div class="readonly-description" style="padding: 5px; color: #1a252c;">
+        <div style="padding: 5px;">
           {{{enrichedDescription}}}
         </div>
       {{/if}}
