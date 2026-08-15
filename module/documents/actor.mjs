@@ -103,6 +103,9 @@ export class LoreAndLegacyActor extends Actor {
 /**
    * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
    */
+  /**
+   * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
+   */
   async rollCapacite(itemId) {
     const capacite = this.items.get(itemId);
     if (!capacite || capacite.type !== "capacite") return;
@@ -110,7 +113,7 @@ export class LoreAndLegacyActor extends Actor {
     const capaciteValue = capacite.system.valeur;
     const attributLieKey = capacite.system.attributLie; 
     
-    // Récupération de l'attribut complet parent (pour lire sa valeur ET ses cases cochées)
+    // Récupération de l'attribut complet parent
     const attributParent = attributLieKey ? this.system.attributs[attributLieKey] : null;
     const attributValue = attributParent ? attributParent.value : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
@@ -121,25 +124,28 @@ export class LoreAndLegacyActor extends Actor {
 
     let formula = "";
     let flavorText = "";
+    let typeDeDe = "d6"; // Par défaut, on prépare un D6 pour le jet de repli
 
-    // 1. Déterminer le dé de base (1D10 + Capa ou 1D6 + Attribut)
+    // 1. Déterminer le dé de base et le type de dé pour la Fortune/Adversité
     if (capaciteValue > 0) {
+      typeDeDe = "d10"; // La capacité est connue, les dés bonus seront des D10
       formula = `1d10 + ${capaciteValue}`;
       flavorText = `Jet de Capacité : <b>${capacite.name}</b>`;
     } else {
+      typeDeDe = "d6"; // Repli sur l'attribut, les dés bonus seront des D6
       formula = `1d6 + ${attributValue}`;
       flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
-    // 2. Gestion du Dé de Fortune (+1D6)
+    // 2. Gestion du Dé de Fortune (s'adapte automatiquement en 1d6 ou 1d10)
     if (isFortune) {
-      formula += ` + 1d6`;
+      formula += ` + 1${typeDeDe}`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
-    // 3. Gestion du Dé d'Adversité (-1D6)
+    // 3. Gestion du Dé d'Adversité (s'adapte automatiquement en 1d6 ou 1d10)
     if (isAdversite) {
-      formula += ` - 1d6`;
+      formula += ` - 1${typeDeDe}`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
 
