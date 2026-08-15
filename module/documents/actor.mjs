@@ -102,9 +102,7 @@ export class LoreAndLegacyActor extends Actor {
 
 /**
    * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
-   */
-  /**
-   * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
+   * @param {string} itemId - L'ID de l'objet Capacité cliqué
    */
   async rollCapacite(itemId) {
     const capacite = this.items.get(itemId);
@@ -124,29 +122,27 @@ export class LoreAndLegacyActor extends Actor {
 
     let formula = "";
     let flavorText = "";
-    let typeDeDe = "d6"; // Par défaut, on prépare un D6 pour le jet de repli
+    let typeDeDe = "d6";
 
     // 1. Déterminer le dé de base et le type de dé pour la Fortune/Adversité
     if (capaciteValue > 0) {
-      typeDeDe = "d10"; // La capacité est connue, les dés bonus seront des D10
+      typeDeDe = "d10";
       formula = `1d10 + ${capaciteValue}`;
       flavorText = `Jet de Capacité : <b>${capacite.name}</b>`;
     } else {
-      typeDeDe = "d6"; // Repli sur l'attribut, les dés bonus seront des D6
+      typeDeDe = "d6";
       formula = `1d6 + ${attributValue}`;
       flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
-// 2. Gestion du Dé de Fortune (s'adapte automatiquement en 1d6 ou 1d10)
+    // 2. Gestion du Dé de Fortune
     if (isFortune) {
-      // On ajoute le tag [fortune] directement dans la formule pour que Foundry le reconnaisse
       formula += ` + 1${typeDeDe}[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
-    // 3. Gestion du Dé d'Adversité (s'adapte automatiquement en 1d6 ou 1d10)
+    // 3. Gestion du Dé d'Adversité
     if (isAdversite) {
-      // On ajoute le tag [adversite]
       formula += ` - 1${typeDeDe}[adversite]`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
@@ -155,12 +151,13 @@ export class LoreAndLegacyActor extends Actor {
     let roll = new Roll(formula);
 
     // --- APPLICATION DES COULEURS DICE SO NICE! ---
-    // On parcourt chaque dé de la formule pour vérifier s'il possède un tag
     for (let term of roll.terms) {
-      if (term.options && term.options.flavor === "fortune") {
-        term.options.colorset = "fortune"; // Applique le thème Vert
-      } else if (term.options && term.options.flavor === "adversite") {
-        term.options.colorset = "adversite"; // Applique le thème Rouge
+      if (term.flavor === "fortune") {
+        if (!term.options) term.options = {};
+        term.options.colorset = "fortune";
+      } else if (term.flavor === "adversite") {
+        if (!term.options) term.options = {};
+        term.options.colorset = "adversite";
       }
     }
 
@@ -170,4 +167,5 @@ export class LoreAndLegacyActor extends Actor {
       speaker: ChatMessage.getSpeaker({ actor: this }),
       flavor: flavorText
     });
+  }
 }
