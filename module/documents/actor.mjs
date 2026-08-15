@@ -61,7 +61,43 @@ export class LoreAndLegacyActor extends Actor {
         if (nom.includes("musculation")) bonusMusculation += val;
       }
     }
+    // --- 1.5 SCAN DES TRAITS ---
+    // Réinitialisation des marqueurs (flags) temporaires pour les jets de dés
+    this.flags = {
+      fortuneAcrobatie: false,
+      fortuneEscalade: false
+    };
+    
+    // Distance de saut de base (Rapidité / 3) - On l'anticipe ici pour les Traits
+    let baseSaut = Math.floor((maitrise + vigueur) / 3);
 
+    for (let item of this.items) {
+      if (item.type === "trait") {
+        const nom = item.name.toLowerCase();
+        const estSoigne = item.system.soigne;
+
+        // Exemple 1 : Baraqué (Dé de Fortune sur Vigueur)
+        if (nom.includes("baraqué")) {
+          attr.vigueur.fortune = true;
+        }
+
+        // Exemple 2 : Athlétique (Double saut, Fortune Acrobatie/Escalade)
+        if (nom.includes("athlétique")) {
+          baseSaut *= 2;
+          this.flags.fortuneAcrobatie = true;
+          this.flags.fortuneEscalade = true;
+        }
+
+        // Exemple 3 : Candide (Adversité sur Caractère, SAUF SI soigné)
+        if (nom.includes("candide") && !estSoigne) {
+          attr.caractere.adversite = true;
+        }
+      }
+    }
+    
+    // On sauvegarde la distance de saut finale pour l'affichage
+    sec.distanceSaut = baseSaut;
+    
     // --- 2. CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
     
     // PV = (Robustesse + Vigueur) * 2 + Endurance
@@ -119,7 +155,13 @@ export class LoreAndLegacyActor extends Actor {
     // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
     const isFortune = capacite.system.fortune || (attributParent && attributParent.fortune);
     const isAdversite = capacite.system.adversite || (attributParent && attributParent.adversite);
+    // --- ajout de la gestion des Traits qui impactent les capacités 
+    const nomCapa = capacite.name.toLowerCase();
 
+    // VÉRIFICATION DES BONUS DE TRAITS (Ex: Athlétique)
+    if (nomCapa.includes("acrobatie") && this.flags?.fortuneAcrobatie) isFortune = true;
+    if (nomCapa.includes("escalade") && this.flags?.fortuneEscalade) isFortune = true;
+    
     let formula = "";
     let flavorText = "";
     let typeDeDe = "d6";
