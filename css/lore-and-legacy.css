@@ -437,3 +437,35 @@ input[type="checkbox"]:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* --- TRAITS --- */
+.traits-block .block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #c19a5b;
+  margin-bottom: 8px;
+}
+
+.trait-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #dcd3c8;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.trait-icon {
+  color: #c19a5b;
+  font-size: 14px;
+}
+
+.trait-row .item-name {
+  flex: 1;
+  font-weight: bold;
+  color: #0e3a47;
+  font-size: 13px;
+}
