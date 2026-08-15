@@ -137,25 +137,37 @@ export class LoreAndLegacyActor extends Actor {
       flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
-    // 2. Gestion du Dé de Fortune (s'adapte automatiquement en 1d6 ou 1d10)
+// 2. Gestion du Dé de Fortune (s'adapte automatiquement en 1d6 ou 1d10)
     if (isFortune) {
-      formula += ` + 1${typeDeDe}`;
+      // On ajoute le tag [fortune] directement dans la formule pour que Foundry le reconnaisse
+      formula += ` + 1${typeDeDe}[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
     // 3. Gestion du Dé d'Adversité (s'adapte automatiquement en 1d6 ou 1d10)
     if (isAdversite) {
-      formula += ` - 1${typeDeDe}`;
+      // On ajoute le tag [adversite]
+      formula += ` - 1${typeDeDe}[adversite]`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
 
     // 4. Lancement du jet
     let roll = new Roll(formula);
+
+    // --- APPLICATION DES COULEURS DICE SO NICE! ---
+    // On parcourt chaque dé de la formule pour vérifier s'il possède un tag
+    for (let term of roll.terms) {
+      if (term.options && term.options.flavor === "fortune") {
+        term.options.colorset = "fortune"; // Applique le thème Vert
+      } else if (term.options && term.options.flavor === "adversite") {
+        term.options.colorset = "adversite"; // Applique le thème Rouge
+      }
+    }
+
     await roll.evaluate();
 
     roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       flavor: flavorText
     });
-  }
 }
