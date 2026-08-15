@@ -1,5 +1,6 @@
 import { LoreAndLegacyActor } from "./documents/actor.mjs";
 import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
+import { LoreAndLegacyItemSheet } from "./sheets/item-sheet.mjs"; // fiche des Traits
 import { PersonnageData } from "./data/actor-data.mjs";
 import { CapaciteData, TraitData } from "./data/item-data.mjs"; 
 
@@ -17,6 +18,10 @@ Hooks.once("init", async function() {
   // Enregistrement de la fiche de personnage
   Actors.unregisterSheet("core", ActorSheet);
   Actors.registerSheet("lore-and-legacy", LoreAndLegacyActorSheet, { makeDefault: true });
+
+  // Enregistrement de la fiche d'Objet (Item)
+  Items.unregisterSheet("core", ItemSheet);
+  Items.registerSheet("lore-and-legacy", LoreAndLegacyItemSheet, { makeDefault: true });
 });
 
 // --- INTÉGRATION AVEC LE MODULE DICE SO NICE! ---
