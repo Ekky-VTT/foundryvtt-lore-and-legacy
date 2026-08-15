@@ -159,13 +159,15 @@
             <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
           </div>
 
+          <!-- Case Fortune -->
           <label class="checkbox-label fortune-label" title="Dé de Fortune (+1D6)">
-            <input type="checkbox" class="inline-checkbox" data-field="fortune" {{checked capacite.system.fortune}}/>
+            <input type="checkbox" class="inline-checkbox flag-fortune" data-field="fortune" {{checked capacite.displayFortune}} {{#if capacite.lockFortune}}disabled{{/if}}/>
             <span>Fort.</span>
           </label>
 
+          <!-- Case Adversité -->
           <label class="checkbox-label adversite-label" title="Dé d'Adversité (-1D6)">
-            <input type="checkbox" class="inline-checkbox" data-field="adversite" {{checked capacite.system.adversite}}/>
+            <input type="checkbox" class="inline-checkbox flag-adversite" data-field="adversite" {{checked capacite.displayAdversite}} {{#if capacite.lockAdversite}}disabled{{/if}}/>
             <span>Adv.</span>
           </label>
 
