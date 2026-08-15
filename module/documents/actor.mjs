@@ -168,4 +168,59 @@ export class LoreAndLegacyActor extends Actor {
       flavor: flavorText
     });
   }
+
+  /**
+   * Effectue un jet d'Attribut pur (1D6) avec prise en compte de Fortune/Adversité
+   * @param {string} attrKey - La clé de l'attribut (ex: "caractere")
+   */
+  async rollAttribut(attrKey) {
+    // Vérification de sécurité
+    if (!this.system.attributs[attrKey]) return;
+
+    const attribut = this.system.attributs[attrKey];
+    const attrScore = attribut.value || 0;
+    
+    // Formatage du nom pour un bel affichage (ex: "caractere" -> "Caractère")
+    const nomsFormates = {
+      caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise",
+      prestance: "Prestance", robustesse: "Robustesse", vigueur: "Vigueur", fortune: "Fortune"
+    };
+    const nomAffiche = nomsFormates[attrKey] || attrKey;
+
+    let formula = `1d6 + ${attrScore}`;
+    let flavorText = `Jet d'Attribut : <b>${nomAffiche}</b>`;
+
+    // Gestion du Dé de Fortune lié à l'Attribut
+    if (attribut.fortune) {
+      formula += ` + 1d6[fortune]`;
+      flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
+    }
+
+    // Gestion du Dé d'Adversité lié à l'Attribut
+    if (attribut.adversite) {
+      formula += ` - 1d6[adversite]`;
+      flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
+    }
+
+    // Lancement du jet
+    let roll = new Roll(formula);
+
+    // Application des couleurs Dice So Nice!
+    for (let term of roll.terms) {
+      if (term.flavor === "fortune") {
+        if (!term.options) term.options = {};
+        term.options.colorset = "fortune";
+      } else if (term.flavor === "adversite") {
+        if (!term.options) term.options = {};
+        term.options.colorset = "adversite";
+      }
+    }
+
+    await roll.evaluate();
+
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      flavor: flavorText
+    });
+  }
 }
