@@ -3,9 +3,9 @@
  */
 const LISTE_CAPACITES = [
   // Caractère
-  { name: "Concentration", attr: "caractere" },
+  { name: "Concentration (P)", attr: "caractere", passif: true },
   { name: "Domestication", attr: "caractere" },
-  { name: "Esprit Critique", attr: "caractere" },
+  { name: "Esprit Critique (P)", attr: "caractere", passif: true },
   { name: "Intimidation", attr: "caractere" },
   { name: "Provocation", attr: "caractere" },
   { name: "Rhétorique", attr: "caractere" },
@@ -16,7 +16,7 @@ const LISTE_CAPACITES = [
   { name: "Archéologie", attr: "discernement" },
   { name: "Investigation", attr: "discernement" },
   { name: "Médecine", attr: "discernement" },
-  { name: "Mysticisme", attr: "discernement" },
+  { name: "Mysticisme (P)", attr: "discernement", passif: true },
   { name: "Observation", attr: "discernement" },
   { name: "Réparation", attr: "discernement" },
   { name: "Sorcellerie", attr: "discernement" },
@@ -26,7 +26,7 @@ const LISTE_CAPACITES = [
   { name: "Combat à distance", attr: "maitrise" },
   { name: "Combat rapproché", attr: "maitrise" },
   { name: "Dextérité", attr: "maitrise" },
-  { name: "Esquive", attr: "maitrise" },
+  { name: "Esquive (P)", attr: "maitrise", passif: true },
   { name: "Fabrication", attr: "maitrise" },
   { name: "Mécanique", attr: "maitrise" },
   // Prestance
@@ -37,9 +37,9 @@ const LISTE_CAPACITES = [
   { name: "Marchandage", attr: "prestance" },
   { name: "Présence Apaisante", attr: "prestance" },
   { name: "Représentation", attr: "prestance" },
-  { name: "Optimisation", attr: "prestance" },
+  { name: "Optimisation (P)", attr: "prestance", passif: true },
   // Robustesse
-  { name: "Endurance", attr: "robustesse" },
+  { name: "Endurance (P)", attr: "robustesse", passif: true },
   { name: "Immunité", attr: "robustesse" },
   { name: "Monte", attr: "robustesse" },
   { name: "Natation", attr: "robustesse" },
@@ -47,14 +47,14 @@ const LISTE_CAPACITES = [
   { name: "Survie en milieu sauvage", attr: "robustesse" },
   { name: "Voyage", attr: "robustesse" },
   // Vigueur
-  { name: "Armure Légère", attr: "vigueur" },
-  { name: "Armure lourde", attr: "vigueur" },
-  { name: "Bouclier", attr: "vigueur" },
+  { name: "Armure Légère (P)", attr: "vigueur", passif: true },
+  { name: "Armure lourde (P)", attr: "vigueur", passif: true },
+  { name: "Bouclier (P)", attr: "vigueur", passif: true },
   { name: "Charge", attr: "vigueur" },
   { name: "Effort", attr: "vigueur" },
   { name: "Escalade", attr: "vigueur" },
   { name: "Morsure", attr: "vigueur" },
-  { name: "Musculation", attr: "vigueur" },
+  { name: "Musculation (P)", attr: "vigueur", passif: true },
   // Spécial
   { name: "Passion", attr: "" }
 ];
