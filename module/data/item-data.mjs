@@ -15,3 +15,18 @@ export class CapaciteData extends foundry.abstract.TypeDataModel {
     };
   }
 }
+
+const { HTMLField, NumberField, BooleanField } = foundry.data.fields;
+
+/**
+ * Modèle de données pour les Traits
+ */
+export class TraitData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      description: new HTMLField({ initial: "" }),
+      cout: new NumberField({ initial: 0, integer: true }), // Coût en Points de Création
+      soigne: new BooleanField({ initial: false }) // NOUVEAU : Coche pour annuler les effets négatifs
+    };
+  }
+}
