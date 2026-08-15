@@ -37,6 +37,12 @@ export class PersonnageData extends foundry.abstract.TypeDataModel {
       biographie: new SchemaField({
         concept: new StringField({ initial: "" }),
         notes: new HTMLField({ initial: "" })
+      }),
+      // NOUVEAU : Pour gérer les conditions des capacités passives d'armure
+      equipementActif: new SchemaField({
+        armureLegere: new BooleanField({ initial: false }),
+        armureLourde: new BooleanField({ initial: false }),
+        bouclier: new BooleanField({ initial: false })
       })
     };
   }
