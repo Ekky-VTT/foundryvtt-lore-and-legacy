@@ -470,3 +470,9 @@ input[type="checkbox"]:disabled {
   color: #0e3a47;
   font-size: 13px;
 }
+/* --- FIX ÉDITEUR DE TEXTE FOUNDRY --- */
+.vtt.system-lore-and-legacy .item .editor,
+.vtt.system-lore-and-legacy .item .editor-content {
+  height: 100%;
+  min-height: 100px;
+}
