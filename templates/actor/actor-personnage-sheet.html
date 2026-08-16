@@ -1,26 +1,25 @@
 <form class="{{cssClass}} lore-sheet flexcol" autocomplete="off">
 
-  <header class="sheet-header">
-    <div class="profile-section">
-      <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
-    </div>
+  <!-- EN-TÊTE DE LA FICHE -->
+  <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
     
-    <div class="identity-section">
-      <div class="form-group name-group">
-        <label>NOM :</label>
-        <input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage"/>
+    <!-- Image du Personnage -->
+    <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="width: 100px; height: 100px; border: 1px solid #c19a5b; border-radius: 5px; object-fit: cover;" />
+    
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+      
+      <!-- Nom du Personnage -->
+      <h1 style="margin: 0; border: none;">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage" style="font-size: 28px; font-weight: bold; background: transparent; border: none; width: 100%; color: #0e3a47;"/>
+      </h1>
+      
+      <!-- Affichage du Peuple (Non modifiable) -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+        <label style="font-weight: bold; font-size: 14px; color: #555;">Peuple :</label>
+        
+        <input type="text" value="{{actor.peupleNom}}" readonly title="Glissez un Item de type Peuple pour modifier" placeholder="Aucun" style="width: 200px; border: 1px solid #ccc; background: rgba(0, 0, 0, 0.05); border-radius: 3px; padding: 4px 8px; color: #1a252c; font-style: italic; cursor: not-allowed;"/>
       </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>PEUPLE :</label>
-          <input type="text" name="system.biographie.concept" value="{{system.biographie.concept}}" placeholder="Humain, Ælfyn, Dakti..."/>
-        </div>
-        <div class="form-group currency-group">
-          <label>TAELS :</label>
-          <input type="number" name="system.secondaires.bagage.value" value="{{system.secondaires.bagage.value}}" data-dtype="Number"/>
-        </div>
-      </div>
+      
     </div>
   </header>
 
