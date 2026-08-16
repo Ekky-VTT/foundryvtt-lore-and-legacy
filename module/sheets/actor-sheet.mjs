@@ -112,6 +112,29 @@ _prepareItems(context) {
     context.traits = traits;
   }
 
+  /**
+   * Intercepte le glisser-déposer pour garantir l'unicité du Peuple.
+   * @override
+   */
+  async _onDropItemCreate(itemData) {
+    let itemsToCreate = Array.isArray(itemData) ? itemData : [itemData];
+
+    // Vérifie si un Peuple fait partie des objets déposés
+    const peupleItem = itemsToCreate.find(i => i.type === "peuple");
+    if (peupleItem) {
+      // On cherche s'il y a déjà un peuple sur la fiche
+      const existingPeuples = this.actor.items.filter(i => i.type === "peuple");
+      if (existingPeuples.length > 0) {
+        // On supprime l'ancien peuple avant d'ajouter le nouveau
+        await this.actor.deleteEmbeddedDocuments("Item", existingPeuples.map(i => i.id));
+        ui.notifications.info("L'ancien Peuple a été remplacé par le nouveau.");
+      }
+    }
+
+    // On reprend le comportement normal de Foundry
+    return super._onDropItemCreate(itemsToCreate);
+  }
+
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
