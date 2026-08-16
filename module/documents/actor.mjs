@@ -49,7 +49,6 @@ export class LoreAndLegacyActor extends Actor {
     attr.prestance.total = (attr.prestance.value || 0) + bonusPeuple.prestance;
     attr.robustesse.total = (attr.robustesse.value || 0) + bonusPeuple.robustesse;
     attr.vigueur.total = (attr.vigueur.value || 0) + bonusPeuple.vigueur;
-    
     // Pour la Fortune, la valeur investie est dans 'max' (la ressource de base est 'value')
     attr.fortune.maxTotal = (attr.fortune.max || 0) + bonusPeuple.fortune;
 
