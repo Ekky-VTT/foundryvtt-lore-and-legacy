@@ -23,6 +23,7 @@ export class LoreAndLegacyActor extends Actor {
   _preparePersonnageData(systemData) {
     const attr = systemData.attributs;
     const sec = systemData.secondaires;
+    const eq = systemData.equipementActif;
 
     // --- 0.5. GESTION DU PEUPLE ET DES ATTRIBUTS ---
     let bonusPeuple = { caractere: 0, discernement: 0, maitrise: 0, prestance: 0, robustesse: 0, vigueur: 0, fortune: 0 };
