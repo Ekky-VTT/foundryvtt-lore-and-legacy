@@ -9,7 +9,8 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["lore-and-legacy", "sheet", "item"],
       width: 520,
-      height: 480
+      height: 480,
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }] // <-- C'est cette ligne qui active les onglets !
     });
   }
 
