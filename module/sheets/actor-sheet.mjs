@@ -76,6 +76,14 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const context = super.getData();
     context.system = context.data.system;
     this._prepareItems(context);
+
+    // On s'assure d'identifier les traits raciaux pour le HTML
+    context.traits = this.actor.items.filter(i => i.type === "trait").map(item => {
+      const itemData = item.toObject();
+      itemData.isRacial = item.getFlag("lore-and-legacy", "isRacialTrait") || false;
+      return itemData;
+    });
+    
     return context;
   }
 
