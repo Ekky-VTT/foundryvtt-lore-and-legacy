@@ -4,20 +4,39 @@
   <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
     
     <!-- Image du Personnage -->
-    <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="width: 100px; height: 100px; border: 1px solid #c19a5b; border-radius: 5px; object-fit: cover;" />
+    <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="width: 100px; height: 100px; border: 1px solid #c19a5b; border-radius: 5px; object-fit: cover; background: rgba(0,0,0,0.3);" />
     
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
       
-      <!-- Nom du Personnage -->
-      <h1 style="margin: 0; border: none;">
-        <input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage" style="font-size: 28px; font-weight: bold; background: transparent; border: none; width: 100%; color: #0e3a47;"/>
-      </h1>
-      
-      <!-- Affichage du Peuple (Non modifiable) -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-        <label style="font-weight: bold; font-size: 14px; color: #555;">Peuple :</label>
+      <!-- LIGNE 1 : Nom du Personnage et Monnaie/Progression -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         
-        <input type="text" value="{{actor.peupleNom}}" readonly title="Glissez un Item de type Peuple pour modifier" placeholder="Aucun" style="width: 200px; border: 1px solid #ccc; background: rgba(0, 0, 0, 0.05); border-radius: 3px; padding: 4px 8px; color: #1a252c; font-style: italic; cursor: not-allowed;"/>
+        <!-- Nom du Personnage (Police blanche) -->
+        <h1 style="margin: 0; border: none; flex: 1;">
+          <input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Personnage" style="font-size: 28px; font-weight: bold; background: rgba(0, 0, 0, 0.2); border: 1px solid transparent; width: 90%; color: white; padding-left: 5px; border-radius: 3px;"/>
+        </h1>
+        
+        <!-- Taels et Astres (Police blanche) -->
+        <div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 5px;">
+            <label style="font-weight: bold; font-size: 14px; color: white;">Taels :</label>
+            <input type="number" name="system.taels" value="{{system.taels}}" min="0" style="width: 60px; padding: 2px; text-align: right; background: rgba(0, 0, 0, 0.4); border: 1px solid #c19a5b; border-radius: 3px; color: white; font-weight: bold;"/>
+          </div>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 5px;">
+            <label style="font-weight: bold; font-size: 14px; color: white;">Astres :</label>
+            <input type="number" name="system.astres" value="{{system.astres}}" min="0" style="width: 60px; padding: 2px; text-align: right; background: rgba(0, 0, 0, 0.4); border: 1px solid #c19a5b; border-radius: 3px; color: white; font-weight: bold;"/>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- LIGNE 2 : Affichage du Peuple (Non modifiable, Police blanche) -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+        <label style="font-weight: bold; font-size: 14px; color: white;">Peuple :</label>
+        
+        <input type="text" value="{{actor.peupleNom}}" readonly title="Glissez un Item de type Peuple pour modifier" placeholder="Aucun" style="width: 200px; border: 1px solid #ccc; background: rgba(0, 0, 0, 0.3); border-radius: 3px; padding: 4px 8px; color: white; font-style: italic; cursor: not-allowed;"/>
       </div>
       
     </div>
