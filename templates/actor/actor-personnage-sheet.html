@@ -349,23 +349,29 @@
           {{/if}}
 
           <!-- Bouton Supprimer -->
-          {{#each traits}}
-            <li class="item" data-item-id="{{this._id}}" style="display: flex; justify-content: space-between; align-items: center; padding: 4px;">
-              <span>{{this.name}}</span>
+          {{#each traits}} <!-- (Ou la variable que tu utilises pour ta boucle) -->
+  <li class="item" data-item-id="{{this._id}}" style="display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px dotted #ccc;">
+    
+    <span style="font-weight: bold;">{{this.name}}</span>
+    
+    <!-- LECTURE DIRECTE DU FLAG : On demande au HTML de regarder l'étiquette invisible -->
+    {{#if this.flags.[lore-and-legacy].isRacialTrait}}
       
-          <!-- SI C'EST UN TRAIT RACIAL : On affiche un texte verrouillé -->
-          {{#if this.isRacial}}
-            <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé directement.">
-              (Racial)
-            </span>
-          {{else}}
-          <!-- SINON : Bouton de suppression classique (poubelle) -->
-            <a class="item-control item-delete" title="Supprimer le Trait" style="color: #b32424; cursor: pointer;">
-              <i class="fas fa-trash"></i>
-            </a>
-          {{/if}}
-        </li>
-        {{/each}}
+      <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
+        (Racial)
+      </span>
+      
+    {{else}}
+      
+      <!-- Bouton de suppression classique (poubelle) pour les autres Traits -->
+      <a class="item-delete" data-item-id="{{this._id}}" title="Supprimer le Trait" style="color: #b32424; cursor: pointer;">
+        <i class="fas fa-trash"></i>
+      </a>
+      
+    {{/if}}
+    
+  </li>
+{{/each}}
         </div>
       {{else}}
         <p class="empty-notice">Aucun trait. Glissez-déposez un Trait.</p>
