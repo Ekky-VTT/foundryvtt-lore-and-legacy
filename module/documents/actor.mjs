@@ -18,19 +18,52 @@ export class LoreAndLegacyActor extends Actor {
     }
   }
 
-/** @private */
+
+ /** @private */
   _preparePersonnageData(systemData) {
     const attr = systemData.attributs;
     const sec = systemData.secondaires;
-    const eq = systemData.equipementActif;
 
-    const caractere = attr.caractere.value || 0;
-    const discernement = attr.discernement.value || 0;
-    const maitrise = attr.maitrise.value || 0;
-    const prestance = attr.prestance.value || 0;
-    const robustesse = attr.robustesse.value || 0;
-    const vigueur = attr.vigueur.value || 0;
-    const fortune = attr.fortune.max || 0;
+    // --- 0.5. GESTION DU PEUPLE ET DES ATTRIBUTS ---
+    let bonusPeuple = { caractere: 0, discernement: 0, maitrise: 0, prestance: 0, robustesse: 0, vigueur: 0, fortune: 0 };
+    this.peupleNom = "Aucun";
+
+    // On cherche le Peuple dans l'inventaire
+    for (let item of this.items) {
+      if (item.type === "peuple") {
+        this.peupleNom = item.name;
+        bonusPeuple.caractere = item.system.bonusCaractere || 0;
+        bonusPeuple.discernement = item.system.bonusDiscernement || 0;
+        bonusPeuple.maitrise = item.system.bonusMaitrise || 0;
+        bonusPeuple.prestance = item.system.bonusPrestance || 0;
+        bonusPeuple.robustesse = item.system.bonusRobustesse || 0;
+        bonusPeuple.vigueur = item.system.bonusVigueur || 0;
+        bonusPeuple.fortune = item.system.bonusFortune || 0;
+      }
+    }
+
+    // Calcul du Score Total = Points Investis (value) + Base du Peuple
+    attr.caractere.total = (attr.caractere.value || 0) + bonusPeuple.caractere;
+    attr.discernement.total = (attr.discernement.value || 0) + bonusPeuple.discernement;
+    attr.maitrise.total = (attr.maitrise.value || 0) + bonusPeuple.maitrise;
+    attr.prestance.total = (attr.prestance.value || 0) + bonusPeuple.prestance;
+    attr.robustesse.total = (attr.robustesse.value || 0) + bonusPeuple.robustesse;
+    attr.vigueur.total = (attr.vigueur.value || 0) + bonusPeuple.vigueur;
+    
+    // Pour la Fortune, la valeur investie est dans 'max' (la ressource de base est 'value')
+    attr.fortune.maxTotal = (attr.fortune.max || 0) + bonusPeuple.fortune;
+
+    // ATTENTION : Tu dois maintenant utiliser 'attr.X.total' pour tes caractéristiques secondaires !
+    // Exemple : const caractere = attr.caractere.total;
+    // (Pense à corriger la récupération de tes 7 attributs juste en dessous dans ton fichier)
+
+    const caractere = attr.caractere.total || 0;
+    const discernement = attr.discernement.total || 0;
+    const maitrise = attr.maitrise.total || 0;
+    const prestance = attr.prestance.total || 0;
+    const robustesse = attr.robustesse.total || 0;
+    const vigueur = attr.vigueur.total || 0;
+    const fortune = attr.fortune.maxTotal || 0;
 
     // --- 1. SCAN DE TOUTES LES CAPACITÉS PASSIVES ---
     let bonusEndurance = 0;
@@ -164,7 +197,7 @@ export class LoreAndLegacyActor extends Actor {
     
     // Récupération de l'attribut complet parent
     const attributParent = attributLieKey ? this.system.attributs[attributLieKey] : null;
-    const attributValue = attributParent ? attributParent.value : 0;
+    const attributValue = attributParent ? attributParent.total : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
 
     // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
@@ -236,7 +269,7 @@ export class LoreAndLegacyActor extends Actor {
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    const attrScore = (attrKey === "fortune") ? (attribut.max || 0) : (attribut.value || 0);
+    const attrScore = (attrKey === "fortune") ? (attribut.max || 0) : (attribut.total || 0);
     
     // Formatage du nom pour un bel affichage (ex: "caractere" -> "Caractère")
     const nomsFormates = {
