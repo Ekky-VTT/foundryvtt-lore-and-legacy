@@ -113,25 +113,53 @@ _prepareItems(context) {
   }
 
   /**
-   * Intercepte le glisser-déposer pour garantir l'unicité du Peuple.
+   * Intercepte le glisser-déposer pour garantir l'unicité du Peuple
+   * et importer automatiquement ses Traits culturels.
    * @override
    */
   async _onDropItemCreate(itemData) {
     let itemsToCreate = Array.isArray(itemData) ? itemData : [itemData];
 
     // Vérifie si un Peuple fait partie des objets déposés
-    const peupleItem = itemsToCreate.find(i => i.type === "peuple");
-    if (peupleItem) {
-      // On cherche s'il y a déjà un peuple sur la fiche
+    const peupleItemData = itemsToCreate.find(i => i.type === "peuple");
+    
+    if (peupleItemData) {
+      // --- 1. NETTOYAGE DE L'ANCIEN PEUPLE ET DE SES TRAITS ---
       const existingPeuples = this.actor.items.filter(i => i.type === "peuple");
-      if (existingPeuples.length > 0) {
-        // On supprime l'ancien peuple avant d'ajouter le nouveau
-        await this.actor.deleteEmbeddedDocuments("Item", existingPeuples.map(i => i.id));
-        ui.notifications.info("L'ancien Peuple a été remplacé par le nouveau.");
+      // On cherche tous les Traits qui portent notre étiquette invisible
+      const existingRacialTraits = this.actor.items.filter(i => i.getFlag("lore-and-legacy", "isRacialTrait"));
+      
+      const idsToDelete = [
+        ...existingPeuples.map(i => i.id),
+        ...existingRacialTraits.map(i => i.id)
+      ];
+
+      if (idsToDelete.length > 0) {
+        await this.actor.deleteEmbeddedDocuments("Item", idsToDelete);
+        ui.notifications.info("L'ancien Peuple et ses Traits ont été remplacés.");
+      }
+
+      // --- 2. IMPORTATION DES NOUVEAUX TRAITS ---
+      const traitsUuids = peupleItemData.system?.traits || [];
+      
+      for (let uuid of traitsUuids) {
+        // On va chercher le "vrai" Trait dans la base de données
+        const traitDoc = await fromUuid(uuid);
+        if (traitDoc) {
+          // On le transforme en données brutes pour le copier
+          let traitData = traitDoc.toObject();
+          
+          // LA MAGIE EST ICI : On lui pose l'étiquette invisible pour le reconnaître plus tard !
+          foundry.utils.setProperty(traitData, "flags.lore-and-legacy.isRacialTrait", true);
+          
+          // On l'ajoute à la liste des objets qui vont être créés sur le personnage
+          itemsToCreate.push(traitData);
+        }
       }
     }
 
-    // On reprend le comportement normal de Foundry
+    // --- 3. CRÉATION FINALE ---
+    // On laisse Foundry créer le Peuple ET les Traits qu'on vient d'ajouter à la liste
     return super._onDropItemCreate(itemsToCreate);
   }
 
