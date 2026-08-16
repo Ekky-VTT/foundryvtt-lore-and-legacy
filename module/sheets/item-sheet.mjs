@@ -24,16 +24,31 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
   }
 
   /** @override */
-  async getData() {
-    const context = super.getData();
-    context.system = context.data.system;
+  async getData(options) {
+    const context = super.getData(options);
+    const item = context.item;
+    const source = item.toObject();
+
+    context.system = source.system;
     
-    // NOUVEAU : On vérifie si l'utilisateur est le Meneur de Jeu
-    context.isGM = game.user.isGM;
+    // Si c'est un Peuple, on prépare la liste visuelle des Traits
+    if (item.type === "peuple") {
+      context.traitsList = [];
+      const traitsUuids = context.system.traits || [];
+      
+      for (let uuid of traitsUuids) {
+        const traitItem = await fromUuid(uuid);
+        if (traitItem) {
+          context.traitsList.push({
+            uuid: uuid,
+            name: traitItem.name,
+            img: traitItem.img
+          });
+        }
+      }
+    }
 
-    // NOUVEAU : On enrichit le texte pour supporter le HTML de Foundry (liens, gras, etc.)
-    context.enrichedDescription = await TextEditor.enrichHTML(context.system.description, { async: true });
-
+    context.enrichedDescription = await TextEditor.enrichHTML(item.system.description, {async: true});
     return context;
   }
 }
