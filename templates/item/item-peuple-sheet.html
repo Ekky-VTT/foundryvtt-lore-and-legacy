@@ -1,0 +1,84 @@
+<form class="{{cssClass}} item-sheet" autocomplete="off" style="display: flex; flex-direction: column; height: 100%;">
+  
+  <!-- EN-TÊTE : Image, Nom et Traits -->
+  <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 10px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 72px; height: 72px; border: 1px solid #c19a5b; border-radius: 5px; object-fit: cover;" />
+    
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+      <h1 style="margin: 0; border: none;">
+        <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Peuple" style="font-size: 24px; font-weight: bold; background: transparent; border: none; width: 100%; color: #0e3a47;" {{#unless isGM}}disabled{{/unless}}/>
+      </h1>
+      
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+        <label style="font-weight: bold; font-size: 13px; color: #555; white-space: nowrap;">Traits raciaux :</label>
+        <input type="text" name="system.traitsRaciaux" value="{{system.traitsRaciaux}}" placeholder="Ex: Héliophile, Noctambule" style="width: 100%; border: 1px solid #c19a5b; background: rgba(255, 255, 255, 0.7); border-radius: 3px; padding: 2px 5px;" {{#unless isGM}}disabled{{/unless}}/>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION (Onglets) -->
+  <nav class="sheet-tabs tabs" data-group="primary" style="display: flex; gap: 15px; border-bottom: 1px solid #c19a5b; margin-bottom: 10px; font-weight: bold;">
+    <a class="item" data-tab="description" style="cursor: pointer; padding-bottom: 5px;">Description</a>
+    <a class="item" data-tab="attributs" style="cursor: pointer; padding-bottom: 5px;">Bases d'Attributs</a>
+  </nav>
+
+  <!-- CORPS DE LA FICHE -->
+  <section class="sheet-body" style="flex: 1; overflow-y: auto;">
+    
+    <!-- ONGLET 1 : DESCRIPTION -->
+    <div class="tab description" data-group="primary" data-tab="description" style="height: 100%;">
+      <!-- Le même correctif CSS que pour les Traits pour forcer l'affichage de l'éditeur -->
+      <div style="height: 100%; min-height: 150px;">
+        {{editor enrichedDescription target="system.description" button=true editable=isGM engine="prosemirror"}}
+      </div>
+    </div>
+
+    <!-- ONGLET 2 : BASES D'ATTRIBUTS -->
+    <div class="tab attributs" data-group="primary" data-tab="attributs" style="padding: 10px;">
+      <p style="font-size: 12px; color: #555; font-style: italic; margin-top: 0;">
+        Saisissez ici les valeurs de base des Attributs pour ce peuple (max 3 par attribut, total 10).
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        
+        <!-- Colonne 1 -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Caractère</label>
+            <input type="number" name="system.bonusCaractere" value="{{system.bonusCaractere}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Discernement</label>
+            <input type="number" name="system.bonusDiscernement" value="{{system.bonusDiscernement}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Maîtrise</label>
+            <input type="number" name="system.bonusMaitrise" value="{{system.bonusMaitrise}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Prestance</label>
+            <input type="number" name="system.bonusPrestance" value="{{system.bonusPrestance}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+        </div>
+
+        <!-- Colonne 2 -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Robustesse</label>
+            <input type="number" name="system.bonusRobustesse" value="{{system.bonusRobustesse}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
+            <label style="font-weight: bold;">Vigueur</label>
+            <input type="number" name="system.bonusVigueur" value="{{system.bonusVigueur}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc; margin-top: 10px;">
+            <label style="font-weight: bold; color: #0e3a47;">Fortune</label>
+            <input type="number" name="system.bonusFortune" value="{{system.bonusFortune}}" min="0" style="width: 40px; text-align: center; border: 1px solid #c19a5b; background-color: #e2c98d;" {{#unless isGM}}disabled{{/unless}}/>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+  </section>
+</form>
