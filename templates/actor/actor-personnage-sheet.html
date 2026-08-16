@@ -59,8 +59,13 @@
       
       <div class="attribute-card">
         <a class="attribut-roll" data-attr="caractere" title="Lancer un jet de Caractère (1D6)">CARACTÈRE</a>
-        <div class="attr-formula">1D6 +</div>
-        <input type="number" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" min="1" max="10"/>
+        <!-- Score Total (calculé) affiché en grand -->
+        <div class="attr-formula">1D6 + <span style="font-size: 16px;">{{system.attributs.caractere.total}}</span></div>
+        <!-- Points Investis (modifiables par le joueur) -->
+        <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 3px;">
+          Investi : <input type="number" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" min="0" max="6" style="width: 20px; padding: 1px; text-align: center;"/>
+        </div>
+
         <!-- Cases Fortune / Adversité de l'Attribut -->
         <div class="attr-flags">
           
