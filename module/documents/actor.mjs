@@ -62,15 +62,17 @@ export class LoreAndLegacyActor extends Actor {
       }
     }
     // --- 1.5 SCAN DES TRAITS ---
-    // Réinitialisation des marqueurs (flags) temporaires pour les jets de dés
-    this.flags = {
-      fortuneAcrobatie: false,
-      fortuneEscalade: false
-    };
-    
-    // Distance de saut de base (Rapidité / 3) - On l'anticipe ici pour les Traits
+    this.flags = { fortuneAcrobatie: false, fortuneEscalade: false };
     let baseSaut = Math.floor((maitrise + vigueur) / 3);
+    let bonusBagageTraits = 0;
+    let bonusResPhysTraits = 0;
 
+    // NOUVEAU : Initialiser les marqueurs de Traits pour les Attributs
+    for (let key in attr) {
+      attr[key].traitFortune = false;
+      attr[key].traitAdversite = false;
+    }
+    
     for (let item of this.items) {
       if (item.type === "trait") {
         const nom = item.name.toLowerCase();
@@ -100,6 +102,12 @@ export class LoreAndLegacyActor extends Actor {
           bonusResPhysTraits += 3;
         }
       }
+    }
+    
+    // Calculer l'état final des Attributs (Base de données OU Trait)
+    for (let key in attr) {
+      attr[key].finalFortune = attr[key].fortune || attr[key].traitFortune;
+      attr[key].finalAdversite = attr[key].adversite || attr[key].traitAdversite;
     }
     
     // On sauvegarde la distance de saut finale pour l'affichage
@@ -160,8 +168,9 @@ export class LoreAndLegacyActor extends Actor {
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
 
     // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
-    const isFortune = capacite.system.fortune || (attributParent && attributParent.fortune);
-    const isAdversite = capacite.system.adversite || (attributParent && attributParent.adversite);
+    let isFortune = capacite.system.fortune || (attributParent && attributParent.finalFortune);
+    let isAdversite = capacite.system.adversite || (attributParent && attributParent.finalAdversite);
+    
     // --- ajout de la gestion des Traits qui impactent les capacités 
     const nomCapa = capacite.name.toLowerCase();
 
@@ -240,17 +249,17 @@ export class LoreAndLegacyActor extends Actor {
     let flavorText = `Jet d'Attribut : <b>${nomAffiche}</b>`;
 
     // Gestion du Dé de Fortune lié à l'Attribut
-    if (attribut.fortune) {
+    if (attribut.finalFortune) {
       formula += ` + 1d6[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
     // Gestion du Dé d'Adversité lié à l'Attribut
-    if (attribut.adversite) {
+    if (attribut.finalAdversite) {
       formula += ` - 1d6[adversite]`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
-
+    
     // Lancement du jet
     let roll = new Roll(formula);
 
