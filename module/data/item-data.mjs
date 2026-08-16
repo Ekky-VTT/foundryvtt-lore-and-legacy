@@ -29,3 +29,23 @@ export class TraitData extends foundry.abstract.TypeDataModel {
     };
   }
 }
+
+/**
+ * Modèle de données pour les Races
+ */
+export class PeupleData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { HTMLField, NumberField, StringField } = foundry.data.fields;
+    return {
+      description: new HTMLField({ initial: "" }),
+      traitsRaciaux: new StringField({ initial: "" }), // Ex: "Héliophile, Noctambule"
+      bonusCaractere: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusDiscernement: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusMaitrise: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusPrestance: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusRobustesse: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusVigueur: new NumberField({ initial: 0, min: 0, integer: true }),
+      bonusFortune: new NumberField({ initial: 0, min: 0, integer: true })
+    };
+  }
+}
