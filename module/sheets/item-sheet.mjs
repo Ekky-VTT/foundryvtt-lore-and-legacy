@@ -51,4 +51,49 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     context.enrichedDescription = await TextEditor.enrichHTML(item.system.description, {async: true});
     return context;
   }
+  
+  // AJOUTE PAR LE DRAG AND DROP
+  activateListeners(html) {
+    super.activateListeners(html);
+    if (!this.isEditable) return;
+
+    // NOUVEAU : Supprimer un Trait du Peuple
+    html.find('.trait-delete').click(async ev => {
+      const uuidToRemove = ev.currentTarget.dataset.uuid;
+      const currentTraits = this.item.system.traits || [];
+      // On garde tous les UUIDs SAUF celui qu'on veut supprimer
+      const newTraits = currentTraits.filter(uuid => uuid !== uuidToRemove);
+      await this.item.update({ "system.traits": newTraits });
+    });
+  }
+
+  /**
+   * Intercepte le glisser-déposer d'un Item sur la fiche
+   * @override
+   */
+  async _onDrop(event) {
+    event.preventDefault();
+    if (!this.isEditable) return;
+
+    // On récupère les données lâchées par la souris
+    const data = TextEditor.getDragEventData(event);
+    if (data.type !== "Item") return;
+
+    // On retrouve l'objet complet
+    const droppedItem = await Item.fromDropData(data);
+    if (!droppedItem) return;
+
+    // Si on lâche un Trait sur un Peuple
+    if (this.item.type === "peuple" && droppedItem.type === "trait") {
+      const currentTraits = this.item.system.traits || [];
+      
+      // On évite les doublons
+      if (!currentTraits.includes(droppedItem.uuid)) {
+        const newTraits = [...currentTraits, droppedItem.uuid];
+        await this.item.update({ "system.traits": newTraits });
+      } else {
+        ui.notifications.warn("Ce Trait est déjà assigné à ce Peuple.");
+      }
+    }
+  }
 }
