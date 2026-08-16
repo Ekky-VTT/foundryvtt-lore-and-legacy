@@ -16,6 +16,14 @@
         <input type="number" name="system.cout" value="{{system.cout}}" {{#unless isGM}}disabled{{/unless}} style="width: 50px; text-align: center; border: 1px solid #c19a5b; border-radius: 3px; background: #fff;"/>
       </div>
 
+      <!-- Option Soignable (Visible/Modifiable uniquement par le MJ) -->
+        {{#if isGM}}
+        <label class="checkbox-label" title="Si décoché, ce Trait ne pourra jamais être soigné (ex: Biomécanique, Héliophile, ou bénéfique)" style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+          <input type="checkbox" name="system.soignable" {{checked system.soignable}} style="width: 14px; height: 14px; accent-color: #0e3a47;"/>
+          <span>Ce Trait est soignable</span>
+        </label>
+        {{/if}}
+      
     </div>
   </header>
 
