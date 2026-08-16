@@ -236,15 +236,15 @@
         
         <!-- Affichage Actuel / Maximum Réel pour la Fortune -->
         <div style="display: flex; align-items: center; justify-content: center; gap: 3px; margin-bottom: 3px;">
+          
           <!-- Points restants (Ressource actuelle) -->
-          <input type="number" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" min="0" title="Points de Fortune restants" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px;"/>
+          <input type="number" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" min="0" title="Points de Fortune restants" style="width: 28px; height: 22px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px;"/>
           
           <span style="font-weight: bold; color: #0e3a47;">/</span>
           
-          <!-- Maximum Réel (Calculé : Investi + Peuple) -->
-          <span title="Maximum Réel (Investi + Peuple)" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px; background-color: #e2c98d; display: inline-block;">
-            {{system.attributs.fortune.total}}
-          </span>
+          <!-- Maximum Réel (Calculé : Investi + Peuple) - CORRIGÉ AVEC READONLY -->
+          <input type="text" value="{{system.attributs.fortune.total}}" readonly title="Maximum Réel (Investi + Peuple)" style="width: 28px; height: 22px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px; background-color: #e2c98d; color: #1a252c; cursor: default;"/>
+          
         </div>
 
         <!-- Points Investis (modifiables par le joueur) -->
