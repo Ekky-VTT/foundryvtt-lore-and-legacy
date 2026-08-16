@@ -349,7 +349,23 @@
           {{/if}}
 
           <!-- Bouton Supprimer -->
-          <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
+          {{#each traits}}
+            <li class="item" data-item-id="{{this._id}}" style="display: flex; justify-content: space-between; align-items: center; padding: 4px;">
+              <span>{{this.name}}</span>
+      
+          <!-- SI C'EST UN TRAIT RACIAL : On affiche un texte verrouillé -->
+          {{#if this.isRacial}}
+            <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé directement.">
+              (Racial)
+            </span>
+          {{else}}
+          <!-- SINON : Bouton de suppression classique (poubelle) -->
+            <a class="item-control item-delete" title="Supprimer le Trait" style="color: #b32424; cursor: pointer;">
+              <i class="fas fa-trash"></i>
+            </a>
+          {{/if}}
+        </li>
+        {{/each}}
         </div>
       {{else}}
         <p class="empty-notice">Aucun trait. Glissez-déposez un Trait.</p>
