@@ -25,6 +25,7 @@ export class TraitData extends foundry.abstract.TypeDataModel {
       description: new HTMLField({ initial: "" }),
       cout: new NumberField({ initial: 0, integer: true }), // Coût en Points de Création
       soigne: new BooleanField({ initial: false }) // NOUVEAU : Coche pour annuler les effets négatifs
+      soignable: new BooleanField({ initial: false }) // NOUVEAU : Définit si le trait PEUT être soigné
     };
   }
 }
