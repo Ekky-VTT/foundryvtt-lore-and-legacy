@@ -433,10 +433,13 @@ input[type="checkbox"].flag-adversite:checked::after {
   font-weight: bold;
 }
 
-/* 6. Griser la case si elle est verrouillée (ex: imposée par l'Attribut) */
-input[type="checkbox"]:disabled {
+/* 6. Griser la case si elle est verrouillée (ex: imposée par un Trait) */
+input[type="checkbox"].flag-fortune:disabled,
+input[type="checkbox"].flag-adversite:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  filter: grayscale(0.8); /* Retire 80% de la couleur pour donner un effet grisé/terne */
+  pointer-events: none; /* <-- LA SOLUTION MAGIQUE : Ignore totalement la souris */
 }
 
 /* --- TRAITS --- */
