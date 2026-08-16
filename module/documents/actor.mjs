@@ -44,26 +44,25 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     // Calcul du Score Total = Points Investis (value) + Base du Peuple
-    attr.caractere.total = (attr.caractere.value || 0) + bonusPeuple.caractere;
-    attr.discernement.total = (attr.discernement.value || 0) + bonusPeuple.discernement;
-    attr.maitrise.total = (attr.maitrise.value || 0) + bonusPeuple.maitrise;
-    attr.prestance.total = (attr.prestance.value || 0) + bonusPeuple.prestance;
-    attr.robustesse.total = (attr.robustesse.value || 0) + bonusPeuple.robustesse;
-    attr.vigueur.total = (attr.vigueur.value || 0) + bonusPeuple.vigueur;
-    // Pour la Fortune, la valeur investie est dans 'max' (la ressource de base est 'value')
-    attr.fortune.maxTotal = (attr.fortune.max || 0) + bonusPeuple.fortune;
+    // Utilisation de Number() pour forcer l'addition mathématique et éviter la concaténation de texte
+    attr.caractere.total = Number(attr.caractere.value || 0) + Number(bonusPeuple.caractere);
+    attr.discernement.total = Number(attr.discernement.value || 0) + Number(bonusPeuple.discernement);
+    attr.maitrise.total = Number(attr.maitrise.value || 0) + Number(bonusPeuple.maitrise);
+    attr.prestance.total = Number(attr.prestance.value || 0) + Number(bonusPeuple.prestance);
+    attr.robustesse.total = Number(attr.robustesse.value || 0) + Number(bonusPeuple.robustesse);
+    attr.vigueur.total = Number(attr.vigueur.value || 0) + Number(bonusPeuple.vigueur);
+    
+    // CORRECTION : On utilise bien 'total' pour la Fortune, et on lit 'max' pour les points investis
+    attr.fortune.total = Number(attr.fortune.max || 0) + Number(bonusPeuple.fortune);
 
-    // ATTENTION : Tu dois maintenant utiliser 'attr.X.total' pour tes caractéristiques secondaires !
-    // Exemple : const caractere = attr.caractere.total;
-    // (Pense à corriger la récupération de tes 7 attributs juste en dessous dans ton fichier)
-
+    // Récupération pour les caractéristiques secondaires
     const caractere = attr.caractere.total || 0;
     const discernement = attr.discernement.total || 0;
     const maitrise = attr.maitrise.total || 0;
     const prestance = attr.prestance.total || 0;
     const robustesse = attr.robustesse.total || 0;
     const vigueur = attr.vigueur.total || 0;
-    const fortune = attr.fortune.maxTotal || 0;
+    const fortune = attr.fortune.total || 0; // CORRECTION : On lit 'total'
 
     // --- 1. SCAN DE TOUTES LES CAPACITÉS PASSIVES ---
     let bonusEndurance = 0;
@@ -113,7 +112,7 @@ export class LoreAndLegacyActor extends Actor {
 
         // Baraqué (Dé de Fortune sur Vigueur)
         if (nom.includes("baraqué")) {
-          attr.vigueur.fortune = true;
+          attr.vigueur.traitFortune = true;
         }
 
         // Athlétique (Double saut, Fortune Acrobatie/Escalade)
@@ -269,7 +268,9 @@ export class LoreAndLegacyActor extends Actor {
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    const attrScore = (attrKey === "fortune") ? (attribut.max || 0) : (attribut.total || 0);
+    
+    // CORRECTION : TOUS les attributs (y compris Fortune) utilisent désormais 'total'
+    const attrScore = attribut.total || 0;
     
     // Formatage du nom pour un bel affichage (ex: "caractere" -> "Caractère")
     const nomsFormates = {
