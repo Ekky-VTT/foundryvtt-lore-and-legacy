@@ -3,6 +3,6 @@
     "types": ["personnage", "pnj"]
   },
   "Item": {
-    "types": ["capacite", "trait", "race", "equipement"]
+    "types": ["capacite", "trait", "peuple", "equipement"]
   }
 }
