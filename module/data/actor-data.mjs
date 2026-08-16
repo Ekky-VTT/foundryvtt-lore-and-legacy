@@ -4,6 +4,7 @@ const { SchemaField, NumberField, StringField, HTMLField, BooleanField } = found
 function creerAttribut() {
   return new SchemaField({
     value: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
+    total: new NumberField({ initial: 1, integer: true }), // On déclare le total
     fortune: new BooleanField({ initial: false }),   
     adversite: new BooleanField({ initial: false })  
   });
@@ -22,10 +23,10 @@ attributs: new SchemaField({
         prestance: creerAttribut(),
         robustesse: creerAttribut(),
         vigueur: creerAttribut(),
-        // NOUVEAU : La Fortune obtient un schéma spécifique avec 'value' (actuel) et 'max' (score total)
         fortune: new SchemaField({
           value: new NumberField({ initial: 1, min: 0, integer: true }),
           max: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
+          total: new NumberField({ initial: 1, integer: true }), // NOUVEAU : On déclare le total pour la fortune
           fortune: new BooleanField({ initial: false }),
           adversite: new BooleanField({ initial: false })
         })
