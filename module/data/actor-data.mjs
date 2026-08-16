@@ -15,7 +15,13 @@ function creerAttribut() {
  */
 export class PersonnageData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
+    const { SchemaField, NumberField, BooleanField, StringField, HTMLField } = foundry.data.fields;
+    
     return {
+      
+      taels: new NumberField({ initial: 0, min: 0, integer: true }),
+      astres: new NumberField({ initial: 0, min: 0, integer: true }),
+      
 attributs: new SchemaField({
         caractere: creerAttribut(),
         discernement: creerAttribut(),
