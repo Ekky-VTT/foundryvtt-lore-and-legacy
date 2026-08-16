@@ -76,21 +76,28 @@ export class LoreAndLegacyActor extends Actor {
         const nom = item.name.toLowerCase();
         const estSoigne = item.system.soigne;
 
-        // Exemple 1 : Baraqué (Dé de Fortune sur Vigueur)
+        // Baraqué (Dé de Fortune sur Vigueur)
         if (nom.includes("baraqué")) {
           attr.vigueur.fortune = true;
         }
 
-        // Exemple 2 : Athlétique (Double saut, Fortune Acrobatie/Escalade)
+        // Athlétique (Double saut, Fortune Acrobatie/Escalade)
         if (nom.includes("athlétique")) {
           baseSaut *= 2;
           this.flags.fortuneAcrobatie = true;
           this.flags.fortuneEscalade = true;
         }
-
-        // Exemple 3 : Candide (Adversité sur Caractère, SAUF SI soigné)
+        // Candide (Adversité sur Caractère, SAUF SI soigné)
         if (nom.includes("candide") && !estSoigne) {
           attr.caractere.adversite = true;
+        }
+        // Bête de Somme : +3 Bagage
+        if (nom.includes("bête de somme")) {
+          bonusBagageTraits += 3;
+        }
+        // Blindé : +3 Résistance Physique
+        if (nom.includes("blindé")) {
+          bonusResPhysTraits += 3;
         }
       }
     }
@@ -122,8 +129,8 @@ export class LoreAndLegacyActor extends Actor {
     if (eq.bouclier) resPhysBase += bonusBouclier;
     sec.resPhys.value = resPhysBase;
 
-    // Bagage = Base de 9 + Optimisation (Plafonné à 18 maximum)
-    sec.bagage.max = Math.min(18, 9 + bonusOptimisation);
+    // Bagage = Base de 9 + Optimisation + Traits (ex: Bête de Somme) - Plafonné à 18 maximum
+    sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
 
     // Reste des statistiques (inchangées)
     sec.rdc.max = fortune + vigueur;
