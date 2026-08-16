@@ -207,11 +207,16 @@
           <!-- Nom du Trait -->
           <span class="item-name" title="{{trait.system.description}}">{{trait.name}}</span>
           
-          <!-- Case Soigné (Annulation des malus) -->
+          <!-- Condition pour afficher la case "Soigné" -->
+          {{#if trait.system.soignable}}
           <label class="checkbox-label" title="Effets négatifs annulés (Cellule de soutien ou Atout)">
             <input type="checkbox" class="inline-checkbox" data-field="soigne" {{checked trait.system.soigne}}/>
             <span>Soigné</span>
           </label>
+          {{else}}
+          <!-- Si non soignable, on met un petit badge visuel à la place -->
+          <span style="font-size: 10px; color: #b32424; font-weight: bold; border: 1px solid #b32424; padding: 2px 4px; border-radius: 3px; margin-right: 10px;" title="Ce trait ne peut pas être soigné">Permanent</span>
+          {{/if}}
 
           <!-- Bouton Supprimer -->
           <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
