@@ -234,17 +234,22 @@
         <a class="attribut-roll" data-attr="fortune" title="Lancer un Jet de Fortune (1D6)">FORTUNE</a>
         <div class="attr-formula">1D6 +</div>
         
-        <!-- NOUVEAU : Affichage Actuel / Max pour la Fortune -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
-          <input type="number" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" min="0" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px;"/>
+        <!-- Affichage Actuel / Maximum Réel pour la Fortune -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 3px; margin-bottom: 3px;">
+          <!-- Points restants (Ressource actuelle) -->
+          <input type="number" name="system.attributs.fortune.value" value="{{system.attributs.fortune.value}}" min="0" title="Points de Fortune restants" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px;"/>
+          
           <span style="font-weight: bold; color: #0e3a47;">/</span>
-          <input type="number" name="system.attributs.fortune.max" value="{{system.attributs.fortune.max}}" min="1" max="10" title="Score Max de Fortune" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px; background-color: #e2c98d;"/>
+          
+          <!-- Maximum Réel (Calculé : Investi + Peuple) -->
+          <span title="Maximum Réel (Investi + Peuple)" style="width: 24px; padding: 2px; text-align: center; font-weight: bold; border: 1px solid #c19a5b; border-radius: 3px; background-color: #e2c98d; display: inline-block;">
+            {{system.attributs.fortune.total}}
+          </span>
         </div>
 
-        <!-- Cases Fortune / Adversité de l'Attribut -->
-        <div class="attr-flags">
-          <input type="checkbox" name="system.attributs.fortune.fortune" {{checked system.attributs.fortune.fortune}} class="flag-fortune" title="Fortune : affecte l'attribut"/>
-          <input type="checkbox" name="system.attributs.fortune.adversite" {{checked system.attributs.fortune.adversite}} class="flag-adversite" title="Adversité : affecte l'attribut"/>
+        <!-- Points Investis (modifiables par le joueur) -->
+        <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 3px;">
+          Investi : <input type="number" name="system.attributs.fortune.max" value="{{system.attributs.fortune.max}}" min="0" max="6" style="width: 20px; padding: 1px; text-align: center;"/>
         </div>
       </div>
 
