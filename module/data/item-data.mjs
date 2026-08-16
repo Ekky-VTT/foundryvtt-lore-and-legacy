@@ -31,14 +31,24 @@ export class TraitData extends foundry.abstract.TypeDataModel {
 }
 
 /**
- * Modèle de données pour les Races
+ * Modèle de données pour les Peuples / Espèces
  */
 export class PeupleData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
-    const { HTMLField, NumberField, StringField } = foundry.data.fields;
+    // NOUVEAU : On importe ArrayField en plus du reste
+    const { HTMLField, NumberField, StringField, ArrayField } = foundry.data.fields;
+    
     return {
       description: new HTMLField({ initial: "" }),
-      traitsRaciaux: new StringField({ initial: "" }), // Ex: "Héliophile, Noctambule"
+      
+      // NOUVEAU : Le tableau qui va stocker les UUIDs (Identifiants Uniques) des Traits
+      traits: new ArrayField(new StringField()), 
+      
+      // On peut garder l'ancien champ texte pour le moment si tu avais déjà tapé des choses, 
+      // ou pour ajouter des notes purement textuelles
+      traitsRaciaux: new StringField({ initial: "" }), 
+
+      // Les bonus de base
       bonusCaractere: new NumberField({ initial: 0, min: 0, integer: true }),
       bonusDiscernement: new NumberField({ initial: 0, min: 0, integer: true }),
       bonusMaitrise: new NumberField({ initial: 0, min: 0, integer: true }),
