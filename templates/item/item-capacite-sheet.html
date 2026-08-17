@@ -1,16 +1,29 @@
-<form class="{{cssClass}} flexcol" autocomplete="off">
-    <header class="sheet-header">
-        <img src="{{item.img}}" data-edit="img" title="{{item.name}}" height="64" width="64"/>
-        <h1><input name="name" type="text" value="{{item.name}}" placeholder="Nom de la capacité"/></h1>
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+    
+    <!-- LE HACK CSS : Force l'éditeur de Foundry à occuper l'espace sans s'effondrer -->
+    <style>
+        .lore-editor-fix { flex: 1 1 auto; display: flex; flex-direction: column; }
+        .lore-editor-fix .editor { height: 100%; display: flex; flex-direction: column; }
+        .lore-editor-fix .editor-content { flex: 1; overflow-y: auto; padding: 5px; border: 1px solid #ccc; border-radius: 3px; }
+        .lore-editor-fix .tox-tinymce { height: 100% !important; }
+        .lore-editor-fix .proseMirror { height: 100% !important; overflow-y: auto; }
+    </style>
+
+    <!-- EN-TÊTE FIXE -->
+    <header class="sheet-header" style="flex: 0 0 auto; display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+        <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; background: rgba(0,0,0,0.3);"/>
+        <h1 style="flex: 1; margin: 0;">
+            <input name="name" type="text" value="{{item.name}}" placeholder="Nom de la capacité" style="color: white; font-weight: bold; background: rgba(0, 0, 0, 0.2); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
+        </h1>
     </header>
-    <div class="sheet-content">
-        <div class="form-group">
-            <label>Score (Valeur)</label>
-            <input type="number" name="system.valeur" value="{{system.valeur}}" min="1" max="15"/>
-        </div>
-        <div class="form-group">
-            <label>Attribut Lié</label>
-            <select name="system.attributLie">
+
+    <!-- CORPS DE LA FICHE -->
+    <div class="sheet-content" style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; overflow-y: hidden;">
+        
+        <!-- RÉGLAGES FIXES -->
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <label style="font-weight: bold; color: #1a252c;">Attribut Lié :</label>
+            <select name="system.attributLie" style="width: 150px;">
                 <option value="caractere" {{#if (eq system.attributLie "caractere")}}selected{{/if}}>Caractère</option>
                 <option value="discernement" {{#if (eq system.attributLie "discernement")}}selected{{/if}}>Discernement</option>
                 <option value="maitrise" {{#if (eq system.attributLie "maitrise")}}selected{{/if}}>Maîtrise</option>
@@ -20,13 +33,20 @@
                 <option value="aucun" {{#if (eq system.attributLie "aucun")}}selected{{/if}}>Aucun (ex: Passion)</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>Capacité Passive (P) ?</label>
+
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <label style="font-weight: bold; color: #1a252c;">Capacité Passive (P) :</label>
             <input type="checkbox" name="system.passif" {{checked system.passif}}/>
         </div>
-        <div class="form-group">
-            <label>Description & Effets</label>
-            {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable}}
+
+        <!-- ZONE DE DESCRIPTION ÉTIRABLE AVEC LA CLASSE DE CORRECTION -->
+        <div class="form-group lore-editor-fix" style="margin-top: 10px; min-height: 200px;">
+            <label style="font-weight: bold; margin-bottom: 5px; flex: 0 0 auto; color: #1a252c;">Description :</label>
+            
+            <div class="description-container">
+				{{editor enrichedDescription target="system.description" button=true editable=editable engine="prosemirror"}}
+			</div>
         </div>
+        
     </div>
 </form>
