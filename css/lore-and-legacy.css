@@ -479,3 +479,27 @@ input[type="checkbox"].flag-adversite:disabled {
   height: 100%;
   min-height: 100px;
 }
+
+/* ajouté pour la zone de description des capacités */
+/* S'assure que le conteneur prend toute la largeur et a une hauteur minimum */
+.description-container {
+    width: 100%;
+    min-height: 150px; /* Ajustez cette valeur selon la taille souhaitée */
+    position: relative; /* Utile si le bouton d'édition est en position absolue */
+}
+
+/* Si vous êtes dans un conteneur flexbox (display: flex sur le parent) */
+.description-container {
+    flex: 1; /* Permet à la zone de remplir l'espace restant */
+}
+
+/* Fix spécifique pour l'éditeur FoundryVTT (ProseMirror) quand il est vide */
+.description-container .editor {
+    height: 100%;
+    min-height: 150px;
+}
+
+.description-container .editor-content {
+    min-height: 150px;
+    height: 100%;
+}
