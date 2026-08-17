@@ -2,7 +2,7 @@
   "id": "lore-and-legacy",
   "title": "Lore & Legacy",
   "description": "Système non-officiel pour le jeu de rôle Lore & Legacy sur Foundry VTT. Lore and Legacy est un excellent jeu de rôle développé par Julien Pirou",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "compatibility": {
     "minimum": "12",
     "verified": "14"
