@@ -1,8 +1,37 @@
 {
   "Actor": {
-    "types": ["personnage", "pnj"]
+    "types": ["personnage", "pnj"],
+    "personnage": {
+      "biographie": ""
+    },
+    "pnj": {
+      "biographie": ""
+    }
   },
   "Item": {
-    "types": ["capacite", "trait", "peuple", "equipement"]
+    "types": ["capacite", "trait", "peuple", "equipement"],
+    
+    "capacite": {
+      "valeur": 1,
+      "attributLie": "aucun",
+      "passif": false,
+      "description": "",
+      "materielRequis": ""
+    },
+    
+    "trait": {
+      "description": "",
+      "cout": 0
+    },
+    
+    "peuple": {
+      "description": ""
+    },
+    
+    "equipement": {
+      "description": "",
+      "encombrement": 0,
+      "cout": 0
+    }
   }
 }
