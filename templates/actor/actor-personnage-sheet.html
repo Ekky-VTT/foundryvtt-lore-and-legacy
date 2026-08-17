@@ -1,5 +1,10 @@
 <form class="{{cssClass}} lore-sheet flexcol" autocomplete="off">
 
+<!-- ========================================== -->
+  <!-- ZONE SUPÉRIEURE FIXE (Ne s'étire pas)      -->
+  <!-- ========================================== -->
+  <div class="sheet-top-fixed" style="flex: 0 0 auto;">
+  
   <!-- EN-TÊTE DE LA FICHE -->
   <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
     
@@ -88,14 +93,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.caractere.traitFortune}}
+          {{#if actor.system.attributs.caractere.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.caractere.fortune" {{checked system.attributs.caractere.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.caractere.traitAdversite}}
+          {{#if actor.system.attributs.caractere.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.caractere.adversite" {{checked system.attributs.caractere.adversite}} class="flag-adversite" title="Adversité"/>
@@ -116,14 +121,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.discernement.traitFortune}}
+          {{#if actor.system.attributs.discernement.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.discernement.fortune" {{checked system.attributs.discernement.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.discernement.traitAdversite}}
+          {{#if actor.system.attributs.discernement.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.discernement.adversite" {{checked system.attributs.discernement.adversite}} class="flag-adversite" title="Adversité"/>
@@ -145,14 +150,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.maitrise.traitFortune}}
+          {{#if actor.system.attributs.maitrise.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.maitrise.fortune" {{checked system.attributs.maitrise.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.maitrise.traitAdversite}}
+          {{#if actor.system.attributs.maitrise.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.maitrise.adversite" {{checked system.attributs.maitrise.adversite}} class="flag-adversite" title="Adversité"/>
@@ -174,14 +179,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.prestance.traitFortune}}
+          {{#if actor.system.attributs.prestance.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.prestance.fortune" {{checked system.attributs.prestance.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.prestance.traitAdversite}}
+          {{#if actor.system.attributs.prestance.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.prestance.adversite" {{checked system.attributs.prestance.adversite}} class="flag-adversite" title="Adversité"/>
@@ -203,14 +208,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.robustesse.traitFortune}}
+          {{#if actor.system.attributs.robustesse.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.robustesse.fortune" {{checked system.attributs.robustesse.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.robustesse.traitAdversite}}
+          {{#if sactor.ystem.attributs.robustesse.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.robustesse.adversite" {{checked system.attributs.robustesse.adversite}} class="flag-adversite" title="Adversité"/>
@@ -232,14 +237,14 @@
         <div class="attr-flags">
           
           <!-- FORTUNE -->
-          {{#if system.attributs.vigueur.traitFortune}}
+          {{#if actor.system.attributs.vigueur.traitFortune}}
             <input type="checkbox" checked disabled class="flag-fortune" title="Fortune (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.vigueur.fortune" {{checked system.attributs.vigueur.fortune}} class="flag-fortune" title="Fortune"/>
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if system.attributs.vigueur.traitAdversite}}
+          {{#if actor.system.attributs.vigueur.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.vigueur.adversite" {{checked system.attributs.vigueur.adversite}} class="flag-adversite" title="Adversité"/>
@@ -274,6 +279,61 @@
     </div>
   </section>
   
+    <section class="section-block derived-block">
+    <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
+    
+    <div class="equipment-toggles" style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #0e3a47;">
+      <label><input type="checkbox" name="system.equipementActif.armureLegere" {{checked system.equipementActif.armureLegere}}/> Armure Légère Équipée</label>
+      <label><input type="checkbox" name="system.equipementActif.armureLourde" {{checked system.equipementActif.armureLourde}}/> Armure Lourde Équipée</label>
+      <label><input type="checkbox" name="system.equipementActif.bouclier" {{checked system.equipementActif.bouclier}}/> Bouclier Équipé</label>
+    </div>
+    
+    <div class="derived-grid">
+      <div class="derived-item">
+        <span class="label">Rapidité :</span>
+        <span class="value">{{system.secondaires.rapidite.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Physique :</span>
+        <span class="value">{{system.secondaires.resPhys.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Magique :</span>
+        <span class="value">{{system.secondaires.resMag.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Rés. Mentale :</span>
+        <span class="value">{{system.secondaires.resMent.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Seuil de Blessure :</span>
+        <span class="value">{{system.secondaires.sb.value}}</span>
+      </div>
+      <div class="derived-item">
+        <span class="label">Poids Max :</span>
+        <span class="value">{{system.secondaires.poids.value}} kg</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+	<!-- ========================================== -->
+	<!-- ZONE DES ONGLETS (Nouveau) -->
+	<!-- ========================================== -->
+
+  <!-- Navigation des Onglets -->
+<nav class="sheet-tabs tabs" data-group="primary" style="flex: 0 0 auto; display: flex; gap: 20px; justify-content: center; border-bottom: 2px solid #c19a5b; margin: 15px 0 10px 0; font-weight: bold; font-size: 16px; color: #0e3a47;">
+    <a class="item" data-tab="actions" style="cursor: pointer; padding-bottom: 5px;">Actions & Traits</a>
+    <a class="item" data-tab="equipement" style="cursor: pointer; padding-bottom: 5px;">Équipement</a>
+    <a class="item" data-tab="magie" style="cursor: pointer; padding-bottom: 5px;">Sortilèges</a>
+  </nav>
+
+  <!-- Corps des Onglets (Scrollable) -->
+  <section class="sheet-body" style="flex: 1 1 auto; overflow-y: auto; padding-right: 5px;">
+    
+    <!-- ONGLET 1 : ACTIONS & TRAITS -->
+    <div class="tab" data-group="primary" data-tab="actions">
+	
 <section class="section-block capacities-block">
     <div class="block-header flexrow">
       <h2 class="block-title">CAPACITÉS <span>(1D10 + Score)</span></h2>
@@ -321,7 +381,7 @@
     </div>
   </section>
   
-  <!-- BLOC TRAITS -->
+<!-- BLOC TRAITS -->
   <section class="section-block traits-block">
     <div class="block-header flexrow">
       <h2 class="block-title">TRAITS</h2>
@@ -348,30 +408,15 @@
           <span style="font-size: 10px; color: #b32424; font-weight: bold; border: 1px solid #b32424; padding: 2px 4px; border-radius: 3px; margin-right: 10px;" title="Ce trait ne peut pas être soigné">Permanent</span>
           {{/if}}
 
-          <!-- Bouton Supprimer -->
-          {{#each traits}} <!-- (Ou la variable que tu utilises pour ta boucle) -->
-  <li class="item" data-item-id="{{this._id}}" style="display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px dotted #ccc;">
-    
-    <span style="font-weight: bold;">{{this.name}}</span>
-    
-    <!-- LECTURE DIRECTE DU FLAG : On demande au HTML de regarder l'étiquette invisible -->
-    {{#if this.flags.[lore-and-legacy].isRacialTrait}}
-      
-      <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
-        (Racial)
-      </span>
-      
-    {{else}}
-      
-      <!-- Bouton de suppression classique (poubelle) pour les autres Traits -->
-      <a class="item-delete" data-item-id="{{this._id}}" title="Supprimer le Trait" style="color: #b32424; cursor: pointer;">
-        <i class="fas fa-trash"></i>
-      </a>
-      
-    {{/if}}
-    
-  </li>
-{{/each}}
+          <!-- BOUTON SUPPRIMER OU BADGE RACIAL -->
+          {{#if trait.flags.[lore-and-legacy].isRacialTrait}}
+            <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
+              (Racial)
+            </span>
+          {{else}}
+            <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
+          {{/if}}
+
         </div>
       {{else}}
         <p class="empty-notice">Aucun trait. Glissez-déposez un Trait.</p>
@@ -379,41 +424,27 @@
     </div>
   </section>
   
-  <section class="section-block derived-block">
-    <h2 class="block-title">CARACTÉRISTIQUES SECONDAIRES</h2>
-    
-    <div class="equipment-toggles" style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #0e3a47;">
-      <label><input type="checkbox" name="system.equipementActif.armureLegere" {{checked system.equipementActif.armureLegere}}/> Armure Légère Équipée</label>
-      <label><input type="checkbox" name="system.equipementActif.armureLourde" {{checked system.equipementActif.armureLourde}}/> Armure Lourde Équipée</label>
-      <label><input type="checkbox" name="system.equipementActif.bouclier" {{checked system.equipementActif.bouclier}}/> Bouclier Équipé</label>
+  
+  <!-- ONGLET 2 : ÉQUIPEMENT (Prêt pour la suite) -->
+    <div class="tab" data-group="primary" data-tab="equipement">
+      <div class="block-header flexrow">
+        <h2 class="block-title">ARMES & ARMURES</h2>
+      </div>
+      <p style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">
+        L'inventaire sera construit ici.
+      </p>
     </div>
-    
-    <div class="derived-grid">
-      <div class="derived-item">
-        <span class="label">Rapidité :</span>
-        <span class="value">{{system.secondaires.rapidite.value}}</span>
+
+    <!-- ONGLET 3 : SORTILÈGES (Prêt pour la suite) -->
+    <div class="tab" data-group="primary" data-tab="magie">
+      <div class="block-header flexrow">
+        <h2 class="block-title">GRIMOIRE & INVOCATIONS</h2>
       </div>
-      <div class="derived-item">
-        <span class="label">Rés. Physique :</span>
-        <span class="value">{{system.secondaires.resPhys.value}}</span>
-      </div>
-      <div class="derived-item">
-        <span class="label">Rés. Magique :</span>
-        <span class="value">{{system.secondaires.resMag.value}}</span>
-      </div>
-      <div class="derived-item">
-        <span class="label">Rés. Mentale :</span>
-        <span class="value">{{system.secondaires.resMent.value}}</span>
-      </div>
-      <div class="derived-item">
-        <span class="label">Seuil de Blessure :</span>
-        <span class="value">{{system.secondaires.sb.value}}</span>
-      </div>
-      <div class="derived-item">
-        <span class="label">Poids Max :</span>
-        <span class="value">{{system.secondaires.poids.value}} kg</span>
-      </div>
+      <p style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">
+        Les sortilèges seront listés ici.
+      </p>
     </div>
-  </section>
+	
+	</section>
 
 </form>

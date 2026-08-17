@@ -123,7 +123,7 @@ export class LoreAndLegacyActor extends Actor {
         }
         // Candide (Adversité sur Caractère, SAUF SI soigné)
         if (nom.includes("candide") && !estSoigne) {
-          attr.caractere.adversite = true;
+          attr.caractere.traitAdversite = true;
         }
         // Bête de Somme : +3 Bagage
         if (nom.includes("bête de somme")) {

@@ -6,7 +6,7 @@
     
     <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
       <h1 style="margin: 0; border: none;">
-        <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Peuple" style="font-size: 24px; font-weight: bold; background: transparent; border: none; width: 100%; color: white;" {{#unless isGM}}disabled{{/unless}}/>
+        <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Peuple" style="font-size: 24px; font-weight: bold; background: transparent; border: none; width: 100%; color: white;" {{#unless editable}}disabled{{/unless}}/>
       </h1>
       
       <!-- Zone de Dépôt des Traits (Glisser-Déposer) -->
@@ -20,7 +20,7 @@
           <div style="display: flex; align-items: center; gap: 5px; background: #e2c98d; border: 1px solid #c19a5b; border-radius: 15px; padding: 2px 8px; font-size: 12px; color: #1a252c;">
             <img src="{{this.img}}" style="width: 16px; height: 16px; border: none; border-radius: 50%;" />
             <span style="font-weight: bold;">{{this.name}}</span>
-            {{#if ../isGM}}
+            {{#if ../editable}}
             <!-- Bouton Supprimer (Corbeille) -->
             <a class="trait-delete" data-uuid="{{this.uuid}}" title="Retirer ce Trait" style="color: #b32424; cursor: pointer; margin-left: 3px;">
               <i class="fas fa-times"></i>
@@ -52,7 +52,7 @@
     <div class="tab description" data-group="primary" data-tab="description" style="height: 100%;">
       <!-- Le même correctif CSS que pour les Traits pour forcer l'affichage de l'éditeur -->
       <div style="height: 100%; min-height: 150px;">
-        {{editor enrichedDescription target="system.description" button=true editable=isGM engine="prosemirror"}}
+        {{editor enrichedDescription target="system.description" button=true editable=editable engine="prosemirror"}}
       </div>
     </div>
 
@@ -68,19 +68,19 @@
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Caractère</label>
-            <input type="number" name="system.bonusCaractere" value="{{system.bonusCaractere}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusCaractere" value="{{system.bonusCaractere}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Discernement</label>
-            <input type="number" name="system.bonusDiscernement" value="{{system.bonusDiscernement}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusDiscernement" value="{{system.bonusDiscernement}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Maîtrise</label>
-            <input type="number" name="system.bonusMaitrise" value="{{system.bonusMaitrise}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusMaitrise" value="{{system.bonusMaitrise}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Prestance</label>
-            <input type="number" name="system.bonusPrestance" value="{{system.bonusPrestance}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusPrestance" value="{{system.bonusPrestance}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
         </div>
 
@@ -88,15 +88,15 @@
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Robustesse</label>
-            <input type="number" name="system.bonusRobustesse" value="{{system.bonusRobustesse}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusRobustesse" value="{{system.bonusRobustesse}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc;">
             <label style="font-weight: bold;">Vigueur</label>
-            <input type="number" name="system.bonusVigueur" value="{{system.bonusVigueur}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusVigueur" value="{{system.bonusVigueur}}" min="0" max="3" style="width: 40px; text-align: center; border: 1px solid #c19a5b;" {{#unless editable}}disabled{{/unless}}/>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #ccc; margin-top: 10px;">
             <label style="font-weight: bold; color: #0e3a47;">Fortune</label>
-            <input type="number" name="system.bonusFortune" value="{{system.bonusFortune}}" min="0" style="width: 40px; text-align: center; border: 1px solid #c19a5b; background-color: #e2c98d;" {{#unless isGM}}disabled{{/unless}}/>
+            <input type="number" name="system.bonusFortune" value="{{system.bonusFortune}}" min="0" style="width: 40px; text-align: center; border: 1px solid #c19a5b; background-color: #e2c98d;" {{#unless editable}}disabled{{/unless}}/>
           </div>
         </div>
 

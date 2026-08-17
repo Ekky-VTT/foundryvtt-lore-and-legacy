@@ -23,18 +23,22 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     return `systems/lore-and-legacy/templates/item/item-${this.item.type}-sheet.html`;
   }
 
-  /** @override */
+ /** @override */
   async getData(options) {
-    const context = super.getData(options);
+    const context = await super.getData(options);
     const item = context.item;
+    
+    // On extrait les données propres pour le HTML sans casser l'objet vivant
     const source = item.toObject();
-
     context.system = source.system;
+    
+    // On transmet nativement la permission d'édition au HTML
+    context.editable = this.isEditable;
     
     // Si c'est un Peuple, on prépare la liste visuelle des Traits
     if (item.type === "peuple") {
       context.traitsList = [];
-      const traitsUuids = context.system.traits || [];
+      const traitsUuids = item.system.traits || []; 
       
       for (let uuid of traitsUuids) {
         const traitItem = await fromUuid(uuid);
@@ -48,7 +52,10 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
       }
     }
 
-    context.enrichedDescription = await TextEditor.enrichHTML(item.system.description, {async: true});
+    // Préparation sécurisée de la description
+    const descriptionBrute = item.system.description || "";
+    context.enrichedDescription = await TextEditor.enrichHTML(descriptionBrute, { async: true });
+    
     return context;
   }
   

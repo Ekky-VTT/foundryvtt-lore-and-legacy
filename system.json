@@ -26,6 +26,22 @@
       "path": "lang/fr.json"
     }
   ],
+  "packs": [
+    {
+      "name": "peuples",
+      "label": "Peuples d'Empyréa",
+      "path": "packs/peuples",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
+      "name": "traits",
+      "label": "Traits et Handicaps",
+      "path": "packs/traits",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    }
+  ],
   "url": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy",
   "manifest": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy/releases/latest/download/system.json",
   "download": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy/releases/latest/download/system.zip"

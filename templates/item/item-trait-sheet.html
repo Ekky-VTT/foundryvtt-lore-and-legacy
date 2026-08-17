@@ -8,16 +8,16 @@
     <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
       
       <!-- Nom du Trait -->
-      <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Trait" {{#unless isGM}}disabled{{/unless}} style="font-size: 20px; font-weight: bold; color: #0e3a47; background: rgba(255, 255, 255, 0.7); border: 1px solid #c19a5b; padding: 4px; border-radius: 3px;"/>
+      <input name="name" type="text" value="{{item.name}}" placeholder="Nom du Trait" {{#unless editable}}disabled{{/unless}} style="font-size: 20px; font-weight: bold; color: #0e3a47; background: rgba(255, 255, 255, 0.7); border: 1px solid #c19a5b; padding: 4px; border-radius: 3px;"/>
       
       <!-- Coût du Trait -->
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #333;">
         <label>Coût (Points de Création) :</label>
-        <input type="number" name="system.cout" value="{{system.cout}}" {{#unless isGM}}disabled{{/unless}} style="width: 50px; text-align: center; border: 1px solid #c19a5b; border-radius: 3px; background: #fff;"/>
+        <input type="number" name="system.cout" value="{{system.cout}}" {{#unless editable}}disabled{{/unless}} style="width: 50px; text-align: center; border: 1px solid #c19a5b; border-radius: 3px; background: #fff;"/>
       </div>
 
       <!-- Option Soignable (Visible/Modifiable uniquement par le MJ) -->
-        {{#if isGM}}
+        {{#if editable}}
         <label class="checkbox-label" title="Si décoché, ce Trait ne pourra jamais être soigné (ex: Biomécanique, Héliophile, ou bénéfique)" style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
           <input type="checkbox" name="system.soignable" {{checked system.soignable}} style="width: 14px; height: 14px; accent-color: #0e3a47;"/>
           <span>Ce Trait est soignable</span>
@@ -34,7 +34,7 @@
     <!-- Zone de texte avec "position: relative" ajoutée -->
     <div style="flex: 1; background: #fdfbf7; border: 1px solid #dcd3c8; border-radius: 4px; padding: 8px; color: #1a252c; overflow-y: auto; font-size: 14px; position: relative;">
       
-      {{#if isGM}}
+      {{#if editable}}
         <!-- On force "editable=true" car on a déjà vérifié que c'est le MJ -->
         <div style="height: 100%; min-height: 100px;">
           {{editor enrichedDescription target="system.description" button=true editable=true engine="prosemirror"}}

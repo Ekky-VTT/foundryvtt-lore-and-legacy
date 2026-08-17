@@ -67,7 +67,9 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       classes: ["lore-and-legacy", "sheet", "actor"],
       template: "systems/lore-and-legacy/templates/actor/actor-personnage-sheet.html",
       width: 760,
-      height: 820
+      height: 1024,
+	  // On active les onglets pour la fiche de personnage
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "actions" }]
     });
   }
 
