@@ -40,6 +40,13 @@
       "path": "packs/traits",
       "type": "Item",
       "system": "lore-and-legacy"
+    },
+    {
+		"name": "capacites",
+		"label": "Capacités des personnages",
+		"path": "packs/traits",
+      "type": "Item",
+      "system": "lore-and-legacy"
     }
   ],
   "url": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy",
