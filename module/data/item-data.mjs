@@ -122,3 +122,54 @@ export class ConsommableData extends EquipementBaseData {
     };
   }
 }
+
+/**
+ * 5. L'ARCANOTECH (Hérite de EquipementBaseData)
+ */
+export class ArcanotechData extends EquipementBaseData {
+  static defineSchema() {
+    const baseSchema = super.defineSchema();
+    return {
+      ...baseSchema,
+      mystere: new NumberField({ initial: 10, min: 0, integer: true }),
+      identifie: new BooleanField({ initial: false }), // Doit être identifié avant usage
+      sousType: new StringField({ initial: "armeMelee" }), // 'armeMelee', 'armeTir', ou 'artefact'
+      // Si c'est une arme, on ajoute de quoi stocker les dégâts
+      degatsBase: new StringField({ initial: "1D8" }),
+      degatsBonus: new NumberField({ initial: 0, integer: true }),
+      // Si c'est un artefact, on stocke la durabilité
+      durabilite: new NumberField({ initial: 10, min: 0, integer: true })
+    };
+  }
+}
+
+/**
+ * 6. LE MATÉRIEL (Hérite de EquipementBaseData)
+ * Ex: Ceinture d'outils, Kit de cambriole...
+ */
+export class MaterielData extends EquipementBaseData {
+  static defineSchema() {
+    const baseSchema = super.defineSchema();
+    return {
+      ...baseSchema,
+      usagesLibres: new NumberField({ initial: 3, min: 0, integer: true }), // La règle indique souvent 3 utilisations avant épuisement
+      usagesMax: new NumberField({ initial: 3, min: 0, integer: true })
+    };
+  }
+}
+
+/**
+ * 7. LE COMPOSANT (Hérite de EquipementBaseData)
+ * Utilisé pour les Logidroïdes, Véhicules ou Implants.
+ */
+export class ComposantData extends EquipementBaseData {
+  static defineSchema() {
+    const baseSchema = super.defineSchema();
+    return {
+      ...baseSchema,
+      ddInstallation: new NumberField({ initial: 12, min: 0, integer: true }),
+      durabilite: new NumberField({ initial: 10, min: 0, integer: true }),
+      effet: new StringField({ initial: "" }) // Pour noter textuellement le bonus, ex: "RAPIDITÉ + 2"
+    };
+  }
+}
