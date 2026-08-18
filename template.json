@@ -9,7 +9,7 @@
     }
   },
   "Item": {
-    "types": ["capacite", "trait", "peuple", "equipement"],
+    "types": ["capacite", "trait", "peuple", "equipement", "arme", "armure", "consommable"],
     
     "capacite": {
       "valeur": 1,
@@ -32,6 +32,10 @@
       "description": "",
       "encombrement": 0,
       "cout": 0
-    }
+    },
+
+    "arme": {},
+    "armure": {},
+    "consommable": {}
   }
 }
