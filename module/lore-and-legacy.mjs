@@ -3,7 +3,7 @@ import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
 import { LoreAndLegacyItemSheet } from "./sheets/item-sheet.mjs"; // fiche des Traits
 import { PersonnageData } from "./data/actor-data.mjs";
 import { CapaciteData, TraitData, PeupleData  } from "./data/item-data.mjs"; 
-import { EquipementBaseData, ArmeData, ArmureData, ConsommableData } from "./data/item-data.mjs";
+import { EquipementBaseData, ArmeData, ArmureData, ConsommableData, ArcanotechData, MaterielData, ComposantData } from "./data/item-data.mjs";
 
 Hooks.once("init", async function() {
   console.log("Lore & Legacy | Initialisation du système Lore & Legacy");
