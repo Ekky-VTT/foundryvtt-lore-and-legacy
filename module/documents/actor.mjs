@@ -44,15 +44,12 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     // Calcul du Score Total = Points Investis (value) + Base du Peuple
-    // Utilisation de Number() pour forcer l'addition mathématique et éviter la concaténation de texte
     attr.caractere.total = Number(attr.caractere.value || 0) + Number(bonusPeuple.caractere);
     attr.discernement.total = Number(attr.discernement.value || 0) + Number(bonusPeuple.discernement);
     attr.maitrise.total = Number(attr.maitrise.value || 0) + Number(bonusPeuple.maitrise);
     attr.prestance.total = Number(attr.prestance.value || 0) + Number(bonusPeuple.prestance);
     attr.robustesse.total = Number(attr.robustesse.value || 0) + Number(bonusPeuple.robustesse);
     attr.vigueur.total = Number(attr.vigueur.value || 0) + Number(bonusPeuple.vigueur);
-    
-    // CORRECTION : On utilise bien 'total' pour la Fortune, et on lit 'max' pour les points investis
     attr.fortune.total = Number(attr.fortune.max || 0) + Number(bonusPeuple.fortune);
 
     // Récupération pour les caractéristiques secondaires
@@ -62,7 +59,7 @@ export class LoreAndLegacyActor extends Actor {
     const prestance = attr.prestance.total || 0;
     const robustesse = attr.robustesse.total || 0;
     const vigueur = attr.vigueur.total || 0;
-    const fortune = attr.fortune.total || 0; // CORRECTION : On lit 'total'
+    const fortune = attr.fortune.total || 0;
 
     // --- 1. SCAN DE TOUTES LES CAPACITÉS PASSIVES ---
     let bonusEndurance = 0;
@@ -93,13 +90,23 @@ export class LoreAndLegacyActor extends Actor {
         if (nom.includes("musculation")) bonusMusculation += val;
       }
     }
+
     // --- 1.5 SCAN DES TRAITS ---
-    this.flags = { fortuneAcrobatie: false, fortuneEscalade: false };
+    // Initialisation globale des flags
+    this.flags = {};
     let baseSaut = Math.floor((maitrise + vigueur) / 3);
+    
+    // Nouveaux compteurs pour les Traits
     let bonusBagageTraits = 0;
     let bonusResPhysTraits = 0;
+    let bonusResMagTraits = 0;
+    let bonusResMentTraits = 0;
+    let bonusPVTraits = 0;
+    let bonusPMTraits = 0;
+    let bonusRapiditeTraits = 0;
+    let bonusPoidsTraits = 0;
+    let multRDC = 1;
 
-    // NOUVEAU : Initialiser les marqueurs de Traits pour les Attributs
     for (let key in attr) {
       attr[key].traitFortune = false;
       attr[key].traitAdversite = false;
@@ -110,29 +117,63 @@ export class LoreAndLegacyActor extends Actor {
         const nom = item.name.toLowerCase();
         const estSoigne = item.system.soigne;
 
-        // Baraqué (Dé de Fortune sur Vigueur)
-        if (nom.includes("baraqué")) {
-          attr.vigueur.traitFortune = true;
-        }
+        // Attributs : Fortune
+        if (nom.includes("baraqué")) attr.vigueur.traitFortune = true;
+        if (nom.includes("irréductible")) attr.caractere.traitFortune = true;
+        if (nom.includes("petit génie")) attr.discernement.traitFortune = true;
+        if (nom.includes("solide comme un roc")) attr.robustesse.traitFortune = true;
+        if (nom.includes("vif comme l'éclair")) attr.maitrise.traitFortune = true;
+        if (nom.includes("lunaire") && !estSoigne) attr.discernement.traitFortune = true;
 
-        // Athlétique (Double saut, Fortune Acrobatie/Escalade)
+        // Attributs : Adversité (seulement si non soigné)
+        if (nom.includes("candide") && !estSoigne) attr.caractere.traitAdversite = true;
+        if (nom.includes("frêle") && !estSoigne) attr.robustesse.traitAdversite = true;
+        if (nom.includes("ingénu") && !estSoigne) attr.discernement.traitAdversite = true;
+        if (nom.includes("maladroit") && !estSoigne) attr.maitrise.traitAdversite = true;
+        if (nom.includes("moche") && !estSoigne) attr.prestance.traitAdversite = true;
+        if (nom.includes("rat de bibliothèque") && !estSoigne) attr.vigueur.traitAdversite = true;
+        if (nom.includes("lunaire") && !estSoigne) attr.prestance.traitAdversite = true;
+
+        // Capacités : Flags spécifiques
         if (nom.includes("athlétique")) {
           baseSaut *= 2;
           this.flags.fortuneAcrobatie = true;
           this.flags.fortuneEscalade = true;
         }
-        // Candide (Adversité sur Caractère, SAUF SI soigné)
-        if (nom.includes("candide") && !estSoigne) {
-          attr.caractere.traitAdversite = true;
+        if (nom.includes("animiste")) {
+          this.flags.fortuneSorcellerie = true;
+          this.flags.fortuneSpiritisme = true;
         }
-        // Bête de Somme : +3 Bagage
-        if (nom.includes("bête de somme")) {
-          bonusBagageTraits += 3;
+        if (nom.includes("guérisseur")) this.flags.fortuneMedecine = true;
+        if (nom.includes("technophile")) {
+          this.flags.fortuneArcanotech = true;
+          this.flags.fortuneMecanique = true;
         }
-        // Blindé : +3 Résistance Physique
-        if (nom.includes("blindé")) {
-          bonusResPhysTraits += 3;
+        if (nom.includes("techno-sceptique") && !estSoigne) {
+          this.flags.adversiteArcanotech = true;
+          this.flags.adversiteMecanique = true;
         }
+
+        // Caractéristiques Secondaires
+        if (nom.includes("bête de somme")) bonusBagageTraits += 3;
+        if (nom.includes("blindé")) bonusResPhysTraits += 3; // Gardé au cas où
+        if (nom.includes("cuir solide")) bonusResPhysTraits += 2;
+        if (nom.includes("enveloppé")) bonusPoidsTraits += 20;
+        if (nom.includes("hardi")) bonusPVTraits += 2;
+        if (nom.includes("increvable")) multRDC = 2;
+        if (nom.includes("opiniâtre")) bonusResMentTraits += 2;
+        if (nom.includes("source de magie")) bonusPMTraits += 4;
+        if (nom.includes("tatouages protecteurs")) bonusResMagTraits += 2;
+        if (nom.includes("véloce")) bonusRapiditeTraits += 2;
+        if (nom.includes("zazou")) {
+          bonusResMentTraits += 4;
+          this.flags.adversiteSociale = true;
+        }
+
+        // Flags pour équipement futur et macros
+        if (nom.includes("main lourde")) this.flags.mainLourde = true;
+        if (nom.includes("poings d'acier")) this.flags.poingsAcier = true;
+        if (nom.includes("tireur d'élite")) this.flags.tireurElite = true;
       }
     }
     
@@ -147,38 +188,38 @@ export class LoreAndLegacyActor extends Actor {
     
     // --- 2. CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
     
-    // PV = (Robustesse + Vigueur) * 2 + Endurance
-    sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance;
+    // PV = (Robustesse + Vigueur) * 2 + Endurance + Traits
+    sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance + bonusPVTraits;
 
-    // PM = (Caractère + Discernement) * 2 + Concentration + (Mysticisme * 2)
-    sec.pm.max = (caractere + discernement) * 2 + bonusConcentration + (bonusMysticisme * 2);
+    // PM = (Caractère + Discernement) * 2 + Concentration + (Mysticisme * 2) + Traits
+    sec.pm.max = (caractere + discernement) * 2 + bonusConcentration + (bonusMysticisme * 2) + bonusPMTraits;
 
     // Seuil de Blessure = (Robustesse * 2) + Endurance
     sec.sb.value = (robustesse * 2) + bonusEndurance;
 
-    // Résistance Magique = (Discernement + Maîtrise) * 2 + Concentration
-    sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration;
+    // Résistance Magique = (Discernement + Maîtrise) * 2 + Concentration + Traits
+    sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration + bonusResMagTraits;
 
-    // Résistance Mentale = (Caractère + Prestance) * 2 + Esprit Critique
-    sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique;
+    // Résistance Mentale = (Caractère + Prestance) * 2 + Esprit Critique + Traits
+    sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique + bonusResMentTraits;
 
-    // Résistance Physique = (Robustesse * 3) + Esquive + Armures (si équipées)
-    let resPhysBase = (robustesse * 3) + bonusEsquive;
-    if (eq.armureLegere) resPhysBase += bonusArmureLegere;
-    if (eq.armureLourde) resPhysBase += bonusArmureLourde;
-    if (eq.bouclier) resPhysBase += bonusBouclier;
+    // Résistance Physique = (Robustesse * 3) + Esquive + Armures + Traits
+    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits;
+    if (eq?.armureLegere) resPhysBase += bonusArmureLegere;
+    if (eq?.armureLourde) resPhysBase += bonusArmureLourde;
+    if (eq?.bouclier) resPhysBase += bonusBouclier;
     sec.resPhys.value = resPhysBase;
 
-    // Bagage = Base de 9 + Optimisation + Traits (ex: Bête de Somme) - Plafonné à 18 maximum
+    // Bagage = Base de 9 + Optimisation + Traits - Plafonné à 18
+    sec.bagage = sec.bagage || {};
     sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
 
-    // Reste des statistiques (inchangées)
-    sec.rdc.max = fortune + vigueur;
-    sec.rapidite.value = maitrise + vigueur;
-    sec.poids.value = sec.resPhys.value * 10;
+    // Reste des statistiques
+    sec.rdc.max = (fortune + vigueur) * multRDC;
+    sec.rapidite.value = maitrise + vigueur + bonusRapiditeTraits;
+    sec.poids.value = (sec.resPhys.value * 10) + bonusPoidsTraits;
 
     // --- 3. STOCKAGE DES BONUS DE MUSCULATION POUR PLUS TARD ---
-    // Ces valeurs ne s'affichent pas directement, mais seront très utiles pour les macros d'armes !
     sec.bonusDegatsCaC = bonusMusculation;
     sec.bonusChargeEffort = Math.ceil(bonusMusculation / 2);
   }
@@ -194,7 +235,6 @@ export class LoreAndLegacyActor extends Actor {
     const capaciteValue = capacite.system.valeur;
     const attributLieKey = capacite.system.attributLie; 
     
-    // Récupération de l'attribut complet parent
     const attributParent = attributLieKey ? this.system.attributs[attributLieKey] : null;
     const attributValue = attributParent ? attributParent.total : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
@@ -203,18 +243,31 @@ export class LoreAndLegacyActor extends Actor {
     let isFortune = capacite.system.fortune || (attributParent && attributParent.finalFortune);
     let isAdversite = capacite.system.adversite || (attributParent && attributParent.finalAdversite);
     
-    // --- ajout de la gestion des Traits qui impactent les capacités 
     const nomCapa = capacite.name.toLowerCase();
 
-    // VÉRIFICATION DES BONUS DE TRAITS (Ex: Athlétique)
+    // VÉRIFICATION DES BONUS DE TRAITS SUR LES CAPACITÉS
     if (nomCapa.includes("acrobatie") && this.flags?.fortuneAcrobatie) isFortune = true;
     if (nomCapa.includes("escalade") && this.flags?.fortuneEscalade) isFortune = true;
+    if (nomCapa.includes("sorcellerie") && this.flags?.fortuneSorcellerie) isFortune = true;
+    if (nomCapa.includes("spiritisme") && this.flags?.fortuneSpiritisme) isFortune = true;
+    if (nomCapa.includes("médecine") && this.flags?.fortuneMedecine) isFortune = true;
+    if (nomCapa.includes("arcanotech") && this.flags?.fortuneArcanotech) isFortune = true;
+    if (nomCapa.includes("mécanique") && this.flags?.fortuneMecanique) isFortune = true;
+    
+    // VÉRIFICATION DES MALUS DE TRAITS SUR LES CAPACITÉS
+    if (nomCapa.includes("arcanotech") && this.flags?.adversiteArcanotech) isAdversite = true;
+    if (nomCapa.includes("mécanique") && this.flags?.adversiteMecanique) isAdversite = true;
+
+    // Cas spécifique du Zazou (Adversité sur toutes les interactions sociales)
+    const socialCapacites = ["charme", "intimidation", "provocation", "marchandage", "présence apaisante", "rhétorique", "représentation"];
+    if (this.flags?.adversiteSociale && socialCapacites.some(c => nomCapa.includes(c))) {
+      isAdversite = true;
+    }
     
     let formula = "";
     let flavorText = "";
     let typeDeDe = "d6";
 
-    // 1. Déterminer le dé de base et le type de dé pour la Fortune/Adversité
     if (capaciteValue > 0) {
       typeDeDe = "d10";
       formula = `1d10 + ${capaciteValue}`;
@@ -225,22 +278,18 @@ export class LoreAndLegacyActor extends Actor {
       flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
-    // 2. Gestion du Dé de Fortune
     if (isFortune) {
       formula += ` + 1${typeDeDe}[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
-    // 3. Gestion du Dé d'Adversité
     if (isAdversite) {
       formula += ` - 1${typeDeDe}[adversite]`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
 
-    // 4. Lancement du jet
     let roll = new Roll(formula);
 
-    // --- APPLICATION DES COULEURS DICE SO NICE! ---
     for (let term of roll.terms) {
       if (term.flavor === "fortune") {
         if (!term.options) term.options = {};
@@ -264,15 +313,11 @@ export class LoreAndLegacyActor extends Actor {
    * @param {string} attrKey - La clé de l'attribut (ex: "caractere")
    */
   async rollAttribut(attrKey) {
-    // Vérification de sécurité
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    
-    // CORRECTION : TOUS les attributs (y compris Fortune) utilisent désormais 'total'
     const attrScore = attribut.total || 0;
     
-    // Formatage du nom pour un bel affichage (ex: "caractere" -> "Caractère")
     const nomsFormates = {
       caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise",
       prestance: "Prestance", robustesse: "Robustesse", vigueur: "Vigueur", fortune: "Fortune"
@@ -282,22 +327,18 @@ export class LoreAndLegacyActor extends Actor {
     let formula = `1d6 + ${attrScore}`;
     let flavorText = `Jet d'Attribut : <b>${nomAffiche}</b>`;
 
-    // Gestion du Dé de Fortune lié à l'Attribut
     if (attribut.finalFortune) {
       formula += ` + 1d6[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
-    // Gestion du Dé d'Adversité lié à l'Attribut
     if (attribut.finalAdversite) {
       formula += ` - 1d6[adversite]`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
     
-    // Lancement du jet
     let roll = new Roll(formula);
 
-    // Application des couleurs Dice So Nice!
     for (let term of roll.terms) {
       if (term.flavor === "fortune") {
         if (!term.options) term.options = {};
