@@ -8,8 +8,19 @@
       "biographie": ""
     }
   },
-  "Item": {
-    "types": ["capacite", "trait", "peuple", "equipement", "arme", "armure", "consommable", "arcanotech"],
+"Item": {
+    "types": [
+      "capacite", 
+      "trait", 
+      "peuple", 
+      "equipement", 
+      "arme", 
+      "armure", 
+      "consommable",
+      "arcanotech",
+      "materiel",
+      "composant"
+    ],
     
     "capacite": {
       "valeur": 1,
@@ -37,6 +48,8 @@
     "arme": {},
     "armure": {},
     "consommable": {},
-    "arcanotech": {}
+    "arcanotech": {},
+    "materiel": {},
+    "composant": {}
   }
 }
