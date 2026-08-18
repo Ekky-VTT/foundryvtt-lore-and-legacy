@@ -17,6 +17,9 @@ Hooks.once("init", async function() {
   CONFIG.Item.dataModels.arme = ArmeData;
   CONFIG.Item.dataModels.armure = ArmureData;
   CONFIG.Item.dataModels.consommable = ConsommableData;
+  CONFIG.Item.dataModels.arcanotech = ArcanotechData;
+  CONFIG.Item.dataModels.materiel = MaterielData;
+  CONFIG.Item.dataModels.composant = ComposantData;
 
     // Déclaration des Classes de Documents
   CONFIG.Actor.documentClass = LoreAndLegacyActor;
