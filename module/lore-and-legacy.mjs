@@ -3,6 +3,7 @@ import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
 import { LoreAndLegacyItemSheet } from "./sheets/item-sheet.mjs"; // fiche des Traits
 import { PersonnageData } from "./data/actor-data.mjs";
 import { CapaciteData, TraitData, PeupleData  } from "./data/item-data.mjs"; 
+import { EquipementBaseData, ArmeData, ArmureData, ConsommableData } from "./data/item-data.mjs";
 
 Hooks.once("init", async function() {
   console.log("Lore & Legacy | Initialisation du système Lore & Legacy");
@@ -12,6 +13,10 @@ Hooks.once("init", async function() {
   CONFIG.Item.dataModels.capacite = CapaciteData;
   CONFIG.Item.dataModels.trait = TraitData; 
   CONFIG.Item.dataModels.peuple = PeupleData;
+  CONFIG.Item.dataModels.equipement = EquipementBaseData; // Pour le matériel générique
+  CONFIG.Item.dataModels.arme = ArmeData;
+  CONFIG.Item.dataModels.armure = ArmureData;
+  CONFIG.Item.dataModels.consommable = ConsommableData;
 
     // Déclaration des Classes de Documents
   CONFIG.Actor.documentClass = LoreAndLegacyActor;
@@ -23,6 +28,8 @@ Hooks.once("init", async function() {
   // Enregistrement de la fiche d'Objet (Item)
   Items.unregisterSheet("core", ItemSheet);
   Items.registerSheet("lore-and-legacy", LoreAndLegacyItemSheet, { makeDefault: true });
+
+  
 });
 
 // --- INTÉGRATION AVEC LE MODULE DICE SO NICE! ---
