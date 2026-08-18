@@ -18,7 +18,7 @@
           {{#each traitsList}}
           <!-- Badge du Trait -->
           <div style="display: flex; align-items: center; gap: 5px; background: #e2c98d; border: 1px solid #c19a5b; border-radius: 15px; padding: 2px 8px; font-size: 12px; color: #1a252c;">
-            <img src="{{this.img}}" style="width: 16px; height: 16px; border: none; border-radius: 50%;" />
+            <img src="{{this.img}}" style="width: 16px; height: 16px; object-fit: cover; border: none; border-radius: 50%;" />
             <span style="font-weight: bold;">{{this.name}}</span>
             {{#if ../editable}}
             <!-- Bouton Supprimer (Corbeille) -->
