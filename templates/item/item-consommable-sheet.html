@@ -1,0 +1,36 @@
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+    <header class="sheet-header" style="flex: 0 0 auto; display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+        <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 5px; background: rgba(0,0,0,0.3);"/>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <h1 style="margin: 0; border: none;">
+                <input name="name" type="text" value="{{item.name}}" placeholder="Nom du consommable" style="font-weight: bold; background: rgba(0, 0, 0, 0.05); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
+            </h1>
+            <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px; font-size: 12px; font-weight: bold;">
+                <label style="display: flex; align-items: center; gap: 5px;">Quantité: <input type="number" name="system.quantite" value="{{system.quantite}}" min="0" style="width: 40px; text-align: center;"/></label>
+                <label style="display: flex; align-items: center; gap: 5px;">Bagage: <input type="number" name="system.encombrement" value="{{system.encombrement}}" min="0" style="width: 40px; text-align: center;"/></label>
+                <label style="display: flex; align-items: center; gap: 5px;">Prix (Taels): <input type="number" name="system.prix" value="{{system.prix}}" min="0" style="width: 50px; text-align: center;"/></label>
+            </div>
+        </div>
+    </header>
+
+    <div class="sheet-content" style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; overflow-y: hidden;">
+        <!-- SPÉCIFICITÉS CONSOMMABLE -->
+        <div style="flex: 0 0 auto; display: flex; justify-content: space-between; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
+            <div style="display: flex; align-items: center; gap: 5px; flex: 1;">
+                <label style="font-weight: bold;">Effet :</label>
+                <input type="text" name="system.effet" value="{{system.effet}}" placeholder="Ex: Soigne 1D8 PV" style="flex: 1; padding: 2px 5px; border: 1px solid #ccc;"/>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; margin-left: 15px;">
+                <label style="font-weight: bold;">Charges/Doses :</label>
+                <input type="number" name="system.charges" value="{{system.charges}}" min="0" style="width: 50px; text-align: center; border: 1px solid #ccc;"/>
+            </div>
+        </div>
+
+        <div class="form-group" style="flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 5px; min-height: 150px;">
+            <label style="font-weight: bold; margin-bottom: 5px; flex: 0 0 auto; color: #0e3a47; border-bottom: 1px solid #c19a5b;">Description :</label>
+            <div style="flex: 1 1 auto; position: relative;">
+                {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable engine="prosemirror"}}
+            </div>
+        </div>
+    </div>
+</form>
