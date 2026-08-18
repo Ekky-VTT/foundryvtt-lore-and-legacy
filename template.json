@@ -9,7 +9,7 @@
     }
   },
   "Item": {
-    "types": ["capacite", "trait", "peuple", "equipement", "arme", "armure", "consommable"],
+    "types": ["capacite", "trait", "peuple", "equipement", "arme", "armure", "consommable", "arcanotech"],
     
     "capacite": {
       "valeur": 1,
@@ -36,6 +36,7 @@
 
     "arme": {},
     "armure": {},
-    "consommable": {}
+    "consommable": {},
+    "arcanotech": {}
   }
 }
