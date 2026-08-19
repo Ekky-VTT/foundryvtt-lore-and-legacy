@@ -155,7 +155,6 @@ export class MaterielData extends EquipementBaseData {
     const baseSchema = super.defineSchema();
     return {
       ...baseSchema,
-      usagesLibres: new NumberField({ initial: 3, min: 0, integer: true }), // La règle indique souvent 3 utilisations avant épuisement
       usagesMax: new NumberField({ initial: 3, min: 0, integer: true })
     };
   }

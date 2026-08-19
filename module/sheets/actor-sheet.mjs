@@ -68,67 +68,151 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       template: "systems/lore-and-legacy/templates/actor/actor-personnage-sheet.html",
       width: 760,
       height: 1024,
-	  // On active les onglets pour la fiche de personnage
+      // LA CORRECTION EST ICI : ".window-content" englobe toute la fenêtre
+      dragDrop: [{ dragSelector: ".item", dropSelector: ".window-content" }],
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "actions" }]
     });
   }
 
-  /** @override */
+  /**
+   * Intercepte SPÉCIFIQUEMENT le glisser-déposer des Objets (Items)
+   * @override
+   */
+  async _onDropItem(event, data) {
+    if (!this.actor.isOwner) return false;
+
+    const item = await Item.implementation.fromDropData(data);
+    if (!item) return false;
+
+    const itemData = item.toObject();
+    // LE NOUVEAU LOG QUI DIT TOUT :
+    console.log(`Lore & Legacy | Objet déposé -> Nom : "${itemData.name}" | TYPE : [${itemData.type}]`);
+
+    if (this.actor.uuid === item.parent?.uuid) {
+      return this._onSortItem(event, itemData);
+    }
+
+    return this._onDropItemCreate(itemData);
+  }
+
+ /** @override */
   async getData() {
-    const context = super.getData();
-    context.system = context.data.system;
+    const context = await super.getData();
+    // On pointe vers les données vivantes (et non context.data.system)
+    context.system = this.actor.system; 
     this._prepareItems(context);
     return context;
   }
 
-_prepareItems(context) {
+  _prepareItems(context) {
     const capacities = [];
     const traits = [];
-    const attributs = context.system.attributs;
+    const armes = [];
+    const armures = [];
+    const consommables = [];
+    const materiels = [];
+    const attributs = this.actor.system.attributs;
 
-    for (let item of context.items) {
-      // Tri des Capacités
+    for (let item of this.actor.items) {
+      let itemData = item.toObject(false);
+
       if (item.type === "capacite") {
         const attrLie = item.system.attributLie;
         const parentFortune = (attrLie && attributs[attrLie]) ? attributs[attrLie].fortune : false;
         const parentAdversite = (attrLie && attributs[attrLie]) ? attributs[attrLie].adversite : false;
 
-        item.displayFortune = item.system.fortune || parentFortune;
-        item.displayAdversite = item.system.adversite || parentAdversite;
-        item.lockFortune = parentFortune; 
-        item.lockAdversite = parentAdversite;
+        itemData.displayFortune = item.system.fortune || parentFortune;
+        itemData.displayAdversite = item.system.adversite || parentAdversite;
+        itemData.lockFortune = parentFortune; 
+        itemData.lockAdversite = parentAdversite;
 
-        capacities.push(item);
+        capacities.push(itemData);
       }
       
-      // Tri des Traits
-      if (item.type === "trait") {
-        traits.push(item);
+      if (item.type === "trait") traits.push(itemData);
+
+      // --- LES ARMES (Classiques) ---
+      if (item.type === "arme") armes.push(itemData);
+
+      // --- L'ARCANOTECH ---
+      if (item.type === "arcanotech") {
+        if (item.system.sousType === "armeMelee" || item.system.sousType === "armeTir") {
+          // Si c'est une arme, elle va dans le tableau des armes !
+          // On lui ajoute un petit tag "Arcanotech" dans le nom pour l'esthétique
+          itemData.name = itemData.name + " (Arcanotech)";
+          armes.push(itemData);
+        } else {
+          // Si c'est un artefact, il va dans le sac à dos (Matériel)
+          itemData.usagesActuels = item.getFlag("lore-and-legacy", "usagesActuels") ?? item.system.durabilite ?? 1;
+          itemData.usagesMax = item.system.durabilite || 1;
+          materiels.push(itemData);
+        }
+      }
+
+      // --- LES ARMURES ---
+      if (item.type === "armure") {
+        const categories = { legere: "Armure légère", lourde: "Armure lourde", bouclier: "Bouclier", accessoire: "Accessoire" };
+        itemData.categorieArmure = categories[item.system.type] || categories.legere;
+        armures.push(itemData);
+      }
+
+      // --- CONSOMMABLES & MATÉRIELS ---
+      if (item.type === "consommable") {
+        itemData.usagesActuels = item.getFlag("lore-and-legacy", "usagesActuels") ?? item.system.charges ?? 1;
+        itemData.usagesMax = item.system.charges || 1;
+        if (itemData.usagesActuels > 0) consommables.push(itemData);
+      }
+
+      if (item.type === "materiel") {
+        itemData.usagesActuels = item.getFlag("lore-and-legacy", "usagesActuels") ?? item.system.usagesMax ?? 1;
+        itemData.usagesMax = item.system.usagesMax || 1;
+        if (itemData.usagesActuels > 0) materiels.push(itemData);
       }
     }
     
-    capacities.sort((a, b) => a.name.localeCompare(b.name));
-    traits.sort((a, b) => a.name.localeCompare(b.name));
+    // Tris et assignations au contexte
+    context.capacites = capacities.sort((a, b) => a.name.localeCompare(b.name));
+    context.traits = traits.sort((a, b) => a.name.localeCompare(b.name));
+    context.armes = armes.sort((a, b) => a.name.localeCompare(b.name));
     
-    context.capacites = capacities;
-    context.traits = traits;
+    context.armures = armures.sort((a, b) => {
+      const categoryOrder = ["Armure légère", "Armure lourde", "Bouclier", "Accessoire"];
+      return categoryOrder.indexOf(a.categorieArmure) - categoryOrder.indexOf(b.categorieArmure) || a.name.localeCompare(b.name);
+    });
+    
+    context.armures.forEach((arm, index, liste) => {
+      arm.afficherCategorie = index === 0 || arm.categorieArmure !== liste[index - 1].categorieArmure;
+    });
+    
+    context.consommables = consommables.sort((a, b) => a.name.localeCompare(b.name));
+    context.materiels = materiels.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  /**
-   * Intercepte le glisser-déposer pour garantir l'unicité du Peuple
-   * et importer automatiquement ses Traits culturels.
+/**
+   * Intercepte uniquement la CRÉATION finale des objets déposés.
+   * Le "Drop" en lui-même est géré par Foundry en amont.
    * @override
    */
   async _onDropItemCreate(itemData) {
-    let itemsToCreate = Array.isArray(itemData) ? itemData : [itemData];
+    // On clone les données pour pouvoir les modifier en toute sécurité
+    let itemsToCreate = Array.isArray(itemData) ? foundry.utils.deepClone(itemData) : [foundry.utils.deepClone(itemData)];
 
-    // Vérifie si un Peuple fait partie des objets déposés
+    for (const data of itemsToCreate) {
+      // SÉCURITÉ ABSOLUE : On efface l'ID d'origine pour forcer une nouvelle création propre
+      delete data._id;
+
+      if (["consommable", "materiel"].includes(data.type)) {
+        const maxUsages = data.type === "consommable"
+          ? data.system?.charges
+          : data.system?.usagesMax;
+        foundry.utils.setProperty(data, "flags.lore-and-legacy.usagesActuels", maxUsages ?? 0);
+      }
+    }
+
     const peupleItemData = itemsToCreate.find(i => i.type === "peuple");
     
     if (peupleItemData) {
-      // --- 1. NETTOYAGE DE L'ANCIEN PEUPLE ET DE SES TRAITS ---
       const existingPeuples = this.actor.items.filter(i => i.type === "peuple");
-      // On cherche tous les Traits qui portent notre étiquette invisible
       const existingRacialTraits = this.actor.items.filter(i => i.getFlag("lore-and-legacy", "isRacialTrait"));
       
       const idsToDelete = [
@@ -141,27 +225,18 @@ _prepareItems(context) {
         ui.notifications.info("L'ancien Peuple et ses Traits ont été remplacés.");
       }
 
-      // --- 2. IMPORTATION DES NOUVEAUX TRAITS ---
       const traitsUuids = peupleItemData.system?.traits || [];
-      
       for (let uuid of traitsUuids) {
-        // On va chercher le "vrai" Trait dans la base de données
         const traitDoc = await fromUuid(uuid);
         if (traitDoc) {
-          // On le transforme en données brutes pour le copier
           let traitData = traitDoc.toObject();
-          
-          // LA MAGIE EST ICI : On lui pose l'étiquette invisible pour le reconnaître plus tard !
+          delete traitData._id; // On efface aussi l'ID pour les Traits !
           foundry.utils.setProperty(traitData, "flags.lore-and-legacy.isRacialTrait", true);
-          
-          // On l'ajoute à la liste des objets qui vont être créés sur le personnage
           itemsToCreate.push(traitData);
         }
       }
     }
 
-    // --- 3. CRÉATION FINALE ---
-    // On laisse Foundry créer le Peuple ET les Traits qu'on vient d'ajouter à la liste
     return super._onDropItemCreate(itemsToCreate);
   }
 
@@ -173,6 +248,7 @@ _prepareItems(context) {
     html.find('.capacite-roll').click(this._onRollCapacite.bind(this));
     html.find('.item-create-capacite').click(this._onOpenCapaciteDialog.bind(this));
     html.find('.item-delete').click(this._onItemDelete.bind(this));
+    html.find('.item-use').click(this._onItemUse.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
     
     // Sauvegarde immédiate du score de capacité dès qu'il est modifié
@@ -287,5 +363,21 @@ _prepareItems(context) {
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
     const item = this.actor.items.get(itemId);
     if (item) await item.delete();
+  }
+
+  async _onItemUse(event) {
+    event.preventDefault();
+    const itemId = $(event.currentTarget).closest('.item').data('item-id');
+    const item = this.actor.items.get(itemId);
+    if (!item) return;
+
+    const usagesMax = item.type === "consommable" ? item.system.charges : item.system.usagesMax;
+    const usages = item.getFlag("lore-and-legacy", "usagesActuels") ?? usagesMax;
+    if (usages <= 1) {
+      await item.delete();
+      return;
+    }
+
+    await item.setFlag("lore-and-legacy", "usagesActuels", usages - 1);
   }
 }

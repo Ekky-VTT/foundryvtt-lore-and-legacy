@@ -215,7 +215,7 @@
           {{/if}}
 
           <!-- ADVERSITÉ -->
-          {{#if sactor.ystem.attributs.robustesse.traitAdversite}}
+          {{#if actor.system.attributs.robustesse.traitAdversite}}
             <input type="checkbox" checked disabled class="flag-adversite" title="Adversité (Imposé par un Trait)"/>
           {{else}}
             <input type="checkbox" name="system.attributs.robustesse.adversite" {{checked system.attributs.robustesse.adversite}} class="flag-adversite" title="Adversité"/>
@@ -325,12 +325,12 @@
   </section>
 
 </div>
-	<!-- ========================================== -->
-	<!-- ZONE DES ONGLETS (Nouveau) -->
-	<!-- ========================================== -->
+<!-- ========================================== -->
+  <!-- ZONE DES ONGLETS (Nouveau) -->
+  <!-- ========================================== -->
 
   <!-- Navigation des Onglets -->
-<nav class="sheet-tabs tabs" data-group="primary" style="flex: 0 0 auto; display: flex; gap: 20px; justify-content: center; border-bottom: 2px solid #c19a5b; margin: 15px 0 10px 0; font-weight: bold; font-size: 16px; color: #0e3a47;">
+  <nav class="sheet-tabs tabs" data-group="primary" style="flex: 0 0 auto; display: flex; gap: 20px; justify-content: center; border-bottom: 2px solid #c19a5b; margin: 15px 0 10px 0; font-weight: bold; font-size: 16px; color: #0e3a47;">
     <a class="item" data-tab="actions" style="cursor: pointer; padding-bottom: 5px;">Actions & Traits</a>
     <a class="item" data-tab="equipement" style="cursor: pointer; padding-bottom: 5px;">Équipement</a>
     <a class="item" data-tab="magie" style="cursor: pointer; padding-bottom: 5px;">Sortilèges</a>
@@ -341,106 +341,228 @@
     
     <!-- ONGLET 1 : ACTIONS & TRAITS -->
     <div class="tab" data-group="primary" data-tab="actions">
-	
-<section class="section-block capacities-block">
-    <div class="block-header flexrow">
-      <h2 class="block-title">CAPACITÉS <span>(1D10 + Score)</span></h2>
-      <a class="item-create-capacite" title="Ajouter une Capacité"><i class="fas fa-plus-circle"></i> Ajouter une Capacité</a>
-    </div>
+      
+      <!-- BLOC CAPACITÉS -->
+      <section class="section-block capacities-block">
+        <div class="block-header flexrow">
+          <h2 class="block-title">CAPACITÉS <span>(1D10 + Score)</span></h2>
+          <a class="item-create-capacite" title="Ajouter une Capacité"><i class="fas fa-plus-circle"></i> Ajouter une Capacité</a>
+        </div>
 
-    <div class="capacities-list">
-      {{#each capacites as |capacite id|}}
-        <div class="capacity-row item flexrow" data-item-id="{{capacite._id}}">
-          
-    <!-- Bouton de Jet (Caché si Passif) -->
-          {{#unless capacite.system.passif}}
-          <button type="button" class="capacite-roll roll-button" title="Lancer le jet">
-            <i class="fas fa-dice-d10"></i>
-          </button>
+        <div class="capacities-list">
+          {{#each capacites as |capacite id|}}
+            <div class="capacity-row item flexrow" data-item-id="{{capacite._id}}">
+              
+              <!-- Bouton de Jet (Caché si Passif) -->
+              {{#unless capacite.system.passif}}
+              <button type="button" class="capacite-roll roll-button" title="Lancer le jet">
+                <i class="fas fa-dice-d10"></i>
+              </button>
+              {{else}}
+              <div style="width: 28px;" title="Capacité Passive"></div>
+              {{/unless}}
+              
+              <span class="item-name">{{capacite.name}}</span>
+              <span class="attr-badge">{{#if capacite.system.attributLie}}{{capacite.system.attributLie}}{{else}}aucun{{/if}}</span>
+                
+              <div class="score-input-wrap" title="Score de la capacité (1 à 15)">
+                <label>SCORE :</label>
+                <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
+              </div>
+
+              <!-- Case Fortune -->
+              <label class="checkbox-label fortune-label" title="Dé de Fortune (+1D6)">
+                <input type="checkbox" class="inline-checkbox flag-fortune" data-field="fortune" {{checked capacite.displayFortune}} {{#if capacite.lockFortune}}disabled{{/if}}/>
+                <span>Fort.</span>
+              </label>
+
+              <!-- Case Adversité -->
+              <label class="checkbox-label adversite-label" title="Dé d'Adversité (-1D6)">
+                <input type="checkbox" class="inline-checkbox flag-adversite" data-field="adversite" {{checked capacite.displayAdversite}} {{#if capacite.lockAdversite}}disabled{{/if}}/>
+                <span>Adv.</span>
+              </label>
+
+              <a class="item-delete" title="Supprimer la capacité"><i class="fas fa-trash"></i></a>
+            </div>
           {{else}}
-          <div style="width: 28px;" title="Capacité Passive"></div>
-          {{/unless}}
+            <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter une Capacité" pour ouvrir le menu de sélection.</p>
+          {{/each}}
+        </div>
+      </section>
+      
+      <!-- BLOC TRAITS -->
+      <section class="section-block traits-block">
+        <div class="block-header flexrow">
+          <h2 class="block-title">TRAITS</h2>
+        </div>
+
+        <div class="traits-list">
+          {{#each traits as |trait id|}}
+            <div class="trait-row item flexrow" data-item-id="{{trait._id}}">
+              
+              <!-- Icône purement décorative -->
+              <div class="trait-icon"><i class="fas fa-fingerprint"></i></div>
+              
+              <!-- Nom du Trait -->
+              <span class="item-name" title="{{trait.system.description}}">{{trait.name}}</span>
+              
+              <!-- Condition pour afficher la case "Soigné" -->
+              {{#if trait.system.soignable}}
+              <label class="checkbox-label" title="Effets négatifs annulés (Cellule de soutien ou Atout)">
+                <input type="checkbox" class="inline-checkbox" data-field="soigne" {{checked trait.system.soigne}}/>
+                <span>Soigné</span>
+              </label>
+              {{else}}
+              <!-- Si non soignable, on met un petit badge visuel à la place -->
+              <span style="font-size: 10px; color: #b32424; font-weight: bold; border: 1px solid #b32424; padding: 2px 4px; border-radius: 3px; margin-right: 10px;" title="Ce trait ne peut pas être soigné">Permanent</span>
+              {{/if}}
+
+              <!-- BOUTON SUPPRIMER OU BADGE RACIAL -->
+              {{#if trait.flags.[lore-and-legacy].isRacialTrait}}
+                <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
+                  (Racial)
+                </span>
+              {{else}}
+                <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
+              {{/if}}
+
+            </div>
+          {{else}}
+            <p class="empty-notice">Aucun trait. Glissez-déposez un Trait.</p>
+          {{/each}}
+        </div>
+      </section>
+      
+    </div> <!-- FIN DE L'ONGLET 1 (C'est la balise qui manquait !) -->
+
+
+    <!-- ONGLET 2 : ÉQUIPEMENT -->
+    <div class="tab" data-group="primary" data-tab="equipement">
+      
+      <!-- TABLEAU 1 : LES ARMES -->
+      <section class="section-block">
+        <div class="block-header flexrow">
+          <h2 class="block-title">ARMES</h2>
+        </div>
+        <div class="items-list">
+          <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
+            <div style="flex: 3;">Nom</div>
+            <div style="flex: 1; text-align: center;">Dégâts</div>
+            <div style="flex: 1; text-align: center;">Prise</div>
+            <div style="flex: 1; text-align: center;">Portée</div>
+            <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
+            <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
+          </div>
           
-          <span class="item-name">{{capacite.name}}</span>
-          <span class="attr-badge">{{#if capacite.system.attributLie}}{{capacite.system.attributLie}}{{else}}aucun{{/if}}</span>
+          {{#each armes as |arme id|}}
+          <div class="item flexrow" data-item-id="{{arme._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+            <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+              <img src="{{arme.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+              <span>{{arme.name}} {{#if arme.system.equipe}}<span style="font-size: 10px; color: #b32424;">(Équipé)</span>{{/if}}</span>
+            </div>
+            <div style="flex: 1; text-align: center;">{{arme.system.degatsBase}} {{#if arme.system.degatsBonus}}+{{arme.system.degatsBonus}}{{/if}}</div>
+            <div style="flex: 1; text-align: center;">{{arme.system.mains}}</div>
+            <div style="flex: 1; text-align: center;">{{arme.system.portee}}</div>
+            <div style="flex: 0.5; text-align: center;">{{arme.system.encombrement}}</div>
+            <div style="flex: 0.5; text-align: center;">
+              <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+            </div>
+          </div>
+          {{else}}
+          <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucune arme.</p>
+          {{/each}}
+        </div>
+      </section>
+
+      <!-- TABLEAU 2 : ARMURES -->
+      <section class="section-block" style="margin-top: 20px;">
+        <div class="block-header flexrow">
+          <h2 class="block-title">ARMURES & PROTECTIONS</h2>
+        </div>
+        <div class="items-list">
+          <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
+            <div style="flex: 3;">Nom</div>
+            <div style="flex: 1; text-align: center;">Bonus Rés. Phys.</div>
+            <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
+            <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
+          </div>
+          
+          {{#each armures as |armure id|}}
+            {{#if armure.afficherCategorie}}
+            <div style="background: rgba(193, 154, 91, 0.3); padding: 4px 8px; font-weight: bold; font-variant: small-caps; color: #0e3a47; margin-top: 5px; border-radius: 3px;">
+              {{armure.categorieArmure}}
+            </div>
+            {{/if}}
             
-          <div class="score-input-wrap" title="Score de la capacité (1 à 15)">
-            <label>SCORE :</label>
-            <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15"/>
+            <div class="item flexrow" data-item-id="{{armure._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+              <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                <img src="{{armure.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+                <span>{{armure.name}} {{#if armure.system.equipe}}<span style="font-size: 10px; color: #b32424;">(Équipé)</span>{{/if}}</span>
+              </div>
+              <div style="flex: 1; text-align: center;">+{{armure.system.bonusResPhys}}</div>
+              <div style="flex: 0.5; text-align: center;">{{armure.system.encombrement}}</div>
+              <div style="flex: 0.5; text-align: center;">
+                <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+              </div>
+            </div>
+          {{else}}
+          <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucune armure.</p>
+          {{/each}}
+        </div>
+      </section>
+
+      <!-- TABLEAU 3 : SAC À DOS -->
+      <section class="section-block" style="margin-top: 20px;">
+        <div class="block-header flexrow">
+          <h2 class="block-title">SAC À DOS (CONSOMMABLES & MATÉRIEL)</h2>
+        </div>
+        <div class="items-list">
+          <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
+            <div style="flex: 3;">Nom</div>
+            <div style="flex: 1; text-align: center;">Usages</div>
+            <div style="flex: 1; text-align: center;">Actions</div>
           </div>
 
-          <!-- Case Fortune -->
-          <label class="checkbox-label fortune-label" title="Dé de Fortune (+1D6)">
-            <input type="checkbox" class="inline-checkbox flag-fortune" data-field="fortune" {{checked capacite.displayFortune}} {{#if capacite.lockFortune}}disabled{{/if}}/>
-            <span>Fort.</span>
-          </label>
+          {{#each consommables as |conso id|}}
+          <div class="item flexrow" data-item-id="{{conso._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+            <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+              <img src="{{conso.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+              <span title="{{conso.system.effet}}">{{conso.name}}</span>
+            </div>
+            <div style="flex: 1; text-align: center; font-weight: bold; color: #0e3a47;">
+              {{conso.usagesActuels}} / {{conso.usagesMax}}
+            </div>
+            <div style="flex: 1; text-align: center; display: flex; justify-content: center; gap: 15px;">
+              <a class="item-use" title="Consommer 1 usage" style="color: #2b7a4b; cursor: pointer;"><i class="fas fa-flask"></i></a>
+              <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+            </div>
+          </div>
+          {{/each}}
 
-          <!-- Case Adversité -->
-          <label class="checkbox-label adversite-label" title="Dé d'Adversité (-1D6)">
-            <input type="checkbox" class="inline-checkbox flag-adversite" data-field="adversite" {{checked capacite.displayAdversite}} {{#if capacite.lockAdversite}}disabled{{/if}}/>
-            <span>Adv.</span>
-          </label>
+          {{#each materiels as |mat id|}}
+          <div class="item flexrow" data-item-id="{{mat._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+            <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+              <img src="{{mat.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+              <span>{{mat.name}}</span>
+            </div>
+            <div style="flex: 1; text-align: center; font-weight: bold; color: #0e3a47;">
+              {{mat.usagesActuels}} / {{mat.usagesMax}}
+            </div>
+            <div style="flex: 1; text-align: center; display: flex; justify-content: center; gap: 15px;">
+              <a class="item-use" title="Utiliser 1 fois" style="color: #0e3a47; cursor: pointer;"><i class="fas fa-wrench"></i></a>
+              <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+            </div>
+          </div>
+          {{/each}}
 
-          <a class="item-delete" title="Supprimer la capacité"><i class="fas fa-trash"></i></a>
+          {{#unless consommables.length}}
+            {{#unless materiels.length}}
+              <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Le sac à dos est vide.</p>
+            {{/unless}}
+          {{/unless}}
+          
         </div>
-      {{else}}
-        <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter une Capacité" pour ouvrir le menu de sélection.</p>
-      {{/each}}
-    </div>
-  </section>
-  
-<!-- BLOC TRAITS -->
-  <section class="section-block traits-block">
-    <div class="block-header flexrow">
-      <h2 class="block-title">TRAITS</h2>
-    </div>
-
-    <div class="traits-list">
-      {{#each traits as |trait id|}}
-        <div class="trait-row item flexrow" data-item-id="{{trait._id}}">
-          
-          <!-- Icône purement décorative -->
-          <div class="trait-icon"><i class="fas fa-fingerprint"></i></div>
-          
-          <!-- Nom du Trait -->
-          <span class="item-name" title="{{trait.system.description}}">{{trait.name}}</span>
-          
-          <!-- Condition pour afficher la case "Soigné" -->
-          {{#if trait.system.soignable}}
-          <label class="checkbox-label" title="Effets négatifs annulés (Cellule de soutien ou Atout)">
-            <input type="checkbox" class="inline-checkbox" data-field="soigne" {{checked trait.system.soigne}}/>
-            <span>Soigné</span>
-          </label>
-          {{else}}
-          <!-- Si non soignable, on met un petit badge visuel à la place -->
-          <span style="font-size: 10px; color: #b32424; font-weight: bold; border: 1px solid #b32424; padding: 2px 4px; border-radius: 3px; margin-right: 10px;" title="Ce trait ne peut pas être soigné">Permanent</span>
-          {{/if}}
-
-          <!-- BOUTON SUPPRIMER OU BADGE RACIAL -->
-          {{#if trait.flags.[lore-and-legacy].isRacialTrait}}
-            <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
-              (Racial)
-            </span>
-          {{else}}
-            <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
-          {{/if}}
-
-        </div>
-      {{else}}
-        <p class="empty-notice">Aucun trait. Glissez-déposez un Trait.</p>
-      {{/each}}
-    </div>
-  </section>
-  
-  
-  <!-- ONGLET 2 : ÉQUIPEMENT (Prêt pour la suite) -->
-    <div class="tab" data-group="primary" data-tab="equipement">
-      <div class="block-header flexrow">
-        <h2 class="block-title">ARMES & ARMURES</h2>
-      </div>
-      <p style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">
-        L'inventaire sera construit ici.
-      </p>
+      </section>
     </div>
 
     <!-- ONGLET 3 : SORTILÈGES (Prêt pour la suite) -->
@@ -452,7 +574,7 @@
         Les sortilèges seront listés ici.
       </p>
     </div>
-	
-	</section>
+  
+  </section>
 
 </form>

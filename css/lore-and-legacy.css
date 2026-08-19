@@ -258,6 +258,55 @@
   margin: 0;
 }
 
+.equipment-block {
+  margin-bottom: 12px;
+}
+
+.equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.equipment-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(184, 168, 152, 0.6);
+  text-align: center;
+}
+
+.equipment-table .item-name {
+  width: 45%;
+  text-align: left;
+  font-weight: bold;
+}
+
+.equipment-category-row td {
+  padding: 8px 8px 3px;
+  border-bottom: 1px solid #c19a5b;
+  color: #0e3a47;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.equipment-table .item-delete,
+.equipment-table .item-use {
+  color: #0e3a47;
+  cursor: pointer;
+}
+
+.equipment-table button {
+  border: 0;
+  background: transparent;
+  padding: 2px 6px;
+}
+
+.equipment-category {
+  margin: 8px 0 2px;
+  color: #0e3a47;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
 .item-create-capacite {
   font-size: 12px;
   font-weight: bold;
