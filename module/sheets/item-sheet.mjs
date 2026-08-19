@@ -64,6 +64,11 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     super.activateListeners(html);
     if (!this.isEditable) return;
 
+    html.find('select[name="system.typeConsommable"]').change(event => {
+      const isPoison = event.currentTarget.value === "poison";
+      html.find(".nocivite-field").toggleClass("is-visible", isPoison);
+    });
+
     // NOUVEAU : Supprimer un Trait du Peuple
     html.find('.trait-delete').click(async ev => {
       const uuidToRemove = ev.currentTarget.dataset.uuid;

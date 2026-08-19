@@ -1,15 +1,32 @@
 <form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+
+    <!-- LE HACK CSS BLINDÉ : Gère la hauteur ET la largeur -->
+    <style>
+        .lore-editor-fix { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; width: 100%; overflow: hidden; }
+        .lore-editor-fix .editor-container { flex: 1 1 auto; position: relative; min-height: 0; height: auto; width: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .lore-editor-fix .editor { flex: 1; display: flex; flex-direction: column; min-height: 0; height: auto !important; width: 100%; }
+        .lore-editor-fix .editor-content { flex: 1; overflow-y: auto; padding: 5px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.1); min-height: 0; height: auto !important; width: 100%; }
+        
+        .lore-editor-fix .tox-tinymce { height: 100% !important; width: 100% !important; }
+        .lore-editor-fix .proseMirror { height: auto !important; min-height: 0; width: 100% !important; overflow-y: auto; }
+    </style>
+
     <header class="sheet-header" style="flex: 0 0 auto; display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
         <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 5px; background: rgba(0,0,0,0.3);"/>
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
             <h1 style="margin: 0; border: none;">
-                <input name="name" type="text" value="{{item.name}}" placeholder="Nom de l'armure" style="font-weight: bold; background: rgba(0, 0, 0, 0.05); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
+                <input name="name" type="text" value="{{item.name}}" placeholder="Nom de l'armure" style="font-weight: bold; color:white;background: rgba(0, 0, 0, 0.05); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
             </h1>
             <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px; font-size: 12px; font-weight: bold;">
-                <label style="display: flex; align-items: center; gap: 5px;">Quantité: <input type="number" name="system.quantite" value="{{system.quantite}}" min="0" style="width: 40px; text-align: center;"/></label>
-                <label style="display: flex; align-items: center; gap: 5px;">Bagage: <input type="number" name="system.encombrement" value="{{system.encombrement}}" min="0" style="width: 40px; text-align: center;"/></label>
-                <label style="display: flex; align-items: center; gap: 5px;">Prix (Taels): <input type="number" name="system.prix" value="{{system.prix}}" min="0" style="width: 50px; text-align: center;"/></label>
-                <label style="display: flex; align-items: center; gap: 5px; color: #b32424; cursor: pointer;"><input type="checkbox" name="system.equipe" {{checked system.equipe}}/> ÉQUIPÉ</label>
+                <label style="display: flex; align-items: center; gap: 5px;" title="Durabilité">Durabilité: <input type="number" name="system.durabilite" value="{{system.durabilite}}" min="0" style="width: 40px; color:white; text-align: center; background: rgba(0, 0, 0, 0.2); border: 1px solid #ccc;"/></label>
+                <label style="display: flex; align-items: center; gap: 5px;">Enc.: <input type="number" name="system.encombrement" value="{{system.encombrement}}" min="0" style="width: 40px; text-align: center; color:white; background: rgba(0, 0, 0, 0.05); border: 1px solid transparent;"/></label>
+                <label style="display: flex; align-items: center; gap: 5px;">Prix (Taels): <input type="number" name="system.prix" value="{{system.prix}}" min="0" style="width: 50px; text-align: center; color:white; background: rgba(0, 0, 0, 0.05); border: 1px solid transparent;"/></label>
+                <!-- S'affiche uniquement si l'objet appartient à un personnage -->
+                {{#if item.isOwned}}
+                    <label style="display: flex; align-items: center; gap: 5px; color: #b32424; cursor: pointer;">
+                        <input type="checkbox" name="system.equipe" {{checked system.equipe}}/> ÉQUIPÉ</label>
+                {{/if}}
             </div>
         </div>
     </header>
@@ -33,9 +50,11 @@
             </div>
         </div>
 
-        <div class="form-group" style="flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 5px; min-height: 150px;">
-            <label style="font-weight: bold; margin-bottom: 5px; flex: 0 0 auto; color: #0e3a47; border-bottom: 1px solid #c19a5b;">Description :</label>
-            <div style="flex: 1 1 auto; position: relative;">
+        <!-- ZONE DE DESCRIPTION ÉTIRABLE -->
+        <div class="form-group lore-editor-fix">
+            <label style="font-weight: bold; margin-bottom: 5px; flex: 0 0 auto; color: #0e3a47; border-bottom: 1px solid #c19a5b;">Description & Effets :</label>
+            
+            <div class="editor-container">
                 {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable engine="prosemirror"}}
             </div>
         </div>

@@ -69,8 +69,9 @@ export class EquipementBaseData extends foundry.abstract.TypeDataModel {
     return {
       description: new HTMLField({ initial: "" }),
       encombrement: new NumberField({ initial: 1, min: 0, integer: true }), // Le "Bagage"
-      quantite: new NumberField({ initial: 1, min: 0, integer: true }),
+      quantite: new NumberField({ initial: 1, min: 0, integer: true }), // Nombre d'objets identiques
       prix: new NumberField({ initial: 0, min: 0, integer: true }), // En Taels
+      durabilite: new NumberField({ initial: 10, min: 0, integer: true }), // Durabilité de l'objet
       equipe: new BooleanField({ initial: false }) // Case à cocher "Équipé"
     };
   }
@@ -117,6 +118,8 @@ export class ConsommableData extends EquipementBaseData {
     const baseSchema = super.defineSchema();
     return {
       ...baseSchema,
+      typeConsommable: new StringField({ initial: "potion" }),
+      nocivite: new NumberField({ initial: 0, min: 0, integer: true }),
       effet: new StringField({ initial: "" }), // Ex: "+ (1D8+2) PV"
       charges: new NumberField({ initial: 1, min: 0, integer: true }) // Nombre d'utilisations (ex: rations, potions)
     };
