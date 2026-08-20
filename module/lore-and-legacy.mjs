@@ -1,8 +1,8 @@
 import { LoreAndLegacyActor } from "./documents/actor.mjs";
-import { LoreAndLegacyActorSheet } from "./sheets/actor-sheet.mjs";
+import { LoreAndLegacyActorSheet, LoreAndLegacyPNJSheet } from "./sheets/actor-sheet.mjs";
 import { LoreAndLegacyItemSheet } from "./sheets/item-sheet.mjs"; // fiche des Traits
-import { PersonnageData } from "./data/actor-data.mjs";
-import { CapaciteData, TraitData, PeupleData  } from "./data/item-data.mjs"; 
+import { PersonnageData, PNJData } from "./data/actor-data.mjs";
+import { CapaciteData, TraitData, TraitSpecialData, PeupleData  } from "./data/item-data.mjs"; 
 import { EquipementBaseData, ArmeData, ArmureData, ConsommableData, ArcanotechData, MaterielData, ComposantData } from "./data/item-data.mjs";
 
 Hooks.once("init", async function() {
@@ -10,8 +10,10 @@ Hooks.once("init", async function() {
 
   // Déclaration des Data Models
   CONFIG.Actor.dataModels.personnage = PersonnageData;
+  CONFIG.Actor.dataModels.pnj = PNJData;
   CONFIG.Item.dataModels.capacite = CapaciteData;
   CONFIG.Item.dataModels.trait = TraitData; 
+  CONFIG.Item.dataModels.traitSpecial = TraitSpecialData;
   CONFIG.Item.dataModels.peuple = PeupleData;
   CONFIG.Item.dataModels.equipement = EquipementBaseData; // Pour le matériel générique
   CONFIG.Item.dataModels.arme = ArmeData;
@@ -24,13 +26,29 @@ Hooks.once("init", async function() {
     // Déclaration des Classes de Documents
   CONFIG.Actor.documentClass = LoreAndLegacyActor;
 
-  // Enregistrement de la fiche de personnage
+  // 1. Désinscrire la fiche par défaut de Foundry
   Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("lore-and-legacy", LoreAndLegacyActorSheet, { makeDefault: true });
 
-  // Enregistrement de la fiche d'Objet (Item)
+  // 2. Enregistrer la fiche PJ EXCLUSIVEMENT pour le type "personnage"
+  Actors.registerSheet("lore-and-legacy", LoreAndLegacyActorSheet, {
+    types: ["personnage"],
+    makeDefault: true,
+    label: "Fiche Personnage (PJ)"
+  });
+
+  // 3. Enregistrer la fiche PNJ EXCLUSIVEMENT pour le type "pnj"
+  Actors.registerSheet("lore-and-legacy", LoreAndLegacyPNJSheet, {
+    types: ["pnj"],
+    makeDefault: true,
+    label: "Fiche Monstre / PNJ"
+  });
+
+  // Enregistrer la fiche personnalisée pour tous les types d'Items
   Items.unregisterSheet("core", ItemSheet);
-  Items.registerSheet("lore-and-legacy", LoreAndLegacyItemSheet, { makeDefault: true });
+  Items.registerSheet("lore-and-legacy", LoreAndLegacyItemSheet, {
+    makeDefault: true,
+    label: "Fiche Lore & Legacy"
+  });
 
   
 });

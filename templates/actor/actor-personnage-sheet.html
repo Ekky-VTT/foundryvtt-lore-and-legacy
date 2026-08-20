@@ -314,8 +314,10 @@
         <span class="value">{{system.secondaires.poids.value}} kg</span>
       </div>
 	  <div class="derived-item">
-        <span class="label" title="Bagage porté / maximum autorisé">Bagage porté / max :</span>
-        <span class="value">{{system.secondaires.bagage.value}} / {{system.secondaires.bagage.max}}</span>
+        <span class="label" title="Base de 9 + Modificateurs (Plafonné à 18)">Bagage :</span>
+        <span class="value" {{#if actor.system.secondaires.bagage.surcharge}}style="color: #b32424; font-weight: bold; text-shadow: 0 0 3px rgba(179,36,36,0.3);"{{/if}}>
+          {{actor.system.secondaires.bagage.value}} / {{actor.system.secondaires.bagage.max}}
+        </span>
       </div>
 	  <div class="derived-item">
         <span class="label" title="Base : Rapidité ÷ 3">Distance de Saut :</span>
@@ -347,7 +349,6 @@
       <section class="section-block capacities-block">
         <div class="block-header flexrow">
           <h2 class="block-title">CAPACITÉS <span>(1D10 + Score)</span></h2>
-          <a class="item-create-capacite" title="Ajouter une Capacité"><i class="fas fa-plus-circle"></i> Ajouter une Capacité</a>
         </div>
 
         <div class="capacities-list">
@@ -386,7 +387,7 @@
               <a class="item-delete" title="Supprimer la capacité"><i class="fas fa-trash"></i></a>
             </div>
           {{else}}
-            <p class="empty-notice">Aucune capacité ajoutée. Cliquez sur "+ Ajouter une Capacité" pour ouvrir le menu de sélection.</p>
+            <p class="empty-notice">Aucune capacité ajoutée. Glissez une capacité depuis le compendium.</p>
           {{/each}}
         </div>
       </section>
@@ -421,7 +422,7 @@
               <!-- BOUTON SUPPRIMER OU BADGE RACIAL -->
               {{#if trait.flags.[lore-and-legacy].isRacialTrait}}
                 <span style="font-size: 10px; font-style: italic; color: #aaa; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;" title="Ce trait est imposé par votre Peuple et ne peut être supprimé.">
-                  (Racial)
+                  (Peuple)
                 </span>
               {{else}}
                 <a class="item-delete" title="Supprimer le Trait"><i class="fas fa-trash"></i></a>
@@ -447,30 +448,57 @@
         </div>
         <div class="items-list">
           <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
-            <div style="flex: 3;">Nom</div>
+            <div style="flex: 0.8; text-align: center;">Équipé</div>
+            <div style="flex: 2.5;">Nom</div>
+            <div style="flex: 1; text-align: center;">Type</div>
             <div style="flex: 1; text-align: center;">Dégâts</div>
-            <div style="flex: 1; text-align: center;">Prise</div>
+            <div style="flex: 0.8; text-align: center;">Prise</div>
             <div style="flex: 1; text-align: center;">Portée</div>
             <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
             <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
           </div>
           
           {{#each armes as |arme id|}}
-          <div class="item flexrow" data-item-id="{{arme._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
-            <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-              <img src="{{arme.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
-              <span>{{arme.name}} {{#if arme.system.equipe}}<span style="font-size: 10px; color: #b32424;">(Équipé)</span>{{/if}}</span>
+          
+            {{#if arme.afficherCategorie}}
+            <div style="background: rgba(193, 154, 91, 0.3); padding: 4px 8px; font-weight: bold; font-variant: small-caps; color: #0e3a47; margin-top: 5px; border-radius: 3px;">
+              {{arme.categorieArme}}
             </div>
-            <div style="flex: 1; text-align: center;">{{arme.system.degatsBase}} {{#if arme.system.degatsBonus}}+{{arme.system.degatsBonus}}{{/if}}</div>
-            <div style="flex: 1; text-align: center;">{{arme.system.mains}}</div>
-            <div style="flex: 1; text-align: center;">{{arme.system.portee}}</div>
-            <div style="flex: 0.5; text-align: center;">{{arme.system.encombrement}}</div>
-            <div style="flex: 0.5; text-align: center;">
-              <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+            {{/if}}
+
+            <div class="item flexrow" data-item-id="{{arme._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+              
+              <div style="flex: 0.8; text-align: center;">
+                <input type="checkbox" class="inline-checkbox" data-field="equipe" {{checked arme.system.equipe}} title="Équiper cette arme"/>
+              </div>
+
+              <div style="flex: 2.5; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                <img src="{{arme.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+                {{#if arme.system.equipe}}
+                <span style="color: black; font-weight: bold;">{{arme.name}}</span>
+                {{else}}
+                <span>{{arme.name}}</span>
+                {{/if}}
+              </div>
+              
+              <div style="flex: 1; text-align: center; font-size: 11px; font-style: italic; color: #0e3a47;">
+                {{arme.typeArmeLabel}}
+              </div>
+
+              <div style="flex: 1; text-align: center; font-weight: bold;">
+                {{arme.system.degatsBase}}{{#if arme.system.degatsBonus}}+{{arme.system.degatsBonus}}{{/if}}
+              </div>
+              
+              <div style="flex: 0.8; text-align: center;">{{arme.system.mains}}</div>
+              <div style="flex: 1; text-align: center; font-size: 11px;">{{arme.porteeAffichee}}</div>
+              <div style="flex: 0.5; text-align: center;">{{arme.system.encombrement}}</div>
+              
+              <div style="flex: 0.5; text-align: center;">
+                <a class="item-delete" style="color: #b32424; cursor: pointer;" title="Supprimer l'arme"><i class="fas fa-trash"></i></a>
+              </div>
             </div>
-          </div>
           {{else}}
-          <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucune arme.</p>
+          <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucune arme dans l'inventaire.</p>
           {{/each}}
         </div>
       </section>
@@ -483,6 +511,7 @@
         <div class="items-list">
           <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
             <div style="flex: 3;">Nom</div>
+            <div style="flex: 0.5; text-align: center;">Équipé</div>
             <div style="flex: 1; text-align: center;">Bonus Rés. Phys.</div>
             <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
             <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
@@ -499,6 +528,9 @@
               <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                 <img src="{{armure.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
                 <span>{{armure.name}} {{#if armure.system.equipe}}<span style="font-size: 10px; color: #b32424;">(Équipé)</span>{{/if}}</span>
+              </div>
+              <div style="flex: 0.5; text-align: center;">
+                <input type="checkbox" class="inline-checkbox" data-field="equipe" {{checked armure.system.equipe}} title="Équiper cette armure"/>
               </div>
               <div style="flex: 1; text-align: center;">+{{armure.system.bonusResPhys}}</div>
               <div style="flex: 0.5; text-align: center;">{{armure.system.encombrement}}</div>
@@ -526,6 +558,7 @@
           <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
             <div style="flex: 3;">Nom</div>
             <div style="flex: 1; text-align: center;">Usages</div>
+            <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
             <div style="flex: 1; text-align: center;">Actions</div>
           </div>
 
@@ -538,6 +571,7 @@
             <div style="flex: 1; text-align: center; font-weight: bold; color: #0e3a47;">
               {{conso.usagesActuels}} / {{conso.usagesMax}}
             </div>
+            <div style="flex: 0.5; text-align: center;">{{conso.system.encombrement}}</div>
             <div style="flex: 1; text-align: center; display: flex; justify-content: center; gap: 15px;">
               <a class="item-use" title="Consommer 1 usage" style="color: #2b7a4b; cursor: pointer;"><i class="fas fa-flask"></i></a>
               <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
@@ -554,6 +588,7 @@
             <div style="flex: 1; text-align: center; font-weight: bold; color: #0e3a47;">
               {{mat.usagesActuels}} / {{mat.usagesMax}}
             </div>
+            <div style="flex: 0.5; text-align: center;">{{mat.system.encombrement}}</div>
             <div style="flex: 1; text-align: center; display: flex; justify-content: center; gap: 15px;">
               <a class="item-use" title="Utiliser 1 fois" style="color: #0e3a47; cursor: pointer;"><i class="fas fa-wrench"></i></a>
               <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
@@ -567,6 +602,35 @@
             {{/unless}}
           {{/unless}}
           
+        </div>
+      </section>
+
+      <!-- TABLEAU : SAC À DOS (DIVERS) -->
+      <section class="section-block" style="margin-top: 20px;">
+        <div class="block-header flexrow">
+          <h2 class="block-title">SAC À DOS (DIVERS)</h2>
+        </div>
+        <div class="items-list">
+          <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
+            <div style="flex: 3;">Nom</div>
+            <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
+            <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
+          </div>
+
+          {{#each divers as |objet id|}}
+          <div class="item flexrow" data-item-id="{{objet._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+            <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+              <img src="{{objet.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+              <span>{{objet.name}}</span>
+            </div>
+            <div style="flex: 0.5; text-align: center;">{{objet.system.encombrement}}</div>
+            <div style="flex: 0.5; text-align: center;">
+              <a class="item-delete" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+            </div>
+          </div>
+          {{else}}
+          <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucun objet divers.</p>
+          {{/each}}
         </div>
       </section>
     </div>

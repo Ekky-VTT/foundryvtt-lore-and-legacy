@@ -39,23 +39,42 @@
     <div class="sheet-content" style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; overflow-y: hidden;">
         
         <!-- SPÉCIFICITÉS ARME -->
-        <div style="flex: 0 0 auto; display: flex; justify-content: space-between; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <label style="font-weight: bold;">Dégâts:</label>
-                <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" style="width: 50px; text-align: center;" title="Dés de dégâts (ex: 1D8)"/>
-                <span style="font-weight: bold;">+</span>
-                <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center;" title="Bonus fixe aux dégâts"/>
+        <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label style="font-weight: bold;">Dégâts:</label>
+                    <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" style="width: 50px; text-align: center;" title="Dés de dégâts (ex: 1D8)"/>
+                    <span style="font-weight: bold;">+</span>
+                    <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center;" title="Bonus fixe aux dégâts"/>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label style="font-weight: bold;">Prise:</label>
+                    <select name="system.mains" style="width: 80px;">
+                        <option value="1M" {{#if (eq system.mains "1M")}}selected{{/if}}>1 Main</option>
+                        <option value="2M" {{#if (eq system.mains "2M")}}selected{{/if}}>2 Mains</option>
+                    </select>
+                </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <label style="font-weight: bold;">Prise:</label>
-                <select name="system.mains" style="width: 80px;">
-                    <option value="1M" {{#if (eq system.mains "1M")}}selected{{/if}}>1 Main</option>
-                    <option value="2M" {{#if (eq system.mains "2M")}}selected{{/if}}>2 Mains</option>
-                </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <label style="font-weight: bold;">Portée:</label>
-                <input type="text" name="system.portee" value="{{system.portee}}" style="width: 80px; text-align: center;"/>
+            <div style="display: flex; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <label style="font-weight: bold;">Catégorie :</label>
+                    <select name="system.typeArme" style="width: 120px;">
+                        <option value="melee" {{#if (eq system.typeArme "melee")}}selected{{/if}}>Mêlée</option>
+                        <option value="distance" {{#if (eq system.typeArme "distance")}}selected{{/if}}>À distance</option>
+                    </select>
+                </div>
+                {{#if (eq system.typeArme "distance")}}
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-weight: bold; color: #0e3a47;">P. Moy. (m) :</label>
+                        <input type="number" name="system.porteeMoyenne" value="{{system.porteeMoyenne}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-weight: bold; color: #0e3a47;">P. Max. (m) :</label>
+                        <input type="number" name="system.porteeMax" value="{{system.porteeMax}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
+                    </div>
+                </div>
+                {{/if}}
             </div>
         </div>
 

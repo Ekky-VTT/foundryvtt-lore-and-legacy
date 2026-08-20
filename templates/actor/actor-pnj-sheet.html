@@ -1,0 +1,164 @@
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column;">
+  
+  <style>
+    .pnj-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .pnj-box { background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 5px; text-align: center; }
+    .pnj-box label { font-weight: bold; color: #0e3a47; font-size: 11px; display: block; margin-bottom: 2px; }
+    .pnj-box input { width: 100%; text-align: center; border: 1px solid #ccc; font-weight: bold; }
+    
+    /* GRILLE D'ATTRIBUTS : Empêche l'étirement vertical */
+    .pnj-attr-grid { 
+      display: grid; 
+      grid-template-columns: repeat(6, 1fr); 
+      gap: 5px; 
+      margin-bottom: 15px; 
+      align-items: start; /* Empêche les cases de s'étirer en hauteur */
+    }
+
+    .pnj-editor-container { flex: 1; min-height: 200px; border: 1px solid #c19a5b; background: rgba(0,0,0,0.05); border-radius: 3px; padding: 5px; }
+    
+    /* CADRE D'ATTRIBUT COMPACT */
+    .pnj-attr-box { 
+      background: rgba(193, 154, 91, 0.2); 
+      border: 1px solid #c19a5b; 
+      border-radius: 3px; 
+      padding: 3px 2px; 
+      text-align: center;
+      height: fit-content; /* S'adapte au contenu sans espace vide */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .pnj-attr-box a { 
+      font-size: 11px; 
+      font-weight: bold; 
+      color: #0e3a47; 
+      display: block; 
+      margin: 0;
+      padding: 0;
+      line-height: 1.1;
+    }
+
+    .pnj-attr-box input { 
+      width: 100%; 
+      height: 20px; 
+      min-height: 20px;
+      max-height: 20px;
+      text-align: center; 
+      border: 1px solid #ccc; 
+      font-weight: bold; 
+      margin: 2px 0 0 0; /* Élimine la marge inférieure parasite de Foundry */
+      padding: 0;
+      box-sizing: border-box;
+    }
+  </style>
+
+  <header style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+    <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="width: 80px; height: 80px; border-radius: 5px; object-fit: cover; border: 1px solid #c19a5b;"/>
+    
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+      <input name="name" type="text" value="{{actor.name}}" placeholder="Nom de la Créature" style="font-size: 24px; font-weight: bold; background: transparent; border: none; border-bottom: 1px dotted #c19a5b; color: #0e3a47; margin-bottom: 8px;"/>
+      
+      <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; color: #b32424;">
+        <label>INDICE DE DANGER :</label>
+        <input type="number" name="system.indiceDanger" value="{{system.indiceDanger}}" style="width: 50px; text-align: center; border: 1px solid #b32424; color: #b32424; background: rgba(179,36,36,0.1);"/>
+      </div>
+    </div>
+  </header>
+
+  <div class="pnj-grid">
+    <div class="pnj-box"><label>PV</label>
+      <div style="display: flex; align-items: center;">
+        <input type="number" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.pv.max" value="{{system.secondaires.pv.max}}" data-dtype="Number"/>
+      </div>
+    </div>
+    <div class="pnj-box"><label>PM</label>
+      <div style="display: flex; align-items: center;">
+        <input type="number" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.pm.max" value="{{system.secondaires.pm.max}}" data-dtype="Number"/>
+      </div>
+    </div>
+    <div class="pnj-box"><label>RDC</label>
+      <div style="display: flex; align-items: center;">
+        <input type="number" name="system.secondaires.rdc.value" value="{{system.secondaires.rdc.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.rdc.max" value="{{system.secondaires.rdc.max}}" data-dtype="Number"/>
+      </div>
+    </div>
+    <div class="pnj-box">
+      <label>RÉS. PHYSIQUE</label>
+      <input type="number" name="system.secondaires.resPhys.value" value="{{system.secondaires.resPhys.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-box">
+      <label>RÉS. MAGIQUE</label>
+      <input type="number" name="system.secondaires.resMag.value" value="{{system.secondaires.resMag.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-box">
+      <label>RÉS. MENTALE</label>
+      <input type="number" name="system.secondaires.resMent.value" value="{{system.secondaires.resMent.value}}" data-dtype="Number"/>
+    </div>
+  </div>
+
+  <div class="pnj-attr-grid">
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="caractere" title="Lancer Caractère">CAR</a>
+      <input type="number" name="system.attributs.caractere.value" value="{{system.attributs.caractere.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="discernement" title="Lancer Discernement">DIS</a>
+      <input type="number" name="system.attributs.discernement.value" value="{{system.attributs.discernement.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="maitrise" title="Lancer Maîtrise">MAÎ</a>
+      <input type="number" name="system.attributs.maitrise.value" value="{{system.attributs.maitrise.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="prestance" title="Lancer Prestance">PRE</a>
+      <input type="number" name="system.attributs.prestance.value" value="{{system.attributs.prestance.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="robustesse" title="Lancer Robustesse">ROB</a>
+      <input type="number" name="system.attributs.robustesse.value" value="{{system.attributs.robustesse.value}}" data-dtype="Number"/>
+    </div>
+    <div class="pnj-attr-box">
+      <a class="attribut-roll" data-attr="vigueur" title="Lancer Vigueur">VIG</a>
+      <input type="number" name="system.attributs.vigueur.value" value="{{system.attributs.vigueur.value}}" data-dtype="Number"/>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; min-height: 220px; flex: 1 1 auto;">
+    <section data-drop-type="traitSpecial" style="display: flex; flex-direction: column; min-width: 0; min-height: 220px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
+      <h3 style="flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px;">TRAITS SPÉCIAUX</h3>
+      <div style="flex: 1 1 auto; overflow-y: auto;">
+        {{#each traitsSpeciaux as |traitSpecial id|}}
+        <div class="item flexrow" data-item-id="{{traitSpecial._id}}" style="display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dotted #ccc;">
+          <span style="flex: 1; font-weight: bold;">{{traitSpecial.name}}</span>
+          <a class="item-delete" title="Supprimer le Trait Spécial" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+        </div>
+        {{else}}
+        <p style="margin: 8px 0; text-align: center; color: #888; font-style: italic;">Glissez un Trait Spécial ici.</p>
+        {{/each}}
+      </div>
+    </section>
+
+    <section data-drop-type="capacite" style="display: flex; flex-direction: column; min-width: 0; min-height: 220px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
+      <h3 style="flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px;">CAPACITÉS</h3>
+      <div style="flex: 1 1 auto; overflow-y: auto;">
+        {{#each capacites as |capacite id|}}
+        <div class="item flexrow" data-item-id="{{capacite._id}}" style="display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dotted #ccc;">
+          <a class="capacite-roll" title="Lancer {{capacite.name}}" style="flex: 1; font-weight: bold; color: #0e3a47; cursor: pointer;">{{capacite.name}}</a>
+          <label title="Score de la capacité" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold;">
+            
+            <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15" style="width: 40px; text-align: center;"/>
+          </label>
+          <a class="item-delete" title="Supprimer la capacité" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
+        </div>
+        {{else}}
+        <p style="margin: 8px 0; text-align: center; color: #888; font-style: italic;">Glissez une capacité ici.</p>
+        {{/each}}
+      </div>
+    </section>
+  </div>
+
+</form>

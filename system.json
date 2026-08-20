@@ -7,6 +7,25 @@
     "minimum": "12",
     "verified": "14"
   },
+  "documentTypes": {
+    "Actor": {
+      "personnage": {},
+      "pnj": {}
+    },
+    "Item": {
+      "capacite": {},
+      "trait": {},
+      "traitSpecial": {},
+      "peuple": {},
+      "equipement": {},
+      "arme": {},
+      "armure": {},
+      "consommable": {},
+      "arcanotech": {},
+      "materiel": {},
+      "composant": {}
+    }
+  },
   "authors": [
     {
       "name": "Ekky",

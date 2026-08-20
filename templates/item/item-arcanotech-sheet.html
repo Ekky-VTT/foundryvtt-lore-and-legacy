@@ -20,6 +20,7 @@
                 <input name="name" type="text" value="{{item.name}}" placeholder="Nom de la relique" style="color: white; font-weight: bold; background: rgba(0, 0, 0, 0.2); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
             </h1>
             <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px; font-size: 12px; font-weight: bold;">
+                <label style="display: flex; align-items: center; gap: 5px;" title="Durabilité">Durabilité : <input type="number" name="system.durabilite" value="{{system.durabilite}}" min="0" style="width: 40px; color:white; background: rgba(0,0,0,0.4); border: 1px solid #c19a5b; border-radius: 3px; text-align: center;"/></label>
                 
                 <label style="display: flex; align-items: center; gap: 5px;" title="Encombrement">Enc. : <input type="number" name="system.encombrement" value="{{system.encombrement}}" min="0" style="width: 40px; color:white; background: rgba(0,0,0,0.4); border: 1px solid #c19a5b; border-radius: 3px; text-align: center;"/></label>
                 
@@ -42,7 +43,7 @@
         <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <label style="font-weight: bold; color: #4a2c66;">Mystère :</label>
+                    <label style="font-weight: bold; color: black;">Mystère :</label>
                     <input type="number" name="system.mystere" value="{{system.mystere}}" min="0" style="width: 40px; text-align: center; border: 1px solid #4a2c66;"/>
                 </div>
                 
@@ -62,16 +63,27 @@
                     </select>
                 </div>
             </div>
-            <div style="display: flex; justify-content: space-around; align-items: center; border-top: 1px dotted #c19a5b; padding-top: 5px;">
+            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
                 <div style="display: flex; align-items: center; gap: 5px;" title="Utilisé si l'objet est une arme">
                     <label style="font-weight: bold;">Dégâts :</label>
                     <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" style="width: 50px; text-align: center;"/>
                     <span style="font-weight: bold;">+</span>
                     <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center;"/>
                 </div>
+                <div style="display: flex; align-items: center; gap: 5px;" title="Nombre de mains nécessaires">
+                    <label style="font-weight: bold;">Prise :</label>
+                    <select name="system.mains" style="width: 80px;">
+                        <option value="1M" {{#if (eq system.mains "1M")}}selected{{/if}}>1 Main</option>
+                        <option value="2M" {{#if (eq system.mains "2M")}}selected{{/if}}>2 Mains</option>
+                    </select>
+                </div>
                 <div style="display: flex; align-items: center; gap: 5px;" title="Utilisé si l'objet est un artefact (fragile)">
-                    <label style="font-weight: bold;">Durabilité :</label>
-                    <input type="number" name="system.durabilite" value="{{system.durabilite}}" style="width: 40px; text-align: center;"/>
+                    {{#if (eq system.sousType "armeTir")}}
+                    <label style="font-weight: bold; color: #0e3a47;">P. Moy. (m) :</label>
+                    <input type="number" name="system.porteeMoyenne" value="{{system.porteeMoyenne}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
+                    <label style="font-weight: bold; color: #0e3a47;">P. Max. (m) :</label>
+                    <input type="number" name="system.porteeMax" value="{{system.porteeMax}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
+                    {{/if}}
                 </div>
             </div>
         </div>

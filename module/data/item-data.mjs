@@ -30,6 +30,15 @@ export class TraitData extends foundry.abstract.TypeDataModel {
   }
 }
 
+export class TraitSpecialData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    
+    return {
+      description: new HTMLField({ initial: "" })
+    };
+  }
+}
+
 /**
  * Modèle de données pour les Peuples / Espèces
  */
@@ -88,10 +97,12 @@ export class ArmeData extends EquipementBaseData {
     // Et on y ajoute les spécificités des armes de Lore & Legacy
     return {
       ...baseSchema,
+      typeArme: new StringField({ initial: "melee" }), // 'melee' ou 'distance'
       degatsBase: new StringField({ initial: "1D8" }),
       degatsBonus: new NumberField({ initial: 0, integer: true }), // Le "+ X"
       mains: new StringField({ initial: "1M" }), // 1M (une main) ou 2M (deux mains)
-      portee: new StringField({ initial: "Mêlée" })
+      porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
+      porteeMax: new NumberField({ initial: 40, min: 0, integer: true })
     };
   }
 }
@@ -140,6 +151,9 @@ export class ArcanotechData extends EquipementBaseData {
       // Si c'est une arme, on ajoute de quoi stocker les dégâts
       degatsBase: new StringField({ initial: "1D8" }),
       degatsBonus: new NumberField({ initial: 0, integer: true }),
+      mains: new StringField({ initial: "1M" }),
+      porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
+      porteeMax: new NumberField({ initial: 40, min: 0, integer: true }),
       // Si c'est un artefact, on stocke la durabilité
       durabilite: new NumberField({ initial: 10, min: 0, integer: true })
     };

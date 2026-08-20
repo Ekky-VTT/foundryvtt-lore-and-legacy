@@ -8,7 +8,7 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["lore-and-legacy", "sheet", "item"],
-      width: 520,
+      width: 620,
       height: 480,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description" }], 
       dragDrop: [{ dragSelector: ".item", dropSelector: "form" }]
@@ -34,7 +34,7 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     
     // On transmet nativement la permission d'édition au HTML
     context.editable = this.isEditable;
-    
+      
     // Si c'est un Peuple, on prépare la liste visuelle des Traits
     if (item.type === "peuple") {
       context.traitsList = [];

@@ -3,8 +3,8 @@ const { SchemaField, NumberField, StringField, HTMLField, BooleanField } = found
 // Petite fonction maison pour éviter de répéter le code pour chaque attribut
 function creerAttribut() {
   return new SchemaField({
-    value: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
-    total: new NumberField({ initial: 1, integer: true }), // On déclare le total
+    value: new NumberField({ initial: 0, min: 0, max: 10, integer: true }),
+    total: new NumberField({ initial: 0, integer: true }), // On déclare le total
     fortune: new BooleanField({ initial: false }),   
     adversite: new BooleanField({ initial: false })  
   });
@@ -30,9 +30,9 @@ attributs: new SchemaField({
         robustesse: creerAttribut(),
         vigueur: creerAttribut(),
         fortune: new SchemaField({
-          value: new NumberField({ initial: 1, min: 0, integer: true }),
-          max: new NumberField({ initial: 1, min: 1, max: 10, integer: true }),
-          total: new NumberField({ initial: 1, integer: true }), // NOUVEAU : On déclare le total pour la fortune
+          value: new NumberField({ initial: 0, min: 0, integer: true }),
+          max: new NumberField({ initial: 0, min: 0, max: 10, integer: true }),
+          total: new NumberField({ initial: 0, integer: true }), // NOUVEAU : On déclare le total pour la fortune
           fortune: new BooleanField({ initial: false }),
           adversite: new BooleanField({ initial: false })
         })
@@ -59,6 +59,15 @@ attributs: new SchemaField({
         armureLourde: new BooleanField({ initial: false }),
         bouclier: new BooleanField({ initial: false })
       })
+    };
+  }
+}
+
+export class PNJData extends PersonnageData {
+  static defineSchema() {
+    return {
+      ...super.defineSchema(),
+      indiceDanger: new foundry.data.fields.NumberField({ initial: 0, min: 0, integer: true })
     };
   }
 }

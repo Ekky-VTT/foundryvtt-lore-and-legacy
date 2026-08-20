@@ -13,7 +13,7 @@ export class LoreAndLegacyActor extends Actor {
   prepareDerivedData() {
     super.prepareDerivedData();
     const systemData = this.system;
-    if (this.type === "personnage" || this.type === "pnj") {
+    if (this.type === "personnage") {
       this._preparePersonnageData(systemData);
     }
   }
@@ -203,22 +203,56 @@ export class LoreAndLegacyActor extends Actor {
     // Résistance Mentale = (Caractère + Prestance) * 2 + Esprit Critique + Traits
     sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique + bonusResMentTraits;
 
-    // Résistance Physique = (Robustesse * 3) + Esquive + Armures + Traits
-    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits;
-    if (eq?.armureLegere) resPhysBase += bonusArmureLegere;
-    if (eq?.armureLourde) resPhysBase += bonusArmureLourde;
-    if (eq?.bouclier) resPhysBase += bonusBouclier;
+    // --- NOUVEAU : CALCUL DES PROTECTIONS ÉQUIPÉES ET RÉSISTANCE PHYSIQUE ---
+    let bonusResPhysArmures = 0;
+    let hasArmureLegere = false;
+    let hasArmureLourde = false;
+    let hasBouclier = false;
+
+    for (let item of this.items) {
+      if (item.type === "armure" && item.system?.equipe) {
+        bonusResPhysArmures += Number(item.system.bonusResPhys || 0);
+        if (item.system.type === "legere") hasArmureLegere = true;
+        if (item.system.type === "lourde") hasArmureLourde = true;
+        if (item.system.type === "bouclier") hasBouclier = true;
+      }
+    }
+
+    // Mise à jour automatique des flags d'équipement
+    if (eq) {
+      eq.armureLegere = hasArmureLegere;
+      eq.armureLourde = hasArmureLourde;
+      eq.bouclier = hasBouclier;
+    }
+
+    // Résistance Physique = (Robustesse * 3) + Esquive + Bonus Armures (équipement) + Bonus Traits
+    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits + bonusResPhysArmures;
+    
+    // Application des bonus de capacités passives si le bon type est équipé
+    if (hasArmureLegere) resPhysBase += bonusArmureLegere;
+    if (hasArmureLourde) resPhysBase += bonusArmureLourde;
+    if (hasBouclier) resPhysBase += bonusBouclier;
+
     sec.resPhys.value = resPhysBase;
 
+    // --- CALCUL DU BAGAGE ---
     // Bagage = Base de 9 + Optimisation + Traits - Plafonné à 18
     sec.bagage = sec.bagage || {};
     sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
+    
+    // Calcul du bagage actuel : on somme l'encombrement de tous les objets
     sec.bagage.value = this.items.reduce((total, item) => {
-      if (!item.system?.equipe) return total;
-      const encombrement = Number(item.system.encombrement || 0);
-      const quantite = Number(item.system.quantite || 1);
-      return total + (encombrement * quantite);
+      // On ne compte que les objets qui possèdent un champ "encombrement"
+      if (item.system && item.system.encombrement !== undefined) {
+        const encombrement = Number(item.system.encombrement || 0);
+        const quantite = Number(item.system.quantite || 1);
+        return total + (encombrement * quantite);
+      }
+      return total;
     }, 0);
+
+    // Nouveau : on crée un indicateur booléen (vrai/faux) si le bagage dépasse le max
+    sec.bagage.surcharge = sec.bagage.value > sec.bagage.max;
 
     // Reste des statistiques
     sec.rdc.max = (fortune + vigueur) * multRDC;
@@ -230,11 +264,11 @@ export class LoreAndLegacyActor extends Actor {
     sec.bonusChargeEffort = Math.ceil(bonusMusculation / 2);
   }
 
-/**
+  /**
    * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
    * @param {string} itemId - L'ID de l'objet Capacité cliqué
    */
-  async rollCapacite(itemId) {
+  async rollCapacite(itemId, options = {}) {
     const capacite = this.items.get(itemId);
     if (!capacite || capacite.type !== "capacite") return;
 
@@ -246,8 +280,12 @@ export class LoreAndLegacyActor extends Actor {
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
 
     // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
-    let isFortune = capacite.system.fortune || (attributParent && attributParent.finalFortune);
-    let isAdversite = capacite.system.adversite || (attributParent && attributParent.finalAdversite);
+    let isFortune = options.fortune !== undefined
+      ? options.fortune
+      : capacite.system.fortune || (attributParent && attributParent.finalFortune);
+    let isAdversite = options.adversite !== undefined
+      ? options.adversite
+      : capacite.system.adversite || (attributParent && attributParent.finalAdversite);
     
     const nomCapa = capacite.name.toLowerCase();
 
@@ -269,6 +307,9 @@ export class LoreAndLegacyActor extends Actor {
     if (this.flags?.adversiteSociale && socialCapacites.some(c => nomCapa.includes(c))) {
       isAdversite = true;
     }
+
+    if (options.fortune !== undefined) isFortune = options.fortune;
+    if (options.adversite !== undefined) isAdversite = options.adversite;
     
     let formula = "";
     let flavorText = "";
