@@ -47,6 +47,13 @@
 		"path": "packs/capacites",
       "type": "Item",
       "system": "lore-and-legacy"
+    },
+    {
+      "name": "tables-lore-and-legacy",
+      "label": "Tables de Jet (Lore & Legacy)",
+      "path": "packs/tables-lore-and-legacy",
+      "type": "RollTable",
+      "system": "lore-and-legacy"
     }
   ],
   "url": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy",

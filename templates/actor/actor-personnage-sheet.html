@@ -314,8 +314,8 @@
         <span class="value">{{system.secondaires.poids.value}} kg</span>
       </div>
 	  <div class="derived-item">
-        <span class="label" title="Base de 9 + Modificateurs (Plafonné à 18)">Bagage Max :</span>
-        <span class="value">{{system.secondaires.bagage.max}}</span>
+        <span class="label" title="Bagage porté / maximum autorisé">Bagage porté / max :</span>
+        <span class="value">{{system.secondaires.bagage.value}} / {{system.secondaires.bagage.max}}</span>
       </div>
 	  <div class="derived-item">
         <span class="label" title="Base : Rapidité ÷ 3">Distance de Saut :</span>
@@ -332,6 +332,7 @@
   <!-- Navigation des Onglets -->
   <nav class="sheet-tabs tabs" data-group="primary" style="flex: 0 0 auto; display: flex; gap: 20px; justify-content: center; border-bottom: 2px solid #c19a5b; margin: 15px 0 10px 0; font-weight: bold; font-size: 16px; color: #0e3a47;">
     <a class="item" data-tab="actions" style="cursor: pointer; padding-bottom: 5px;">Actions & Traits</a>
+    <a class="item" data-tab="combat" style="cursor: pointer; padding-bottom: 5px;">Combat</a>
     <a class="item" data-tab="equipement" style="cursor: pointer; padding-bottom: 5px;">Équipement</a>
     <a class="item" data-tab="magie" style="cursor: pointer; padding-bottom: 5px;">Sortilèges</a>
   </nav>
@@ -436,8 +437,8 @@
     </div> <!-- FIN DE L'ONGLET 1 (C'est la balise qui manquait !) -->
 
 
-    <!-- ONGLET 2 : ÉQUIPEMENT -->
-    <div class="tab" data-group="primary" data-tab="equipement">
+    <!-- ONGLET 2 : COMBAT -->
+    <div class="tab" data-group="primary" data-tab="combat">
       
       <!-- TABLEAU 1 : LES ARMES -->
       <section class="section-block">
@@ -511,7 +512,12 @@
         </div>
       </section>
 
-      <!-- TABLEAU 3 : SAC À DOS -->
+    </div>
+
+    <!-- ONGLET 3 : ÉQUIPEMENT -->
+    <div class="tab" data-group="primary" data-tab="equipement">
+
+      <!-- TABLEAU : SAC À DOS -->
       <section class="section-block" style="margin-top: 20px;">
         <div class="block-header flexrow">
           <h2 class="block-title">SAC À DOS (CONSOMMABLES & MATÉRIEL)</h2>
@@ -565,7 +571,7 @@
       </section>
     </div>
 
-    <!-- ONGLET 3 : SORTILÈGES (Prêt pour la suite) -->
+    <!-- ONGLET 4 : SORTILÈGES -->
     <div class="tab" data-group="primary" data-tab="magie">
       <div class="block-header flexrow">
         <h2 class="block-title">GRIMOIRE & INVOCATIONS</h2>

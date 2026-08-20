@@ -213,6 +213,12 @@ export class LoreAndLegacyActor extends Actor {
     // Bagage = Base de 9 + Optimisation + Traits - Plafonné à 18
     sec.bagage = sec.bagage || {};
     sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
+    sec.bagage.value = this.items.reduce((total, item) => {
+      if (!item.system?.equipe) return total;
+      const encombrement = Number(item.system.encombrement || 0);
+      const quantite = Number(item.system.quantite || 1);
+      return total + (encombrement * quantite);
+    }, 0);
 
     // Reste des statistiques
     sec.rdc.max = (fortune + vigueur) * multRDC;
