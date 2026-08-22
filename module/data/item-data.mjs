@@ -17,6 +17,26 @@ export class CapaciteData extends foundry.abstract.TypeDataModel {
 }
 
 /**
+ * Modèle de données pour les Sortilèges
+ */
+export class SortilegeData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      typeMagie: new StringField({ initial: "illusoire" }),
+      coutPM: new NumberField({ initial: 0, min: 0, integer: true }),
+      cible: new StringField({ initial: "unique" }),
+      duree: new StringField({ initial: "" }),
+      description: new HTMLField({ initial: "" }),
+      difficulte: new StringField({ initial: "" }),
+      degats: new NumberField({ initial: 0, min: 0, integer: true }),
+      participantsRecommandes: new NumberField({ initial: 1, min: 1, integer: true }),
+      coutParParticipant: new NumberField({ initial: 0, min: 0, integer: true }),
+      coutTotal: new NumberField({ initial: 0, min: 0, integer: true })
+    };
+  }
+}
+
+/**
  * Modèle de données pour les Traits
  */
 export class TraitData extends foundry.abstract.TypeDataModel {
@@ -30,6 +50,9 @@ export class TraitData extends foundry.abstract.TypeDataModel {
   }
 }
 
+/**
+ * Modèle de données pour les Traits Spéciaux
+ */
 export class TraitSpecialData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     
@@ -38,6 +61,19 @@ export class TraitSpecialData extends foundry.abstract.TypeDataModel {
     };
   }
 }
+
+/**
+ * Modèle de données pour les Pouvoirs
+ */
+export class PouvoirData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { HTMLField } = foundry.data.fields;
+    return {
+      description: new HTMLField({ initial: "" })
+    };
+  }
+}
+
 
 /**
  * Modèle de données pour les Peuples / Espèces

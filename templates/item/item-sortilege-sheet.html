@@ -1,0 +1,88 @@
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+  <style>
+    .sortilege-editor { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; width: 100%; overflow: hidden; }
+    .sortilege-editor .editor-container { flex: 1 1 auto; position: relative; min-height: 0; height: auto; width: 100%; display: flex; flex-direction: column; overflow: hidden; }
+    .sortilege-editor .editor { flex: 1; display: flex; flex-direction: column; min-height: 0; height: auto !important; width: 100%; }
+    .sortilege-editor .editor-content { flex: 1; overflow-y: auto; padding: 5px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.1); min-height: 0; height: auto !important; width: 100%; }
+    .sortilege-editor .tox-tinymce { height: 100% !important; width: 100% !important; }
+    .sortilege-editor .proseMirror { height: auto !important; min-height: 0; width: 100% !important; overflow-y: auto; }
+    .sortilege-fields { display: flex; flex-wrap: wrap; gap: 8px 15px; align-items: center; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px; }
+    .sortilege-field { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 12px; font-weight: bold; }
+    .sortilege-field input, .sortilege-field select { max-width: 150px; min-width: 0; box-sizing: border-box; border: 1px solid #c19a5b; border-radius: 3px; }
+    .sortilege-difficulte { flex: 1 1 auto; min-width: 0; }
+    .sortilege-difficulte-label { flex: 0 0 auto; white-space: nowrap; }
+    .sortilege-difficulte input { flex: 1 1 auto; width: 0; max-width: none; }
+    .sortilege-degats { flex: 0 0 auto; margin-left: auto; white-space: nowrap; }
+    .sortilege-conditional { display: none; }
+    .sortilege-conditional.is-visible { display: flex; }
+  </style>
+
+  <header class="sheet-header" style="flex: 0 0 auto; display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 5px; background: rgba(0,0,0,0.3);"/>
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      <h1 style="margin: 0; border: none;">
+        <input name="name" type="text" value="{{item.name}}" placeholder="Nom du sortilège" {{#unless editable}}disabled{{/unless}} style="font-weight: bold; color: white; background: rgba(0, 0, 0, 0.05); border: 1px solid transparent; width: 100%; padding-left: 5px; border-radius: 3px;"/>
+      </h1>
+      <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px; font-size: 12px; font-weight: bold;">
+        <span style="color: #e2c98d;">SORTILÈGE</span>
+        <span style="color: #fff;">{{typeMagieLabel}}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="sheet-content" style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: hidden;">
+    <div class="sortilege-fields" style="flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: 8px;">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px 15px; align-items: center;">
+      <label class="sortilege-field">Type de magie :
+        <select name="system.typeMagie" class="sortilege-type" {{#unless editable}}disabled{{/unless}}>
+          <option value="illusoire" {{#if (eq system.typeMagie "illusoire")}}selected{{/if}}>Magie Illusoire</option>
+          <option value="materielle" {{#if (eq system.typeMagie "materielle")}}selected{{/if}}>Magie Matérielle</option>
+          <option value="rituelle" {{#if (eq system.typeMagie "rituelle")}}selected{{/if}}>Magie Rituelle</option>
+        </select>
+      </label>
+      <label class="sortilege-field sortilege-cout-pm">Coût (PM) :
+        <input type="number" name="system.coutPM" value="{{system.coutPM}}" min="0" {{#unless editable}}disabled{{/unless}}/>
+      </label>
+      <label class="sortilege-field">Cible :
+        <select name="system.cible" {{#unless editable}}disabled{{/unless}}>
+          <option value="unique" {{#if (eq system.cible "unique")}}selected{{/if}}>Unique</option>
+          <option value="zone" {{#if (eq system.cible "zone")}}selected{{/if}}>Zone</option>
+          <option value="surface" {{#if (eq system.cible "surface")}}selected{{/if}}>Surface</option>
+          <option value="special" {{#if (eq system.cible "special")}}selected{{/if}}>Spécial</option>
+        </select>
+      </label>
+      </div>
+      <label class="sortilege-field" style="width: 100%;">Durée :
+        <input type="text" name="system.duree" value="{{system.duree}}" {{#unless editable}}disabled{{/unless}} style="flex: 1 1 auto; width: 0; max-width: none;"/>
+      </label>
+    </div>
+
+    <div class="sortilege-fields sortilege-materiel sortilege-conditional" data-visible-for="materielle,rituelle">
+      <label class="sortilege-field sortilege-difficulte"> <span class="sortilege-difficulte-label">Difficulté :</span>
+        <input type="text" name="system.difficulte" value="{{system.difficulte}}" {{#unless editable}}disabled{{/unless}}/>
+      </label>
+      <label class="sortilege-field sortilege-degats">Dégâts : D8 +
+        <input type="number" name="system.degats" value="{{system.degats}}" min="0" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
+      </label>
+    </div>
+
+    <div class="sortilege-fields sortilege-rituel sortilege-conditional" data-visible-for="rituelle">
+      <label class="sortilege-field">Participants recommandés :
+        <input type="number" name="system.participantsRecommandes" value="{{system.participantsRecommandes}}" min="1" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
+      </label>
+      <label class="sortilege-field">Coût par participant (PM) :
+        <input type="number" name="system.coutParParticipant" value="{{system.coutParParticipant}}" min="0" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
+      </label>
+      <label class="sortilege-field">Coût total (PM) :
+        <input type="number" name="system.coutTotal" value="{{system.coutTotal}}" min="0" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
+      </label>
+    </div>
+
+    <div class="sortilege-editor">
+      <label style="font-weight: bold; margin-bottom: 5px; color: #0e3a47;">Description / Effet :</label>
+      <div class="editor-container">
+        {{editor enrichedDescription target="system.description" button=true editable=editable engine="prosemirror"}}
+      </div>
+    </div>
+  </div>
+</form>

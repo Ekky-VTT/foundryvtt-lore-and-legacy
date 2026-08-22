@@ -14,8 +14,10 @@
     },
     "Item": {
       "capacite": {},
+      "sortilege": {},
       "trait": {},
       "traitSpecial": {},
+      "pouvoir": {},
       "peuple": {},
       "equipement": {},
       "arme": {},

@@ -257,6 +257,7 @@ export class LoreAndLegacyActor extends Actor {
     // Reste des statistiques
     sec.rdc.max = (fortune + vigueur) * multRDC;
     sec.rapidite.value = maitrise + vigueur + bonusRapiditeTraits;
+    sec.sprint.value = sec.rapidite.value * 2;
     sec.poids.value = (sec.resPhys.value * 10) + bonusPoidsTraits;
 
     // --- 3. STOCKAGE DES BONUS DE MUSCULATION POUR PLUS TARD ---
@@ -318,11 +319,15 @@ export class LoreAndLegacyActor extends Actor {
     if (capaciteValue > 0) {
       typeDeDe = "d10";
       formula = `1d10 + ${capaciteValue}`;
-      flavorText = `Jet de Capacité : <b>${capacite.name}</b>`;
+      flavorText = options.sortilegeName
+        ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (Sorcellerie)`
+        : `Jet de Capacité : <b>${capacite.name}</b>`;
     } else {
       typeDeDe = "d6";
       formula = `1d6 + ${attributValue}`;
-      flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
+      flavorText = options.sortilegeName
+        ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli sans Sorcellerie) : Attribut <b>${attributNom}</b>`
+        : `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
     if (isFortune) {
@@ -331,7 +336,7 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     if (isAdversite) {
-      formula += ` - 1${typeDeDe}[adversite]`;
+      formula = `1${typeDeDe} + max(0, ${capaciteValue > 0 ? capaciteValue : attributValue} - 1${typeDeDe}[adversite])${isFortune ? ` + 1${typeDeDe}[fortune]` : ""}`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
 
@@ -359,11 +364,11 @@ export class LoreAndLegacyActor extends Actor {
    * Effectue un jet d'Attribut pur (1D6) avec prise en compte de Fortune/Adversité
    * @param {string} attrKey - La clé de l'attribut (ex: "caractere")
    */
-  async rollAttribut(attrKey) {
+  async rollAttribut(attrKey, options = {}) {
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    const attrScore = attribut.total || 0;
+    const attrScore = attribut.total || attribut.value || 0;
     
     const nomsFormates = {
       caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise",
@@ -372,15 +377,20 @@ export class LoreAndLegacyActor extends Actor {
     const nomAffiche = nomsFormates[attrKey] || attrKey;
 
     let formula = `1d6 + ${attrScore}`;
-    let flavorText = `Jet d'Attribut : <b>${nomAffiche}</b>`;
+    let flavorText = options.sortilegeName
+      ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli : Discernement)`
+      : `Jet d'Attribut : <b>${nomAffiche}</b>`;
 
-    if (attribut.finalFortune) {
+    const isFortune = options.fortune !== undefined ? options.fortune : attribut.finalFortune;
+    const isAdversite = options.adversite !== undefined ? options.adversite : attribut.finalAdversite;
+
+    if (isFortune) {
       formula += ` + 1d6[fortune]`;
       flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
     }
 
-    if (attribut.finalAdversite) {
-      formula += ` - 1d6[adversite]`;
+    if (isAdversite) {
+      formula = `1d6 + max(0, ${attrScore} - 1d6[adversite])${isFortune ? " + 1d6[fortune]" : ""}`;
       flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
     }
     
@@ -398,6 +408,46 @@ export class LoreAndLegacyActor extends Actor {
 
     await roll.evaluate();
 
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      flavor: flavorText
+    });
+  }
+
+  async rollPNJArme(index, options = {}) {
+    if (this.type !== "pnj") return;
+
+    const arme = this.system.armesPNJ?.[index];
+    if (!arme || !arme.nom) return;
+
+    const cd = Number(arme.cd || 0);
+    const isFortune = options.fortune === true;
+    const isAdversite = options.adversite === true;
+    let formula = `1d8 + ${cd}`;
+    let flavorText = `Dégâts : <b>${arme.nom}</b> (1D8 + ${cd})`;
+
+    if (isFortune) {
+      formula += " + 1d8[fortune]";
+      flavorText += ' <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>';
+    }
+
+    if (isAdversite) {
+      formula = `1d8 + max(0, ${cd} - 1d8[adversite])${isFortune ? " + 1d8[fortune]" : ""}`;
+      flavorText += ' <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>';
+    }
+
+    const roll = new Roll(formula);
+    for (const term of roll.terms) {
+      if (term.flavor === "fortune") {
+        term.options ??= {};
+        term.options.colorset = "fortune";
+      } else if (term.flavor === "adversite") {
+        term.options ??= {};
+        term.options.colorset = "adversite";
+      }
+    }
+
+    await roll.evaluate();
     roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       flavor: flavorText

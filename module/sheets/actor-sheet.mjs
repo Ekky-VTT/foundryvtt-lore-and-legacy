@@ -61,6 +61,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const consommables = [];
     const materiels = [];
     const divers = [];
+    const sortileges = [];
+    const pouvoirs = [];
     const attributs = this.actor.system.attributs;
 
     for (let item of this.actor.items) {
@@ -81,6 +83,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       
       if (item.type === "trait") traits.push(itemData);
       if (item.type === "traitSpecial") traitsSpeciaux.push(itemData);
+      if (item.type === "sortilege") sortileges.push(itemData);
 
       // --- LES ARMES CLASSIQUES ---
       if (item.type === "arme") {
@@ -131,6 +134,10 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       }
 
       if (item.type === "composant") divers.push(itemData);
+
+      if (item.type === "pouvoir" || item.type === "sortilege") {
+        pouvoirs.push(itemData);
+      }
     }
     
     // Tris et assignations au contexte
@@ -172,6 +179,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     context.consommables = consommables.sort((a, b) => a.name.localeCompare(b.name));
     context.materiels = materiels.sort((a, b) => a.name.localeCompare(b.name));
     context.divers = divers.sort((a, b) => a.name.localeCompare(b.name));
+    context.sortileges = sortileges.sort((a, b) => a.name.localeCompare(b.name));
+    context.pouvoirs = pouvoirs.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /**
@@ -246,20 +255,157 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     if (!this.isEditable) return;
 
     html.find('.capacite-roll').click(this._onRollCapacite.bind(this));
+    html.find('.sortilege-roll').click(this._onRollSortilege.bind(this));
     html.find('.item-delete').click(this._onItemDelete.bind(this));
     html.find('.item-use').click(this._onItemUse.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
+    
     
     // Sauvegarde immédiate du score de capacité dès qu'il est modifié
     html.find('.item-valeur').change(this._onItemValueChange.bind(this));
     // Clic sur le nom d'un Attribut
     html.find('.attribut-roll').click(this._onRollAttribut.bind(this));
+
+// --- GESTION DU BOUTON BIVOUAC ---
+    html.find('.action-bivouac').click(ev => {
+      ev.preventDefault();
+      
+      const actor = this.actor;
+      
+      // Contenu HTML de la boîte de dialogue
+      const dialogContent = `
+      <form autocomplete="off">
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label style="font-weight: bold; color:black;">Repas partagé :</label>
+          <select id="repas-choice" style="width: 100%;">
+            <option value="rien">Rien / Jeûne (Aucun soin)</option>
+            <option value="normal">Repas Normal (Gain: 1D8 + 2)</option>
+            <option value="raffine">Mets Raffinés (Gain: 1D8 + 4)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label style="font-weight: bold; color:black;">Sécurité du lieu :</label>
+          <select id="lieu-choice" style="width: 100%;">
+            <option value="tranquille">Tranquille (Difficulté 6)</option>
+            <option value="dangereux">Dangereux (Difficulté 12)</option>
+          </select>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <label style="font-weight: bold; color:black;">Pratiquer sa Passion ?</label>
+          <input type="checkbox" id="passion-check" checked />
+        </div>
+      </form>
+    `;
+
+      new Dialog({
+        title: `Bivouac de ${actor.name}`,
+        content: dialogContent,
+        buttons: {
+          repos: {
+            icon: '<i class="fas fa-campground"></i>',
+            label: "Se reposer",
+            callback: async (html) => {
+              // On uniformise les noms de variables !
+              const repas = html.find('#repas-choice').val();
+              const lieu = html.find('#lieu-choice').val();
+              const passion = html.find('#passion-check').is(':checked');
+
+              // On utilise bien chatContent partout
+              let chatContent = `<h3 style="border-bottom: 2px solid #c19a5b; padding-bottom: 5px; margin-bottom: 10px;">🏕️ Bivouac de ${actor.name}</h3>`;
+
+              // --- 1. GESTION DU REPAS (Soins Aléatoires) ---
+              if (repas !== "rien") {
+                const formule = repas === "normal" ? "1d8+2" : "1d8+4";
+                // L'ajout de {async: true} sécurise la compatibilité de Foundry
+                const repasRoll = await new Roll(formule).evaluate({async: true});
+                const soin = repasRoll.total;
+                
+                chatContent += `<p>🍽️ <b>Repas :</b> ${repas === "normal" ? "Normal" : "Raffiné"}<br>Gain de <b>${soin}</b> PV et PM.</p>`;
+                
+                // Mise à jour de la fiche sans dépasser le Maximum
+                const sec = actor.system.secondaires;
+                const nouveauxPV = Math.min(sec.pv.value + soin, sec.pv.max);
+                const nouveauxPM = Math.min(sec.pm.value + soin, sec.pm.max);
+                
+                await actor.update({
+                  "system.secondaires.pv.value": nouveauxPV,
+                  "system.secondaires.pm.value": nouveauxPM
+                });
+                
+                // Affiche le jet de soin dans le Chat
+                await repasRoll.toMessage({ 
+                  speaker: ChatMessage.getSpeaker({ actor: actor }), 
+                  flavor: `Soin du Bivouac (${repas === "normal" ? "Repas Normal" : "Mets Raffinés"})` 
+                });
+              } else {
+                chatContent += `<p>🍽️ <b>Repas :</b> Aucun (Jeûne).</p>`;
+              }
+
+              // --- 2. GESTION DE LA PASSION (Jet de Fortune) ---
+              if (passion) {
+                const diff = lieu === "tranquille" ? 6 : 12;
+                
+                // On cherche la capacité "Passion" pour récupérer son score (s'il l'a augmentée)
+                const passionItem = actor.items.find(i => i.type === "capacite" && i.name.toLowerCase().includes("passion"));
+                const scorePassion = passionItem ? passionItem.system.valeur : 0;
+                
+                const passionRoll = await new Roll(`1d10 + ${scorePassion}`).evaluate({async: true});
+                const reussite = passionRoll.total >= diff;
+                
+                chatContent += `<p>🎨 <b>Passion :</b> Lieu ${lieu} (Difficulté ${diff})<br>`;
+                
+                if (reussite) {
+                  chatContent += `<span style="color: #2b7a4b; font-weight: bold;">Réussite !</span> Restauration totale de la Fortune.</p>`;
+                  const fortuneMax = actor.system.attributs.fortune.total || 0;
+                  await actor.update({ "system.attributs.fortune.value": fortuneMax });
+                } else {
+                  chatContent += `<span style="color: #b32424; font-weight: bold;">Échec.</span> L'esprit tourmenté, aucune Fortune n'est récupérée.</p>`;
+                }
+                
+                // Affiche le jet de Passion dans le Chat
+                await passionRoll.toMessage({ 
+                  speaker: ChatMessage.getSpeaker({ actor: actor }), 
+                  flavor: `Jet de Passion (Lieu ${lieu})` 
+                });
+              }
+
+              // --- 3. RÉCAPITULATIF GLOBAL ---
+              ChatMessage.create({
+                speaker: ChatMessage.getSpeaker({ actor: actor }),
+                content: chatContent
+              });
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Annuler"
+          }
+        },
+        default: "repos"
+      }).render(true);
+    });
   }
 
   async _onRollCapacite(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
     await this.actor.rollCapacite(itemId);
+  }
+
+  async _onRollSortilege(event) {
+    event.preventDefault();
+    const itemId = $(event.currentTarget).closest('.item').data('item-id');
+    const sortilege = this.actor.items.get(itemId);
+    const sorcellerie = this.actor.items.find(item =>
+      item.type === "capacite" && item.name.toLowerCase().includes("sorcellerie")
+    );
+
+    if (sorcellerie) {
+      await this.actor.rollCapacite(sorcellerie.id, { sortilegeName: sortilege?.name });
+      return;
+    }
+
+    await this.actor.rollAttribut("discernement", { sortilegeName: sortilege?.name });
   }
 
   /**
@@ -344,6 +490,44 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       val = Math.min(Math.max(val, 0), 15); // Borne la valeur entre 0 et 15
       await item.update({ "system.valeur": val });
     }
+  }
+
+  async _onPNJArmeAdd(event) {
+    event.preventDefault();
+    const armes = (this.actor.system.armesPNJ || []).map(arme => ({
+      nom: arme.nom,
+      cd: Number(arme.cd || 0)
+    }));
+    armes.push({ nom: "Nouvelle arme", cd: 0 });
+    await this.actor.update({ "system.armesPNJ": armes });
+  }
+
+  async _onPNJArmeDelete(event) {
+    event.preventDefault();
+    const index = Number(event.currentTarget.dataset.index);
+    const armes = (this.actor.system.armesPNJ || []).map(arme => ({
+      nom: arme.nom,
+      cd: Number(arme.cd || 0)
+    }));
+    if (!Number.isInteger(index) || index < 0 || index >= armes.length) return;
+    armes.splice(index, 1);
+    await this.actor.update({ "system.armesPNJ": armes });
+  }
+
+  async _onPNJArmeChange(event) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    const index = Number(input.dataset.index);
+    const field = input.dataset.field;
+    const armes = (this.actor.system.armesPNJ || []).map(arme => ({
+      nom: arme.nom,
+      cd: Number(arme.cd || 0)
+    }));
+    if (!Number.isInteger(index) || !armes[index]) return;
+
+    if (field === "nom") armes[index].nom = input.value;
+    if (field === "cd") armes[index].cd = Number(input.value) || 0;
+    await this.actor.update({ "system.armesPNJ": armes });
   }
 
   async _onToggleCheckbox(event) {
@@ -502,7 +686,7 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["lore-and-legacy", "sheet", "actor", "pnj"],
       template: "systems/lore-and-legacy/templates/actor/actor-pnj-sheet.html",
-      width: 550,
+      width: 700,
       height: 700,
       tabs: [] // Aucun onglet !
     });
@@ -511,11 +695,18 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
   async getData() {
     const context = await super.getData();
     context.system = this.actor.system;
+    context.pnjSprint = Number(this.actor.system.secondaires.rapidite.value || 0) * 2;
     return context;
   }
   
   activateListeners(html) {
     super.activateListeners(html);
+    if (!this.isEditable) return;
+
+    html.find('.pnj-arme-add').click(this._onPNJArmeAdd.bind(this));
+    html.find('.pnj-arme-delete').click(this._onPNJArmeDelete.bind(this));
+    html.find('.pnj-arme-roll').click(this._onPNJArmeRoll.bind(this));
+    html.find('.pnj-arme-field').change(this._onPNJArmeChange.bind(this));
   }
 
   async _onRollCapacite(event) {
@@ -563,10 +754,87 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
   async _onRollAttribut(event) {
     event.preventDefault();
     const attrKey = event.currentTarget.dataset.attr;
-    const attributValue = this.actor.system.attributs[attrKey]?.value || 0;
-    
-    let roll = new Roll(`1d6 + ${attributValue}`);
-    await roll.evaluate();
-    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: `Jet de ${attrKey.toUpperCase()}` });
+    const nomsFormates = {
+      caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise",
+      prestance: "Prestance", robustesse: "Robustesse", vigueur: "Vigueur", fortune: "Fortune"
+    };
+    const nomAffiche = nomsFormates[attrKey] || attrKey;
+
+    new Dialog({
+      title: `Jet d'attribut : ${nomAffiche}`,
+      content: `
+        <form>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" name="fortune"/>
+              Dé de Fortune (+1D6)
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" name="adversite"/>
+              Dé d'Adversité (-1D6)
+            </label>
+          </div>
+        </form>
+      `,
+      buttons: {
+        roll: {
+          icon: '<i class="fas fa-dice-d6"></i>',
+          label: "Lancer le jet",
+          callback: async html => {
+            await this.actor.rollAttribut(attrKey, {
+              fortune: html.find('[name="fortune"]').prop('checked'),
+              adversite: html.find('[name="adversite"]').prop('checked')
+            });
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Annuler"
+        }
+      },
+      default: "roll"
+    }).render(true);
+  }
+
+  async _onPNJArmeRoll(event) {
+    event.preventDefault();
+    const index = Number(event.currentTarget.dataset.index);
+    const arme = this.actor.system.armesPNJ?.[index];
+    if (!arme || !arme.nom) return;
+
+    new Dialog({
+      title: `Jet de dégâts : ${arme.nom}`,
+      content: `
+        <form>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" name="fortune"/>
+              Dé de Fortune (+1D8)
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" name="adversite"/>
+              Dé d'Adversité (-1D8)
+            </label>
+          </div>
+        </form>
+      `,
+      buttons: {
+        roll: {
+          icon: '<i class="fas fa-dice-d8"></i>',
+          label: "Lancer le jet",
+          callback: async html => {
+            await this.actor.rollPNJArme(index, {
+              fortune: html.find('[name="fortune"]').prop('checked'),
+              adversite: html.find('[name="adversite"]').prop('checked')
+            });
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Annuler"
+        }
+      },
+      default: "roll"
+    }).render(true);
   }
 }

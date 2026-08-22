@@ -1,10 +1,31 @@
-<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column;">
+<form class="{{cssClass}} flexcol" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow-y: auto;">
   
   <style>
     .pnj-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .pnj-box { background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 5px; text-align: center; }
     .pnj-box label { font-weight: bold; color: #0e3a47; font-size: 11px; display: block; margin-bottom: 2px; }
     .pnj-box input { width: 100%; text-align: center; border: 1px solid #ccc; font-weight: bold; }
+
+    /* Correction : suppression du min-height: 220px */
+    .pnj-weapons { display: flex; flex-direction: column; min-width: 0; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px; }
+    .pnj-weapons h3 { border-bottom: none !important; box-shadow: none; text-decoration: none; }
+    .pnj-weapon-row { display: flex; align-items: center; gap: 5px; padding: 5px 0; border-bottom: 1px dotted #ccc; }
+    .pnj-weapon-row input { min-width: 0; border: 1px solid #ccc; font-weight: bold; }
+    .pnj-weapon-name { flex: 1; }
+    .pnj-weapon-cd { width: 38px; text-align: center; }
+    .pnj-weapon-action { color: #0e3a47; cursor: pointer; }
+    .pnj-weapon-delete { color: #b32424; cursor: pointer; }
+
+    .pnj-secondary-grid .pnj-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 48px;
+    }
+
+    .pnj-secondary-grid .pnj-box input {
+      margin-top: auto;
+    }
     
     /* GRILLE D'ATTRIBUTS : Empêche l'étirement vertical */
     .pnj-attr-grid { 
@@ -52,6 +73,15 @@
       padding: 0;
       box-sizing: border-box;
     }
+
+    /* ZONES POUVOIRS ET SORTILÈGES */
+    .pnj-pouvoirs-section { display: flex; flex-direction: column; flex: 0 0 auto; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px; min-height: 60px; }
+    .pnj-pouvoirs-section h3 { flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px; text-transform: uppercase; }
+    .pnj-pouvoirs-list { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; align-items: center; }
+    .pnj-pouvoir-badge { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #1a7692 0%, #0e3a47 100%); color: white; padding: 4px 10px 4px 4px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid #6ccdeb; }
+    .pnj-pouvoir-badge img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid white; background: white; }
+    .pnj-pouvoir-badge .item-name { font-weight: bold; letter-spacing: 0.5px; cursor: pointer; }
+    .pnj-pouvoir-badge .item-delete { color: #ff8c8c; cursor: pointer; margin-left: 4px; display: flex; align-items: center; }
   </style>
 
   <header style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
@@ -70,34 +100,32 @@
   <div class="pnj-grid">
     <div class="pnj-box"><label>PV</label>
       <div style="display: flex; align-items: center;">
-        <input type="number" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.pv.value" value="{{system.secondaires.pv.value}}" data-dtype="Number"/> /
         <input type="number" name="system.secondaires.pv.max" value="{{system.secondaires.pv.max}}" data-dtype="Number"/>
       </div>
     </div>
     <div class="pnj-box"><label>PM</label>
       <div style="display: flex; align-items: center;">
-        <input type="number" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.pm.value" value="{{system.secondaires.pm.value}}" data-dtype="Number"/> /
         <input type="number" name="system.secondaires.pm.max" value="{{system.secondaires.pm.max}}" data-dtype="Number"/>
       </div>
     </div>
     <div class="pnj-box"><label>RDC</label>
       <div style="display: flex; align-items: center;">
-        <input type="number" name="system.secondaires.rdc.value" value="{{system.secondaires.rdc.value}}" data-dtype="Number"/> / 
+        <input type="number" name="system.secondaires.rdc.value" value="{{system.secondaires.rdc.value}}" data-dtype="Number"/> /
         <input type="number" name="system.secondaires.rdc.max" value="{{system.secondaires.rdc.max}}" data-dtype="Number"/>
       </div>
     </div>
-    <div class="pnj-box">
-      <label>RÉS. PHYSIQUE</label>
-      <input type="number" name="system.secondaires.resPhys.value" value="{{system.secondaires.resPhys.value}}" data-dtype="Number"/>
-    </div>
-    <div class="pnj-box">
-      <label>RÉS. MAGIQUE</label>
-      <input type="number" name="system.secondaires.resMag.value" value="{{system.secondaires.resMag.value}}" data-dtype="Number"/>
-    </div>
-    <div class="pnj-box">
-      <label>RÉS. MENTALE</label>
-      <input type="number" name="system.secondaires.resMent.value" value="{{system.secondaires.resMent.value}}" data-dtype="Number"/>
-    </div>
+  </div>
+
+  <div class="pnj-grid pnj-secondary-grid" style="grid-template-columns: repeat(7, minmax(0, 1fr));">
+    <div class="pnj-box"><label>RAPIDITÉ</label><input type="number" name="system.secondaires.rapidite.value" value="{{system.secondaires.rapidite.value}}" data-dtype="Number"/></div>
+    <div class="pnj-box"><label>SPRINT</label><input type="number" value="{{pnjSprint}}" readonly/></div>
+    <div class="pnj-box"><label>RÉS. PHYSIQUE</label><input type="number" name="system.secondaires.resPhys.value" value="{{system.secondaires.resPhys.value}}" data-dtype="Number"/></div>
+    <div class="pnj-box"><label>POIDS</label><input type="number" name="system.secondaires.poids.value" value="{{system.secondaires.poids.value}}" data-dtype="Number"/></div>
+    <div class="pnj-box"><label>RÉS. MAGIQUE</label><input type="number" name="system.secondaires.resMag.value" value="{{system.secondaires.resMag.value}}" data-dtype="Number"/></div>
+    <div class="pnj-box"><label>RÉS. MENTALE</label><input type="number" name="system.secondaires.resMent.value" value="{{system.secondaires.resMent.value}}" data-dtype="Number"/></div>
+    <div class="pnj-box"><label>SEUIL DE BLESSURE</label><input type="number" name="system.secondaires.sb.value" value="{{system.secondaires.sb.value}}" data-dtype="Number"/></div>
   </div>
 
   <div class="pnj-attr-grid">
@@ -127,8 +155,11 @@
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; min-height: 220px; flex: 1 1 auto;">
-    <section data-drop-type="traitSpecial" style="display: flex; flex-direction: column; min-width: 0; min-height: 220px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
+  <!-- CORRECTION DE LA GRILLE : margin-bottom retiré pour supprimer le vide -->
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; flex: 0 0 auto; align-items: start; margin-bottom: 0;">
+    
+    <!-- CORRECTION : min-height supprimé -->
+    <section data-drop-type="traitSpecial" style="display: flex; flex-direction: column; min-width: 0; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
       <h3 style="flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px;">TRAITS SPÉCIAUX</h3>
       <div style="flex: 1 1 auto; overflow-y: auto;">
         {{#each traitsSpeciaux as |traitSpecial id|}}
@@ -142,14 +173,14 @@
       </div>
     </section>
 
-    <section data-drop-type="capacite" style="display: flex; flex-direction: column; min-width: 0; min-height: 220px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
+    <!-- CORRECTION : min-height supprimé -->
+    <section data-drop-type="capacite" style="display: flex; flex-direction: column; min-width: 0; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px;">
       <h3 style="flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px;">CAPACITÉS</h3>
       <div style="flex: 1 1 auto; overflow-y: auto;">
         {{#each capacites as |capacite id|}}
         <div class="item flexrow" data-item-id="{{capacite._id}}" style="display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dotted #ccc;">
           <a class="capacite-roll" title="Lancer {{capacite.name}}" style="flex: 1; font-weight: bold; color: #0e3a47; cursor: pointer;">{{capacite.name}}</a>
           <label title="Score de la capacité" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold;">
-            
             <input type="number" class="item-valeur" value="{{capacite.system.valeur}}" min="0" max="15" style="width: 40px; text-align: center;"/>
           </label>
           <a class="item-delete" title="Supprimer la capacité" style="color: #b32424; cursor: pointer;"><i class="fas fa-trash"></i></a>
@@ -159,6 +190,42 @@
         {{/each}}
       </div>
     </section>
+
+    <!-- La classe .pnj-weapons a été allégée dans le style en haut -->
+    <section class="pnj-weapons">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #c19a5b;">
+        <h3 style="flex: 0 0 auto; margin: 0; padding: 0; color: #0e3a47; font-size: 14px;">ARMES</h3>
+        <a class="pnj-arme-add" title="Ajouter une arme" role="button" tabindex="0" style="font-size: 22px; line-height: 18px; font-weight: bold; color: #0e3a47; cursor: pointer;">+</a>
+      </div>
+      <div style="flex: 1 1 auto; overflow-y: auto;">
+        {{#each system.armesPNJ as |arme index|}}
+        <div class="pnj-weapon-row">
+          <input type="text" class="pnj-arme-field pnj-weapon-name" data-index="{{index}}" data-field="nom" value="{{arme.nom}}" title="Nom de l'arme"/>
+          <input type="number" class="pnj-arme-field pnj-weapon-cd" data-index="{{index}}" data-field="cd" value="{{arme.cd}}" min="0" title="Code de dégât"/>
+          <a class="pnj-arme-roll pnj-weapon-action" data-index="{{index}}" title="Lancer 1D8 + CD"><i class="fas fa-dice-d8"></i></a>
+          <a class="pnj-arme-delete pnj-weapon-delete" data-index="{{index}}" title="Supprimer l'arme"><i class="fas fa-trash"></i></a>
+        </div>
+        {{else}}
+        <p style="margin: 8px 0; text-align: center; color: #888; font-style: italic;">Aucune arme ajoutée.</p>
+        {{/each}}
+      </div>
+    </section>
   </div>
+
+  <!-- NOUVELLE ZONE POUVOIRS & SORTILÈGES -->
+  <section class="pnj-pouvoirs-section">
+    <h3>Pouvoirs & Sortilèges</h3>
+    <div class="pnj-pouvoirs-list">
+      {{#each pouvoirs as |pouvoir id|}}
+      <div class="pnj-pouvoir-badge item" data-item-id="{{pouvoir._id}}">
+        <img src="{{pouvoir.img}}" />
+        <span class="item-name" title="Cliquer pour voir la description">{{pouvoir.name}}</span>
+        <a class="item-delete" title="Oublier ce pouvoir"><i class="fas fa-times-circle"></i></a>
+      </div>
+      {{else}}
+      <p style="width: 100%; text-align: center; color: #888; font-style: italic; font-size: 12px; margin: 0;">Glissez un Pouvoir ou un Sortilège ici.</p>
+      {{/each}}
+    </div>
+  </section>
 
 </form>

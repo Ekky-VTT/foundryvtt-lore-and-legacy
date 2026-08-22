@@ -1,4 +1,4 @@
-const { SchemaField, NumberField, StringField, HTMLField, BooleanField } = foundry.data.fields;
+const { ArrayField, SchemaField, NumberField, StringField, HTMLField, BooleanField } = foundry.data.fields;
 
 // Petite fonction maison pour éviter de répéter le code pour chaque attribut
 function creerAttribut() {
@@ -46,6 +46,7 @@ attributs: new SchemaField({
         rdc: new SchemaField({ value: new NumberField({ initial: 0 }), max: new NumberField({ initial: 0 }) }),
         sb: new SchemaField({ value: new NumberField({ initial: 0 }) }),
         rapidite: new SchemaField({ value: new NumberField({ initial: 0 }) }),
+        sprint: new SchemaField({ value: new NumberField({ initial: 0 }) }),
         bagage: new SchemaField({ value: new NumberField({ initial: 0 }), max: new NumberField({ initial: 18 }) }),
         poids: new SchemaField({ value: new NumberField({ initial: 0 }) })
       }),
@@ -67,6 +68,10 @@ export class PNJData extends PersonnageData {
   static defineSchema() {
     return {
       ...super.defineSchema(),
+      armesPNJ: new ArrayField(new SchemaField({
+        nom: new StringField({ initial: "" }),
+        cd: new NumberField({ initial: 0, integer: true })
+      })),
       indiceDanger: new foundry.data.fields.NumberField({ initial: 0, min: 0, integer: true })
     };
   }

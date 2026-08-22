@@ -1,12 +1,12 @@
 <form class="{{cssClass}} lore-sheet flexcol" autocomplete="off">
 
-<!-- ========================================== -->
+  <!-- ========================================== -->
   <!-- ZONE SUPÉRIEURE FIXE (Ne s'étire pas)      -->
   <!-- ========================================== -->
   <div class="sheet-top-fixed" style="flex: 0 0 auto;">
   
   <!-- EN-TÊTE DE LA FICHE -->
-  <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
+  <header class="sheet-header" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px; position: relative;">
     
     <!-- Image du Personnage -->
     <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="width: 100px; height: 100px; border: 1px solid #c19a5b; border-radius: 5px; object-fit: cover; background: rgba(0,0,0,0.3);" />
@@ -45,8 +45,13 @@
       </div>
       
     </div>
+    
+    <!-- NOUVEAU BOUTON BIVOUAC EN HAUT À DROITE -->
+    <a class="action-bivouac" title="Prendre un Bivouac" style="position: absolute; right: 0; bottom: 10px; display: flex; align-items: center; gap: 5px; background: rgba(193, 154, 91, 0.2); border: 1px solid #c19a5b; border-radius: 3px; padding: 4px 8px; font-weight: bold; color: white; cursor: pointer; font-size: 12px;">
+      <i class="fas fa-campground"></i> Bivouac
+    </a>
   </header>
-
+  
   <section class="resources-bar">
     <div class="resource-box pv-box">
       <span class="resource-label">POINTS DE VIE</span>
@@ -640,9 +645,36 @@
       <div class="block-header flexrow">
         <h2 class="block-title">GRIMOIRE & INVOCATIONS</h2>
       </div>
-      <p style="text-align: center; color: #888; font-style: italic; margin-top: 20px;">
-        Les sortilèges seront listés ici.
-      </p>
+      <div class="items-list">
+        <div class="items-header flexrow" style="font-weight: bold; padding: 5px; border-bottom: 2px solid #c19a5b; font-size: 12px; background: rgba(0,0,0,0.05); align-items: center;">
+          <div style="flex: 3;">Nom</div>
+          <div style="flex: 1; text-align: center;">Coût (PM)</div>
+          <div style="flex: 0.7; text-align: center;">Action</div>
+          <div style="flex: 0.5; text-align: center;"><i class="fas fa-cog"></i></div>
+        </div>
+
+        {{#each sortileges as |sortilege id|}}
+        <div class="item flexrow" data-item-id="{{sortilege._id}}" style="padding: 5px; border-bottom: 1px dotted #ccc; align-items: center;">
+          <div style="flex: 3; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <img src="{{sortilege.img}}" style="width: 24px; height: 24px; border-radius: 3px;"/>
+            <span>{{sortilege.name}}</span>
+          </div>
+          <div style="flex: 1; text-align: center; font-weight: bold; color: #0e3a47;">
+            {{#if (eq sortilege.system.typeMagie "rituelle")}}{{sortilege.system.coutTotal}}{{else}}{{sortilege.system.coutPM}}{{/if}}
+          </div>
+          <div style="flex: 0.7; text-align: center;">
+            <button type="button" class="sortilege-roll roll-button" title="Lancer avec Sorcellerie">
+              <i class="fas fa-wand-magic-sparkles"></i>
+            </button>
+          </div>
+          <div style="flex: 0.5; text-align: center;">
+            <a class="item-delete" style="color: #b32424; cursor: pointer;" title="Supprimer le sortilège"><i class="fas fa-trash"></i></a>
+          </div>
+        </div>
+        {{else}}
+        <p style="text-align: center; color: #888; font-style: italic; padding: 10px;">Aucun sortilège. Glissez-déposez un sortilège ici.</p>
+        {{/each}}
+      </div>
     </div>
   
   </section>

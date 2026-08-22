@@ -2,7 +2,7 @@ import { LoreAndLegacyActor } from "./documents/actor.mjs";
 import { LoreAndLegacyActorSheet, LoreAndLegacyPNJSheet } from "./sheets/actor-sheet.mjs";
 import { LoreAndLegacyItemSheet } from "./sheets/item-sheet.mjs"; // fiche des Traits
 import { PersonnageData, PNJData } from "./data/actor-data.mjs";
-import { CapaciteData, TraitData, TraitSpecialData, PeupleData  } from "./data/item-data.mjs"; 
+import { CapaciteData, SortilegeData, TraitData, TraitSpecialData, PouvoirData, PeupleData  } from "./data/item-data.mjs"; 
 import { EquipementBaseData, ArmeData, ArmureData, ConsommableData, ArcanotechData, MaterielData, ComposantData } from "./data/item-data.mjs";
 
 Hooks.once("init", async function() {
@@ -12,8 +12,10 @@ Hooks.once("init", async function() {
   CONFIG.Actor.dataModels.personnage = PersonnageData;
   CONFIG.Actor.dataModels.pnj = PNJData;
   CONFIG.Item.dataModels.capacite = CapaciteData;
+  CONFIG.Item.dataModels.sortilege = SortilegeData;
   CONFIG.Item.dataModels.trait = TraitData; 
   CONFIG.Item.dataModels.traitSpecial = TraitSpecialData;
+  CONFIG.Item.dataModels.pouvoir = PouvoirData;
   CONFIG.Item.dataModels.peuple = PeupleData;
   CONFIG.Item.dataModels.equipement = EquipementBaseData; // Pour le matériel générique
   CONFIG.Item.dataModels.arme = ArmeData;

@@ -34,6 +34,14 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     
     // On transmet nativement la permission d'édition au HTML
     context.editable = this.isEditable;
+
+    if (item.type === "sortilege") {
+      context.typeMagieLabel = {
+        illusoire: "Magie Illusoire",
+        materielle: "Magie Matérielle",
+        rituelle: "Magie Rituelle"
+      }[item.system.typeMagie] || "Sortilège";
+    }
       
     // Si c'est un Peuple, on prépare la liste visuelle des Traits
     if (item.type === "peuple") {
@@ -68,6 +76,18 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
       const isPoison = event.currentTarget.value === "poison";
       html.find(".nocivite-field").toggleClass("is-visible", isPoison);
     });
+
+    if (this.item.type === "sortilege") {
+      const updateSortilegeFields = typeMagie => {
+        html.find(".sortilege-cout-pm").toggle(typeMagie !== "rituelle");
+        html.find(".sortilege-materiel").toggleClass("is-visible", ["materielle", "rituelle"].includes(typeMagie));
+        html.find(".sortilege-rituel").toggleClass("is-visible", typeMagie === "rituelle");
+      };
+
+      const typeSelect = html.find('select[name="system.typeMagie"]');
+      updateSortilegeFields(typeSelect.val());
+      typeSelect.change(event => updateSortilegeFields(event.currentTarget.value));
+    }
 
     // NOUVEAU : Supprimer un Trait du Peuple
     html.find('.trait-delete').click(async ev => {
