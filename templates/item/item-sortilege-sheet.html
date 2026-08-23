@@ -61,9 +61,7 @@
       <label class="sortilege-field sortilege-difficulte"> <span class="sortilege-difficulte-label">Difficulté :</span>
         <input type="text" name="system.difficulte" value="{{system.difficulte}}" {{#unless editable}}disabled{{/unless}}/>
       </label>
-      <label class="sortilege-field sortilege-degats">Dégâts : D8 +
-        <input type="number" name="system.degats" value="{{system.degats}}" min="0" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
-      </label>
+      
     </div>
 
     <div class="sortilege-fields sortilege-rituel sortilege-conditional" data-visible-for="rituelle">
@@ -77,6 +75,28 @@
         <input type="number" name="system.coutTotal" value="{{system.coutTotal}}" min="0" {{#unless editable}}disabled{{/unless}} style="width: 55px;"/>
       </label>
     </div>
+
+    {{#unless (eq system.typeMagie "illusoire")}}
+    <!-- BLOC OPTIONNEL : SORT D'ATTAQUE -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px; border: 1px solid #c19a5b; background: rgba(0,0,0,0.05); border-radius: 3px;">
+            
+            <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #b32424;">
+                <input type="checkbox" name="system.sortAttaque" {{checked system.sortAttaque}} style="width: 16px; height: 16px; accent-color: #b32424;"/>
+                Sortilège d'attaque
+            </label>
+            
+            <!-- Les champs de dégâts n'apparaissent QUE si la case est cochée -->
+            {{#if system.sortAttaque}}
+            <div style="display: flex; align-items: center; gap: 5px; margin-left: auto; padding-left: 15px; border-left: 1px dotted #c19a5b;">
+                <label style="font-weight: bold;">Dégâts :</label>
+                <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" placeholder="ex: 1d8" style="width: 50px; text-align: center; font-weight: bold;"/>
+                <span style="font-weight: bold;">+</span>
+                <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center; font-weight: bold;"/>
+            </div>
+            {{/if}}
+            
+        </div>
+      {{/unless}}
 
     <div class="sortilege-editor">
       <label style="font-weight: bold; margin-bottom: 5px; color: #0e3a47;">Description / Effet :</label>

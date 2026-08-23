@@ -79,3 +79,71 @@ Hooks.once("diceSoNiceReady", (dice3d) => {
     edge: "#b32424"
   });
 });
+
+Hooks.on("renderChatMessageHTML", (message, html) => {
+  
+  // 1. Dégâts d'Arme (Ciblé)
+  const dmgBtns = html.querySelectorAll(".lnl-damage-roll");
+  dmgBtns.forEach(btn => {
+    btn.addEventListener("click", async event => {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const actor = await fromUuid(button.dataset.actorUuid);
+      if (!actor?.isOwner) return;
+
+      await actor.rollArmeDegats(
+        button.dataset.itemId,
+        decodeURIComponent(button.dataset.targetName),
+        button.dataset.degree,
+        Number(button.dataset.multiplier)
+      );
+      button.disabled = true; // Empêche le double-clic
+    });
+  });
+
+  // 2. Dégâts d'Arme (Manuel sans cible)
+  const manualDmgBtns = html.querySelectorAll(".lnl-manual-damage-roll");
+  manualDmgBtns.forEach(btn => {
+    btn.addEventListener("click", async event => {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const actor = await fromUuid(button.dataset.actorUuid);
+      if (!actor?.isOwner) return;
+
+      await actor.promptManualDamage(button.dataset.itemId);
+    });
+  });
+
+  // 3. Dégâts de Sortilège (Ciblé)
+  const sortDmgBtns = html.querySelectorAll(".lnl-sort-damage-roll");
+  sortDmgBtns.forEach(btn => {
+    btn.addEventListener("click", async event => {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const actor = await fromUuid(button.dataset.actorUuid);
+      if (!actor?.isOwner) return;
+
+      await actor.rollSortilegeDegats(
+        button.dataset.itemId,
+        decodeURIComponent(button.dataset.targetName),
+        button.dataset.degree,
+        Number(button.dataset.multiplier)
+      );
+      button.disabled = true;
+    });
+  });
+
+  // 4. Dégâts de Sortilège (Manuel sans cible)
+  const manualSortBtns = html.querySelectorAll(".lnl-manual-sort-damage-roll");
+  manualSortBtns.forEach(btn => {
+    btn.addEventListener("click", async event => {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const actor = await fromUuid(button.dataset.actorUuid);
+      if (!actor?.isOwner) return;
+
+      await actor.promptManualSortilegeDamage(button.dataset.itemId);
+    });
+  });
+
+});

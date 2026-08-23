@@ -28,10 +28,16 @@ export class SortilegeData extends foundry.abstract.TypeDataModel {
       duree: new StringField({ initial: "" }),
       description: new HTMLField({ initial: "" }),
       difficulte: new StringField({ initial: "" }),
+      /* --- ANCIEN CHAMP POUR LES DÉGÂTS ---
       degats: new NumberField({ initial: 0, min: 0, integer: true }),
+      */
       participantsRecommandes: new NumberField({ initial: 1, min: 1, integer: true }),
       coutParParticipant: new NumberField({ initial: 0, min: 0, integer: true }),
-      coutTotal: new NumberField({ initial: 0, min: 0, integer: true })
+      coutTotal: new NumberField({ initial: 0, min: 0, integer: true }),
+      // --- NOUVEAUX CHAMPS POUR LES DÉGÂTS ---
+      sortAttaque: new BooleanField({ initial: false }), // La case à cocher
+      degatsBase: new StringField({ initial: "1d8" }),  // Le dé de dégâts
+      degatsBonus: new NumberField({ initial: 0, integer: true }) // Le bonus fixe
     };
   }
 }
@@ -191,7 +197,10 @@ export class ArcanotechData extends EquipementBaseData {
       porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
       porteeMax: new NumberField({ initial: 40, min: 0, integer: true }),
       // Si c'est un artefact, on stocke la durabilité
-      durabilite: new NumberField({ initial: 10, min: 0, integer: true })
+      durabilite: new NumberField({ initial: 10, min: 0, integer: true }),
+      // POUR LES JETS DE DÉGÂTS ---
+      fortune: new BooleanField({ initial: false }),
+      adversite: new BooleanField({ initial: false })
     };
   }
 }

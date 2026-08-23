@@ -457,6 +457,7 @@
             <div style="flex: 2.5;">Nom</div>
             <div style="flex: 1; text-align: center;">Type</div>
             <div style="flex: 1; text-align: center;">Dégâts</div>
+            <div style="flex: 0.7; text-align: center;">Attaque</div>
             <div style="flex: 0.8; text-align: center;">Prise</div>
             <div style="flex: 1; text-align: center;">Portée</div>
             <div style="flex: 0.5; text-align: center;" title="Encombrement">Enc.</div>
@@ -486,12 +487,35 @@
                 {{/if}}
               </div>
               
+
               <div style="flex: 1; text-align: center; font-size: 11px; font-style: italic; color: #0e3a47;">
                 {{arme.typeArmeLabel}}
               </div>
 
               <div style="flex: 1; text-align: center; font-weight: bold;">
                 {{arme.system.degatsBase}}{{#if arme.system.degatsBonus}}+{{arme.system.degatsBonus}}{{/if}}
+              </div>
+
+              <!-- Boutons Fortune / Adversité (EXCLUSIF ARCANOTECH) -->
+              {{#if (eq arme.type "arcanotech")}}
+                <div class="score-input-wrap" style="display: flex; gap: 5px; margin-left: 10px;">
+                  <label class="checkbox-label fortune-label" title="Dé de Fortune (Arme bien identifiée)">
+                    <input type="checkbox" class="inline-checkbox flag-fortune" data-field="fortune" {{checked arme.system.fortune}}/>
+                    <!--<span>Fort.</span>-->
+                  </label>
+                  <label class="checkbox-label adversite-label" title="Dé d'Adversité (Risque de dysfonctionnement)">
+                    <input type="checkbox" class="inline-checkbox flag-adversite" data-field="adversite" {{checked arme.system.adversite}}/>
+                    <!-- <span>Adv.</span> -->
+                  </label>
+                </div>
+              {{/if}}
+
+              <div style="flex: 0.7; text-align: center;">
+                {{#if arme.system.equipe}}
+                <button type="button" class="arme-attack-roll roll-button" title="Lancer l'attaque avec la compétence adéquate">
+                  <i class="fas fa-dice-d20"></i>
+                </button>
+                {{/if}}
               </div>
               
               <div style="flex: 0.8; text-align: center;">{{arme.system.mains}}</div>

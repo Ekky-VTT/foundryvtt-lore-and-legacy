@@ -256,14 +256,11 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
 
     html.find('.capacite-roll').click(this._onRollCapacite.bind(this));
     html.find('.sortilege-roll').click(this._onRollSortilege.bind(this));
+    html.find('.arme-attack-roll').click(this._onRollArme.bind(this));
     html.find('.item-delete').click(this._onItemDelete.bind(this));
     html.find('.item-use').click(this._onItemUse.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
-    
-    
-    // Sauvegarde immédiate du score de capacité dès qu'il est modifié
     html.find('.item-valeur').change(this._onItemValueChange.bind(this));
-    // Clic sur le nom d'un Attribut
     html.find('.attribut-roll').click(this._onRollAttribut.bind(this));
 
 // --- GESTION DU BOUTON BIVOUAC ---
@@ -395,17 +392,18 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
   async _onRollSortilege(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
-    const sortilege = this.actor.items.get(itemId);
-    const sorcellerie = this.actor.items.find(item =>
-      item.type === "capacite" && item.name.toLowerCase().includes("sorcellerie")
-    );
-
-    if (sorcellerie) {
-      await this.actor.rollCapacite(sorcellerie.id, { sortilegeName: sortilege?.name });
-      return;
-    }
-
-    await this.actor.rollAttribut("discernement", { sortilegeName: sortilege?.name });
+    
+    // On appelle directement la nouvelle machinerie magique de actor.mjs !
+    await this.actor.rollSortilege(itemId);
+  }
+  
+  /**
+   * Gestionnaire pour le lancer d'une Arme
+   */
+  async _onRollArme(event) {
+    event.preventDefault();
+    const itemId = $(event.currentTarget).closest('.item').data('item-id');
+    await this.actor.rollArme(itemId);
   }
 
   /**
