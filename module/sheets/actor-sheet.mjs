@@ -47,7 +47,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
   async getData() {
     const context = await super.getData();
     // On pointe vers les données vivantes (et non context.data.system)
-    context.system = this.actor.system; 
+    context.system = this.actor.system;
+    context.defenseTotaleActive = this.actor.getFlag("lore-and-legacy", "defenseTotale") ?? false;
     this._prepareItems(context);
     return context;
   }
@@ -188,9 +189,13 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
    * Le "Drop" en lui-même est géré par Foundry en amont.
    * @override
    */
+/**
+   * Intercepte uniquement la CRÉATION finale des objets déposés.
+   * @override
+   */
   async _onDropItemCreate(itemData) {
-    // On clone les données pour pouvoir les modifier en toute sécurité
     let itemsToCreate = Array.isArray(itemData) ? foundry.utils.deepClone(itemData) : [foundry.utils.deepClone(itemData)];
+    let extraItems = []; // Stockera les armes naturelles générées à la volée
 
     if (itemsToCreate.some(data => data.type === "traitSpecial") && this.actor.type !== "pnj") {
       ui.notifications.warn("Les Traits Spéciaux sont réservés aux PNJ.");
@@ -199,14 +204,26 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     }
 
     for (const data of itemsToCreate) {
-      // SÉCURITÉ ABSOLUE : On efface l'ID d'origine pour forcer une nouvelle création propre
       delete data._id;
 
       if (["consommable", "materiel"].includes(data.type)) {
-        const maxUsages = data.type === "consommable"
-          ? data.system?.charges
-          : data.system?.usagesMax;
+        const maxUsages = data.type === "consommable" ? data.system?.charges : data.system?.usagesMax;
         foundry.utils.setProperty(data, "flags.lore-and-legacy.usagesActuels", maxUsages ?? 0);
+      }
+
+      // 1. AUTOMATISATION : Trait "Poings d'acier"
+      if (data.type === "trait" && data.name.toLowerCase().includes("poings d'acier")) {
+        // On supprime l'arme "Mains nues" si elle est présente
+        const mainsNues = this.actor.items.find(i => i.name.toLowerCase().includes("mains nues"));
+        if (mainsNues) await this.actor.deleteEmbeddedDocuments("Item", [mainsNues.id]);
+        
+        // On génère la nouvelle arme
+        extraItems.push({
+          name: "Poings d'acier",
+          type: "arme",
+          img: "icons/skills/melee/unarmed-punch-fist.webp",
+          system: { degats: "1d8 + @attributs.vigueur.total", typeArme: "melee", mains: "1M", equipe: true, encombrement: 0 }
+        });
       }
     }
 
@@ -232,12 +249,41 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
         const traitDoc = traitUuid ? await fromUuid(traitUuid) : null;
         if (traitDoc) {
           let traitData = traitDoc.toObject();
-          delete traitData._id; // On efface aussi l'ID pour les Traits !
+          delete traitData._id; 
           foundry.utils.setProperty(traitData, "flags.lore-and-legacy.isRacialTrait", true);
           itemsToCreate.push(traitData);
         }
       }
+
+      // 2. AUTOMATISATION : L'arme "Mains nues" par défaut
+      const hasMainsNues = this.actor.items.some(i => i.name.toLowerCase().includes("mains nues"));
+      const hasPoingsAcier = this.actor.items.some(i => i.name.toLowerCase().includes("poings d'acier")) || itemsToCreate.some(i => i.type === "trait" && i.name.toLowerCase().includes("poings d'acier"));
+      
+      if (!hasMainsNues && !hasPoingsAcier) {
+        extraItems.push({
+          name: "Mains nues",
+          type: "arme",
+          img: "icons/skills/melee/unarmed-punch-fist.webp",
+          system: { degats: "(1d8 + @attributs.vigueur.total) / 2", typeArme: "melee", mains: "1M", equipe: true, encombrement: 0 }
+        });
+      }
+
+      // 3. AUTOMATISATION : La "Morsure" des Orcs
+      if (peupleItemData.name.toLowerCase().includes("orc") || peupleItemData.name.toLowerCase().includes("orque")) {
+        const hasMorsure = this.actor.items.some(i => i.name.toLowerCase().includes("morsure"));
+        if (!hasMorsure) {
+          extraItems.push({
+            name: "Morsure (Orc)",
+            type: "arme",
+            img: "icons/creatures/abilities/mouth-teeth-human.webp",
+            system: { degats: "1d8 + @attributs.vigueur.total - 1", typeArme: "melee", mains: "1M", equipe: true, encombrement: 0 }
+          });
+        }
+      }
     }
+
+    // On ajoute toutes les armes naturelles à la liste des objets à créer sur le personnage
+    itemsToCreate = itemsToCreate.concat(extraItems);
 
     return super._onDropItemCreate(itemsToCreate);
   }
@@ -261,7 +307,27 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     html.find('.item-use').click(this._onItemUse.bind(this));
     html.find('.inline-checkbox').change(this._onToggleCheckbox.bind(this));
     html.find('.item-valeur').change(this._onItemValueChange.bind(this));
+    html.find('.defense-toggle').change(this._onToggleDefenseTotale.bind(this));
     html.find('.attribut-roll').click(this._onRollAttribut.bind(this));
+    
+    // Ouverture de la fiche de l'objet via un double-clic
+    html.find('.item').dblclick(ev => {
+      ev.preventDefault();
+      // On récupère l'ID de la ligne cliquée
+      const itemId = $(ev.currentTarget).closest('.item').data('item-id');
+      const item = this.actor.items.get(itemId);
+      
+      // On demande à Foundry d'afficher la fenêtre d'édition de CET objet précis
+      if (item) item.sheet.render(true);
+    });
+
+    // Clic sur l'icône Crayon pour éditer un objet
+    html.find('.item-edit').click(ev => {
+      ev.preventDefault();
+      const itemId = $(ev.currentTarget).closest('.item').data('item-id');
+      const item = this.actor.items.get(itemId);
+      if (item) item.sheet.render(true);
+    });
 
 // --- GESTION DU BOUTON BIVOUAC ---
     html.find('.action-bivouac').click(ev => {
@@ -383,6 +449,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     });
   }
 
+  
   async _onRollCapacite(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
@@ -488,6 +555,13 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       val = Math.min(Math.max(val, 0), 15); // Borne la valeur entre 0 et 15
       await item.update({ "system.valeur": val });
     }
+  }
+
+  async _onToggleDefenseTotale(event) {
+    event.preventDefault();
+    const checked = !!event.currentTarget.checked;
+    await this.actor.update({ "flags.lore-and-legacy.defenseTotale": checked });
+    await this.render();
   }
 
   async _onPNJArmeAdd(event) {
@@ -705,6 +779,9 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
     html.find('.pnj-arme-delete').click(this._onPNJArmeDelete.bind(this));
     html.find('.pnj-arme-roll').click(this._onPNJArmeRoll.bind(this));
     html.find('.pnj-arme-field').change(this._onPNJArmeChange.bind(this));
+    html.find('.pnj-pouvoir-add').click(this._onPNJPouvoirAdd.bind(this));
+    html.find('.pnj-pouvoir-delete').click(this._onPNJPouvoirDelete.bind(this));
+    html.find('.pnj-pouvoir-field').change(this._onPNJPouvoirChange.bind(this));
   }
 
   async _onRollCapacite(event) {
@@ -834,5 +911,34 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
       },
       default: "roll"
     }).render(true);
+  }
+/**   
+ * * Gestionnaire pour l'ajout d'un Pouvoir PNJ
+   */
+  async _onPNJPouvoirAdd(event) {
+    event.preventDefault();
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    pouvoirs.push({ nom: "Nouveau pouvoir" });
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+  }
+
+  async _onPNJPouvoirDelete(event) {
+    event.preventDefault();
+    const index = Number(event.currentTarget.dataset.index);
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    if (!Number.isInteger(index) || index < 0 || index >= pouvoirs.length) return;
+    pouvoirs.splice(index, 1);
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+  }
+
+  async _onPNJPouvoirChange(event) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    const index = Number(input.dataset.index);
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    if (!Number.isInteger(index) || !pouvoirs[index]) return;
+
+    pouvoirs[index].nom = input.value;
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
   }
 }

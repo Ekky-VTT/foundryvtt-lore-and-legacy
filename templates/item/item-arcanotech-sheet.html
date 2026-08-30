@@ -47,11 +47,19 @@
                     <input type="number" name="system.mystere" value="{{system.mystere}}" min="0" style="width: 40px; text-align: center; border: 1px solid #4a2c66;"/>
                 </div>
                 
-                <!-- S'affiche uniquement si l'objet appartient à un personnage -->
+                <!-- NOUVEAU BLOC : S'affiche uniquement si l'objet appartient à un personnage -->
                 {{#if item.isOwned}}
-                <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: #4a2c66; cursor: pointer;">
-                    <input type="checkbox" name="system.identifie" {{checked system.identifie}}/> IDENTIFIÉ
-                </label>
+                <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 3px; border: 1px dashed #c19a5b;">
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: #4a2c66; cursor: pointer;" title="L'objet est identifié">
+                        <input type="checkbox" name="system.identifie" {{checked system.identifie}}/> ID.
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: #2a7b36; cursor: pointer;" title="Dé de Fortune sur les dégâts">
+                        <input type="checkbox" name="system.fortune" {{checked system.fortune}}/> FORT.
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: #b32424; cursor: pointer;" title="Dé d'Adversité sur les dégâts">
+                        <input type="checkbox" name="system.adversite" {{checked system.adversite}}/> ADV.
+                    </label>
+                </div>
                 {{/if}}
 
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -64,11 +72,9 @@
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
-                <div style="display: flex; align-items: center; gap: 5px;" title="Utilisé si l'objet est une arme">
+                <div style="display: flex; align-items: center; gap: 5px; flex: 1;" title="Formule de dégâts. Exemples : 1d8+2 ou (1d8 + @attributs.vigueur.total)/2">
                     <label style="font-weight: bold;">Dégâts :</label>
-                    <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" style="width: 50px; text-align: center;"/>
-                    <span style="font-weight: bold;">+</span>
-                    <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center;"/>
+                    <input type="text" name="system.degats" value="{{system.degats}}" placeholder="ex: 1d8+2" style="width: 100%; text-align: center; font-family: monospace;"/>
                 </div>
                 <div style="display: flex; align-items: center; gap: 5px;" title="Nombre de mains nécessaires">
                     <label style="font-weight: bold;">Prise :</label>

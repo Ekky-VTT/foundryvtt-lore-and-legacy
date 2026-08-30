@@ -41,11 +41,9 @@
         <!-- SPÉCIFICITÉS ARME -->
         <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="display: flex; align-items: center; gap: 5px; flex: 1;" title="Formule de dégâts. Exemples : 1d8+2 ou (1d8 + @attributs.vigueur.total)/2">
                     <label style="font-weight: bold;">Dégâts:</label>
-                    <input type="text" name="system.degatsBase" value="{{system.degatsBase}}" style="width: 50px; text-align: center;" title="Dés de dégâts (ex: 1D8)"/>
-                    <span style="font-weight: bold;">+</span>
-                    <input type="number" name="system.degatsBonus" value="{{system.degatsBonus}}" style="width: 40px; text-align: center;" title="Bonus fixe aux dégâts"/>
+                    <input type="text" name="system.degats" value="{{system.degats}}" placeholder="ex: 1d8+2" style="width: 350px; text-align: center; font-family: monospace;"/>
                 </div>
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <label style="font-weight: bold;">Prise:</label>
@@ -55,9 +53,9 @@
                     </select>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <label style="font-weight: bold;">Catégorie :</label>
+                    <label style="font-weight: bold;">Catégorie:</label>
                     <select name="system.typeArme" style="width: 120px;">
                         <option value="melee" {{#if (eq system.typeArme "melee")}}selected{{/if}}>Mêlée</option>
                         <option value="distance" {{#if (eq system.typeArme "distance")}}selected{{/if}}>À distance</option>
@@ -73,6 +71,16 @@
                         <label style="font-weight: bold; color: #0e3a47;">P. Max. (m) :</label>
                         <input type="number" name="system.porteeMax" value="{{system.porteeMax}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
                     </div>
+                </div>
+                <div style="display: flex; flex-basis: 100%; gap: 10px; align-items: center; border-top: 1px dotted #c19a5b; padding-top: 8px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 3px;">
+                    <label style="font-weight: bold; color: #0e3a47;">Munitions:</label>
+                    <input type="number" name="system.munitionsActuelles" value="{{system.munitionsActuelles}}" style="width: 45px; text-align: center; border: 1px solid #c19a5b;"/>
+                    <span style="font-weight: bold;">/</span>
+                    <input type="number" name="system.munitionsMax" value="{{system.munitionsMax}}" style="width: 45px; text-align: center; border: 1px solid #c19a5b;"/>
+                    
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: #b32424; margin-left: auto; cursor: pointer;">
+                        <input type="checkbox" name="system.rafale" {{checked system.rafale}}/> TIR EN RAFALE
+                    </label>
                 </div>
                 {{/if}}
             </div>

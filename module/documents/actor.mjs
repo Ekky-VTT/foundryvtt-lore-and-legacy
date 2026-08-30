@@ -13,11 +13,10 @@ export class LoreAndLegacyActor extends Actor {
   prepareDerivedData() {
     super.prepareDerivedData();
     const systemData = this.system;
-    if (this.type === "personnage") {
+    if (this.type === "personnage" || this.type === "pnj") {
       this._preparePersonnageData(systemData);
     }
   }
-
 
  /** @private */
   _preparePersonnageData(systemData) {
@@ -29,7 +28,6 @@ export class LoreAndLegacyActor extends Actor {
     let bonusPeuple = { caractere: 0, discernement: 0, maitrise: 0, prestance: 0, robustesse: 0, vigueur: 0, fortune: 0 };
     this.peupleNom = "Aucun";
 
-    // On cherche le Peuple dans l'inventaire
     for (let item of this.items) {
       if (item.type === "peuple") {
         this.peupleNom = item.name;
@@ -43,7 +41,6 @@ export class LoreAndLegacyActor extends Actor {
       }
     }
 
-    // Calcul du Score Total = Points Investis (value) + Base du Peuple
     attr.caractere.total = Number(attr.caractere.value || 0) + Number(bonusPeuple.caractere);
     attr.discernement.total = Number(attr.discernement.value || 0) + Number(bonusPeuple.discernement);
     attr.maitrise.total = Number(attr.maitrise.value || 0) + Number(bonusPeuple.maitrise);
@@ -52,7 +49,6 @@ export class LoreAndLegacyActor extends Actor {
     attr.vigueur.total = Number(attr.vigueur.value || 0) + Number(bonusPeuple.vigueur);
     attr.fortune.total = Number(attr.fortune.max || 0) + Number(bonusPeuple.fortune);
 
-    // Récupération pour les caractéristiques secondaires
     const caractere = attr.caractere.total || 0;
     const discernement = attr.discernement.total || 0;
     const maitrise = attr.maitrise.total || 0;
@@ -92,11 +88,9 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     // --- 1.5 SCAN DES TRAITS ---
-    // Initialisation globale des flags
-    this.flags = {};
+    this.flags = { ...(this.flags ?? {}), "lore-and-legacy": { ...(this.flags?.["lore-and-legacy"] ?? {}) } };
     let baseSaut = Math.floor((maitrise + vigueur) / 3);
     
-    // Nouveaux compteurs pour les Traits
     let bonusBagageTraits = 0;
     let bonusResPhysTraits = 0;
     let bonusResMagTraits = 0;
@@ -117,7 +111,6 @@ export class LoreAndLegacyActor extends Actor {
         const nom = item.name.toLowerCase();
         const estSoigne = item.system.soigne;
 
-        // Attributs : Fortune
         if (nom.includes("baraqué")) attr.vigueur.traitFortune = true;
         if (nom.includes("irréductible")) attr.caractere.traitFortune = true;
         if (nom.includes("petit génie")) attr.discernement.traitFortune = true;
@@ -125,7 +118,6 @@ export class LoreAndLegacyActor extends Actor {
         if (nom.includes("vif comme l'éclair")) attr.maitrise.traitFortune = true;
         if (nom.includes("lunaire") && !estSoigne) attr.discernement.traitFortune = true;
 
-        // Attributs : Adversité (seulement si non soigné)
         if (nom.includes("candide") && !estSoigne) attr.caractere.traitAdversite = true;
         if (nom.includes("frêle") && !estSoigne) attr.robustesse.traitAdversite = true;
         if (nom.includes("ingénu") && !estSoigne) attr.discernement.traitAdversite = true;
@@ -134,7 +126,6 @@ export class LoreAndLegacyActor extends Actor {
         if (nom.includes("rat de bibliothèque") && !estSoigne) attr.vigueur.traitAdversite = true;
         if (nom.includes("lunaire") && !estSoigne) attr.prestance.traitAdversite = true;
 
-        // Capacités : Flags spécifiques
         if (nom.includes("athlétique")) {
           baseSaut *= 2;
           this.flags.fortuneAcrobatie = true;
@@ -154,9 +145,8 @@ export class LoreAndLegacyActor extends Actor {
           this.flags.adversiteMecanique = true;
         }
 
-        // Caractéristiques Secondaires
         if (nom.includes("bête de somme")) bonusBagageTraits += 3;
-        if (nom.includes("blindé")) bonusResPhysTraits += 3; // Gardé au cas où
+        if (nom.includes("blindé")) bonusResPhysTraits += 3; 
         if (nom.includes("cuir solide")) bonusResPhysTraits += 2;
         if (nom.includes("enveloppé")) bonusPoidsTraits += 20;
         if (nom.includes("hardi")) bonusPVTraits += 2;
@@ -170,105 +160,102 @@ export class LoreAndLegacyActor extends Actor {
           this.flags.adversiteSociale = true;
         }
 
-        // Flags pour équipement futur et macros
         if (nom.includes("main lourde")) this.flags.mainLourde = true;
         if (nom.includes("poings d'acier")) this.flags.poingsAcier = true;
         if (nom.includes("tireur d'élite")) this.flags.tireurElite = true;
       }
     }
     
-    // Calculer l'état final des Attributs (Base de données OU Trait)
     for (let key in attr) {
       attr[key].finalFortune = attr[key].fortune || attr[key].traitFortune;
       attr[key].finalAdversite = attr[key].adversite || attr[key].traitAdversite;
     }
     
-    // On sauvegarde la distance de saut finale pour l'affichage
     sec.distanceSaut = baseSaut;
     
     // --- 2. CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
-    
-    // PV = (Robustesse + Vigueur) * 2 + Endurance + Traits
     sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance + bonusPVTraits;
-
-    // PM = (Caractère + Discernement) * 2 + Concentration + (Mysticisme * 2) + Traits
     sec.pm.max = (caractere + discernement) * 2 + bonusConcentration + (bonusMysticisme * 2) + bonusPMTraits;
-
-    // Seuil de Blessure = (Robustesse * 2) + Endurance
     sec.sb.value = (robustesse * 2) + bonusEndurance;
-
-    // Résistance Magique = (Discernement + Maîtrise) * 2 + Concentration + Traits
     sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration + bonusResMagTraits;
-
-    // Résistance Mentale = (Caractère + Prestance) * 2 + Esprit Critique + Traits
     sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique + bonusResMentTraits;
-
-    // --- NOUVEAU : CALCUL DES PROTECTIONS ÉQUIPÉES ET RÉSISTANCE PHYSIQUE ---
+/*
+    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits;
+    if (eq?.armureLegere) resPhysBase += bonusArmureLegere;
+    if (eq?.armureLourde) resPhysBase += bonusArmureLourde;
+    if (eq?.bouclier) resPhysBase += bonusBouclier;
+    sec.resPhys.value = resPhysBase;
+*/
+// --- 2.5 CALCUL DES PROTECTIONS ÉQUIPÉES ET RÉSISTANCE PHYSIQUE ---
     let bonusResPhysArmures = 0;
     let hasArmureLegere = false;
     let hasArmureLourde = false;
     let hasBouclier = false;
 
+    // 2.5.1. On parcourt l'inventaire pour trouver les armures équipées
     for (let item of this.items) {
       if (item.type === "armure" && item.system?.equipe) {
+        // On additionne le score de défense brut de l'objet
         bonusResPhysArmures += Number(item.system.bonusResPhys || 0);
+        
+        // On détecte les types d'armure pour les bonus de capacités passives
         if (item.system.type === "legere") hasArmureLegere = true;
         if (item.system.type === "lourde") hasArmureLourde = true;
         if (item.system.type === "bouclier") hasBouclier = true;
       }
     }
 
-    // Mise à jour automatique des flags d'équipement
-    if (eq) {
-      eq.armureLegere = hasArmureLegere;
-      eq.armureLourde = hasArmureLourde;
-      eq.bouclier = hasBouclier;
-    }
-
-    // Résistance Physique = (Robustesse * 3) + Esquive + Bonus Armures (équipement) + Bonus Traits
-    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits + bonusResPhysArmures;
+    // 2.5.2. Base Résistance Physique = (Robustesse * 3) + Esquive + Traits (Blindé, etc.) + Défense des Armures
+    let resPhysBase = (robustesse * 3) + bonusEsquive + (typeof bonusResPhysTraits !== 'undefined' ? bonusResPhysTraits : 0) + bonusResPhysArmures;
     
-    // Application des bonus de capacités passives si le bon type est équipé
+    // 2.5.3. Application des bonus de capacités passives si le bon type d'armure est équipé
     if (hasArmureLegere) resPhysBase += bonusArmureLegere;
     if (hasArmureLourde) resPhysBase += bonusArmureLourde;
     if (hasBouclier) resPhysBase += bonusBouclier;
 
     sec.resPhys.value = resPhysBase;
 
+    // --- APPLICATION DE LA DÉFENSE TOTALE ---
+    if (this.flags["lore-and-legacy"]?.defenseTotale) {
+      sec.resPhys.value *= 2;
+    }
+
     // --- CALCUL DU BAGAGE ---
-    // Bagage = Base de 9 + Optimisation + Traits - Plafonné à 18
+    // Bagage Max = Base de 9 + Optimisation + Traits - Plafonné à 18
     sec.bagage = sec.bagage || {};
     sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
     
-    // Calcul du bagage actuel : on somme l'encombrement de tous les objets
+    // Calcul de l'encombrement actuel (Valeur)
     sec.bagage.value = this.items.reduce((total, item) => {
-      // On ne compte que les objets qui possèdent un champ "encombrement"
       if (item.system && item.system.encombrement !== undefined) {
-        const encombrement = Number(item.system.encombrement || 0);
-        const quantite = Number(item.system.quantite || 1);
+        // On récupère l'encombrement, et si la quantité n'existe pas, on considère qu'il y en a 1 seul.
+        const encombrement = Number(item.system.encombrement) || 0;
+        const quantite = item.system.quantite !== undefined ? Number(item.system.quantite) : 1;
+        
         return total + (encombrement * quantite);
       }
       return total;
     }, 0);
 
-    // Nouveau : on crée un indicateur booléen (vrai/faux) si le bagage dépasse le max
+    // Indicateur de surcharge (Vrai si on dépasse le max)
     sec.bagage.surcharge = sec.bagage.value > sec.bagage.max;
 
     // Reste des statistiques
     sec.rdc.max = (fortune + vigueur) * multRDC;
     sec.rapidite.value = maitrise + vigueur + bonusRapiditeTraits;
     sec.sprint.value = sec.rapidite.value * 2;
-    sec.poids.value = (sec.resPhys.value * 10) + bonusPoidsTraits;
+    
+    // NOUVEAU : Application de la surcharge de bagage sur la rapidité
+    if (sec.bagage.surcharge) {
+      sec.rapidite.value = Math.max(1, Math.floor(sec.rapidite.value / 2));
+      sec.sprint.value = sec.rapidite.value * 2;
+    }
 
-    // --- 3. STOCKAGE DES BONUS DE MUSCULATION POUR PLUS TARD ---
+    // --- 3. STOCKAGE DES BONUS DE MUSCULATION ---
     sec.bonusDegatsCaC = bonusMusculation;
     sec.bonusChargeEffort = Math.ceil(bonusMusculation / 2);
   }
 
-  /**
-   * Effectue un jet de Capacité (ou d'Attribut en repli) avec Fortune/Adversité
-   * @param {string} itemId - L'ID de l'objet Capacité cliqué
-   */
   async rollCapacite(itemId, options = {}) {
     const capacite = this.items.get(itemId);
     if (!capacite || capacite.type !== "capacite") return;
@@ -280,17 +267,11 @@ export class LoreAndLegacyActor extends Actor {
     const attributValue = attributParent ? attributParent.total : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
 
-    // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
-    let isFortune = options.fortune !== undefined
-      ? options.fortune
-      : capacite.system.fortune || (attributParent && attributParent.finalFortune);
-    let isAdversite = options.adversite !== undefined
-      ? options.adversite
-      : capacite.system.adversite || (attributParent && attributParent.finalAdversite);
+    let isFortune = options.fortune !== undefined ? options.fortune : capacite.system.fortune || (attributParent && attributParent.finalFortune);
+    let isAdversite = options.adversite !== undefined ? options.adversite : capacite.system.adversite || (attributParent && attributParent.finalAdversite);
     
     const nomCapa = capacite.name.toLowerCase();
 
-    // VÉRIFICATION DES BONUS DE TRAITS SUR LES CAPACITÉS
     if (nomCapa.includes("acrobatie") && this.flags?.fortuneAcrobatie) isFortune = true;
     if (nomCapa.includes("escalade") && this.flags?.fortuneEscalade) isFortune = true;
     if (nomCapa.includes("sorcellerie") && this.flags?.fortuneSorcellerie) isFortune = true;
@@ -299,11 +280,9 @@ export class LoreAndLegacyActor extends Actor {
     if (nomCapa.includes("arcanotech") && this.flags?.fortuneArcanotech) isFortune = true;
     if (nomCapa.includes("mécanique") && this.flags?.fortuneMecanique) isFortune = true;
     
-    // VÉRIFICATION DES MALUS DE TRAITS SUR LES CAPACITÉS
     if (nomCapa.includes("arcanotech") && this.flags?.adversiteArcanotech) isAdversite = true;
     if (nomCapa.includes("mécanique") && this.flags?.adversiteMecanique) isAdversite = true;
 
-    // Cas spécifique du Zazou (Adversité sur toutes les interactions sociales)
     const socialCapacites = ["charme", "intimidation", "provocation", "marchandage", "présence apaisante", "rhétorique", "représentation"];
     if (this.flags?.adversiteSociale && socialCapacites.some(c => nomCapa.includes(c))) {
       isAdversite = true;
@@ -319,15 +298,11 @@ export class LoreAndLegacyActor extends Actor {
     if (capaciteValue > 0) {
       typeDeDe = "d10";
       formula = `1d10 + ${capaciteValue}`;
-      flavorText = options.sortilegeName
-        ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (Sorcellerie)`
-        : `Jet de Capacité : <b>${capacite.name}</b>`;
+      flavorText = options.sortilegeName ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (Sorcellerie)` : `Jet de Capacité : <b>${capacite.name}</b>`;
     } else {
       typeDeDe = "d6";
       formula = `1d6 + ${attributValue}`;
-      flavorText = options.sortilegeName
-        ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli sans Sorcellerie) : Attribut <b>${attributNom}</b>`
-        : `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
+      flavorText = options.sortilegeName ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli sans Sorcellerie) : Attribut <b>${attributNom}</b>` : `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
     }
 
     if (isFortune) {
@@ -353,33 +328,20 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     await roll.evaluate();
-
-    roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this }),
-      flavor: flavorText
-    });
+    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: flavorText });
   }
 
-  /**
-   * Effectue un jet d'Attribut pur (1D6) avec prise en compte de Fortune/Adversité
-   * @param {string} attrKey - La clé de l'attribut (ex: "caractere")
-   */
   async rollAttribut(attrKey, options = {}) {
     if (!this.system.attributs[attrKey]) return;
 
     const attribut = this.system.attributs[attrKey];
-    const attrScore = attribut.total || attribut.value || 0;
+    const attrScore = attribut.total || 0;
     
-    const nomsFormates = {
-      caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise",
-      prestance: "Prestance", robustesse: "Robustesse", vigueur: "Vigueur", fortune: "Fortune"
-    };
+    const nomsFormates = { caractere: "Caractère", discernement: "Discernement", maitrise: "Maîtrise", prestance: "Prestance", robustesse: "Robustesse", vigueur: "Vigueur", fortune: "Fortune" };
     const nomAffiche = nomsFormates[attrKey] || attrKey;
 
     let formula = `1d6 + ${attrScore}`;
-    let flavorText = options.sortilegeName
-      ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli : Discernement)`
-      : `Jet d'Attribut : <b>${nomAffiche}</b>`;
+    let flavorText = options.sortilegeName ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli : Discernement)` : `Jet d'Attribut : <b>${nomAffiche}</b>`;
 
     const isFortune = options.fortune !== undefined ? options.fortune : attribut.finalFortune;
     const isAdversite = options.adversite !== undefined ? options.adversite : attribut.finalAdversite;
@@ -407,92 +369,105 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     await roll.evaluate();
-
-    roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this }),
-      flavor: flavorText
-    });
+    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: flavorText });
   }
 
   async rollArme(itemId) {
     const arme = this.items.get(itemId);
     if (!arme || !arme.system.equipe) return;
 
+    // --- 1. GESTION DES MUNITIONS EXTERNALISÉE ---
+    const tirData = await this._gererMunitions(arme);
+    if (!tirData.continue) return; 
+    const isRafale = tirData.isRafale;
+
     const isArcanotech = arme.type === "arcanotech";
-    const skillName = isArcanotech
-      ? "arcanotech"
-      : arme.system.typeArme === "distance" ? "combat à distance" : "combat rapproché";
-    const competence = this.items.find(item =>
-      item.type === "capacite" && item.name.toLowerCase().includes(skillName)
-    );
+    const skillName = isArcanotech ? "arcanotech" : arme.system.typeArme === "distance" ? "combat à distance" : "combat rapproché";
+    const competence = this.items.find(item => item.type === "capacite" && item.name.toLowerCase().includes(skillName));
+    
     const attributKey = competence?.system.attributLie || (isArcanotech ? "discernement" : "maitrise");
     const attribut = this.system.attributs[attributKey] || this.system.attributs.maitrise;
     const score = competence ? Number(competence.system.valeur || 0) : 0;
     const usesAttribute = !competence || score <= 0;
-    const baseScore = usesAttribute ? Number(attribut.total || attribut.value || 0) : score;
+    const baseScore = usesAttribute ? Number(attribut.total || 0) : score;
     const die = usesAttribute ? "d6" : "d10";
-    let isFortune = competence
-      ? competence.system.fortune || attribut.finalFortune
-      : attribut.finalFortune;
-    let isAdversite = competence
-      ? competence.system.adversite || attribut.finalAdversite
-      : attribut.finalAdversite;
+    
+    let isFortune = competence ? competence.system.fortune || attribut.finalFortune : attribut.finalFortune;
+    let isAdversite = competence ? competence.system.adversite || attribut.finalAdversite : attribut.finalAdversite;
 
     if (isArcanotech && this.flags?.fortuneArcanotech) isFortune = true;
     if (isArcanotech && this.flags?.adversiteArcanotech) isAdversite = true;
 
-    let formula = `1${die} + ${baseScore}`;
-    if (isFortune) formula += ` + 1${die}[fortune]`;
-    if (isAdversite) formula = `1${die} + max(0, ${baseScore} - 1${die}[adversite])${isFortune ? ` + 1${die}[fortune]` : ""}`;
+// Détermination du nombre de tirs à effectuer
+    const nbTirs = isRafale ? 2 : 1;
 
-    const roll = new Roll(formula);
-    for (const term of roll.terms) {
-      if (term.flavor === "fortune") {
-        term.options ??= {};
-        term.options.colorset = "fortune";
-      } else if (term.flavor === "adversite") {
-        term.options ??= {};
-        term.options.colorset = "adversite";
+    for (let tir = 1; tir <= nbTirs; tir++) {
+      let currentAdversite = isAdversite;
+      let extraFlavor = "";
+
+      // Si c'est une rafale, on personnalise l'affichage et le 2e tir
+      if (isRafale) {
+        if (tir === 1) {
+          extraFlavor = `<br><span style="color:#0e3a47; font-weight:bold; font-size:12px;">[🔥 TIR EN RAFALE : 1er Tir]</span>`;
+        } else if (tir === 2) {
+          currentAdversite = true; // On force l'adversité pour le recul
+          extraFlavor = `<br><span style="color:#b32424; font-weight:bold; font-size:12px;">[🔥 TIR EN RAFALE : 2e Tir (Recul)]</span>`;
+        }
       }
+
+      // Construction de la formule dynamique
+      let formula = `1${die} + ${baseScore}`;
+      if (isFortune) formula += ` + 1${die}[fortune]`;
+      
+      // La variable 'die' contient déjà "d10" ou "d6", le dé d'adversité s'adaptera donc automatiquement !
+      if (currentAdversite) {
+        formula = `1${die} + max(0, ${baseScore} - 1${die}[adversite])${isFortune ? ` + 1${die}[fortune]` : ""}`;
+      }
+
+      const roll = new Roll(formula);
+      for (const term of roll.terms) {
+        if (term.flavor === "fortune") {
+          term.options ??= {};
+          term.options.colorset = "fortune";
+        } else if (term.flavor === "adversite") {
+          term.options ??= {};
+          term.options.colorset = "adversite";
+        }
+      }
+
+      await roll.evaluate();
+
+      // Résolution des cibles pour ce tir spécifique
+      const targets = [...(game.user.targets || [])];
+      const resistanceKey = isArcanotech ? "resMag" : "resPhys";
+      const targetResults = targets.map(token => {
+        const targetActor = token.actor;
+        const resistance = Number(targetActor?.system?.secondaires?.[resistanceKey]?.value || 0);
+        const result = this._getDegreeOfSuccess(roll, resistance, die);
+        const targetLabel = targetActor?.name || token.name;
+        const damageButton = result.damageMultiplier > 0
+          ? `<button type="button" class="lnl-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-dice-d8"></i> Lancer les dégâts</button>`
+          : "";
+        return `<p><b>${targetLabel}</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span>${damageButton}</p>`;
+      }).join("");
+
+      const targetFlavor = targetResults || `
+        <p style="text-align: center; margin-bottom: 5px; color: #555; font-style: italic;">Aucune cible sélectionnée.</p>
+        <button type="button" class="lnl-manual-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}">
+          <i class="fas fa-bullseye"></i> Lancer les dégâts (Manuel)
+        </button>
+      `;
+      
+      const skillLabel = competence ? competence.name : `Attribut : ${attributKey === "discernement" ? "Discernement" : "Maîtrise"} (sans ${skillName})`;
+      const weaponLabel = isArcanotech ? `${arme.name} (Arcanotech)` : arme.name;
+
+      roll.toMessage({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        flavor: `Jet d'attaque : <b>${weaponLabel}</b><br>${skillLabel}${extraFlavor}<br>${targetFlavor}`
+      });
     }
-
-    await roll.evaluate();
-
-    const targets = [...(game.user.targets || [])];
-    const resistanceKey = isArcanotech ? "resMag" : "resPhys";
-    const targetResults = targets.map(token => {
-      const targetActor = token.actor;
-      const resistance = Number(targetActor?.system?.secondaires?.[resistanceKey]?.value || 0);
-      const result = this._getDegreeOfSuccess(roll, resistance, die);
-      const targetLabel = targetActor?.name || token.name;
-      const damageButton = result.damageMultiplier > 0
-        ? `<button type="button" class="lnl-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-dice-d8"></i> Lancer les dégâts</button>`
-        : "";
-      return `<p><b>${targetLabel}</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span>${damageButton}</p>`;
-    }).join("");
-
-
-    const targetFlavor = targetResults || `
-      <p style="text-align: center; margin-bottom: 5px; color: #555; font-style: italic;">Aucune cible sélectionnée.</p>
-      <button type="button" class="lnl-manual-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}">
-        <i class="fas fa-bullseye"></i> Lancer les dégâts (Manuel)
-      </button>
-    `;
-    const skillLabel = competence
-      ? competence.name
-      : `Attribut : ${attributKey === "discernement" ? "Discernement" : "Maîtrise"} (sans ${skillName})`;
-    const weaponLabel = isArcanotech ? `${arme.name} (Arcanotech)` : arme.name;
-
-    roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this }),
-      flavor: `Jet d'attaque : <b>${weaponLabel}</b><br>${skillLabel}<br>${targetFlavor}`
-    });
   }
 
-  /**
-   * Ouvre une boîte de dialogue pour choisir le degré de réussite manuel
-   * @param {string} itemId - L'ID de l'arme utilisée
-   */
   async promptManualDamage(itemId) {
     const arme = this.items.get(itemId);
     if (!arme) return;
@@ -508,22 +483,10 @@ export class LoreAndLegacyActor extends Actor {
       title: "⚔️ Jet de dégâts manuel",
       content: dialogContent,
       buttons: {
-        partial: {
-          label: "Partielle (x0.5)",
-          callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite partielle", 0.5)
-        },
-        standard: {
-          label: "Standard (x1)",
-          callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite standard", 1)
-        },
-        major: {
-          label: "Majeure (x1.5)",
-          callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite majeure", 1.5)
-        },
-        spectacular: {
-          label: "Spectaculaire (x2)",
-          callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite spectaculaire", 2)
-        }
+        partial: { label: "Partielle (x0.5)", callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite partielle", 0.5) },
+        standard: { label: "Standard (x1)", callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite standard", 1) },
+        major: { label: "Majeure (x1.5)", callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite majeure", 1.5) },
+        spectacular: { label: "Spectaculaire (x2)", callback: () => this.rollArmeDegats(itemId, "Cible Inconnue", "Réussite spectaculaire", 2) }
       },
       default: "standard"
     }, { width: 500 }).render(true);
@@ -534,15 +497,8 @@ export class LoreAndLegacyActor extends Actor {
     const halfDifficulty = Math.ceil(difficulty / 2);
     const majorDifficulty = Math.ceil(difficulty * 1.5);
     
-    // Le dé de fortune doit faire son résultat MAX
-    const fortuneMax = roll.dice.some(term =>
-      term.flavor === "fortune" && Number(term.total) === term.faces
-    );
-    
-    // Le dé d'adversité doit faire son résultat MAX !
-    const adversityMax = roll.dice.some(term =>
-      term.flavor === "adversite" && Number(term.total) === term.faces
-    );
+    const fortuneMax = roll.dice.some(term => term.flavor === "fortune" && Number(term.total) === term.faces);
+    const adversityMax = roll.dice.some(term => term.flavor === "adversite" && Number(term.total) === term.faces);
 
     let degree;
     if (total < halfDifficulty) degree = "failure";
@@ -550,94 +506,81 @@ export class LoreAndLegacyActor extends Actor {
     else if (total >= majorDifficulty) degree = "major";
     else degree = "standard";
 
-    // Gestion du Coup du Sort : Si Fortune MAX et Adversité MAX tombent en même temps
     let isCoupDuSort = false;
     if (fortuneMax && adversityMax) {
       isCoupDuSort = true;
     } else {
-      // Sinon, gestion normale des réussites spectaculaires et échecs désastreux
       if (["standard", "major"].includes(degree) && fortuneMax) degree = "spectacular";
       else if (["failure", "partial"].includes(degree) && adversityMax) degree = "disastrous";
     }
 
     const labels = {
-      failure: "Échec",
-      partial: "Réussite partielle (effet / 2)",
-      standard: "Réussite standard",
-      major: "Réussite majeure (effet x 1,5)",
-      spectacular: "Réussite spectaculaire (effet x 2)",
-      disastrous: "!! ÉCHEC DÉSASTREUX !!"
+      failure: "Échec", partial: "Réussite partielle (effet / 2)", standard: "Réussite standard",
+      major: "Réussite majeure (effet x 1,5)", spectacular: "Réussite spectaculaire (effet x 2)", disastrous: "!! ÉCHEC DÉSASTREUX !!"
     };
 
-    // On ajoute visuellement le Coup du Sort au label si ça s'est produit
     let finalLabel = labels[degree];
     if (isCoupDuSort) {
        finalLabel += ` <br><span style="color:#d97711; font-weight:bold; font-size:14px; text-transform:uppercase;">⚡ Coup du Sort ⚡</span>`;
     }
 
-    const multipliers = {
-      failure: 0,
-      partial: 0.5,
-      standard: 1,
-      major: 1.5,
-      spectacular: 2,
-      disastrous: 0
-    };
-
-    return {
-      degree,
-      degreeLabel: finalLabel,
-      damageMultiplier: multipliers[degree],
-      success: !["failure", "disastrous"].includes(degree)
-    };
+    const multipliers = { failure: 0, partial: 0.5, standard: 1, major: 1.5, spectacular: 2, disastrous: 0 };
+    return { degree, degreeLabel: finalLabel, damageMultiplier: multipliers[degree], success: !["failure", "disastrous"].includes(degree) };
   }
 
-async rollArmeDegats(itemId, targetName, degree, multiplier) {
+  async rollArmeDegats(itemId, targetName, degree, multiplier) {
     const arme = this.items.get(itemId);
     if (!arme) return;
 
-    const baseFormula = arme.system.degatsBase || "1d8";
-    const bonus = Number(arme.system.degatsBonus || 0);
-    
-    // On extrait dynamiquement le type de dé (ex: "1d8" ou "1d10") pour l'utiliser dans les malus
-    const dieMatch = baseFormula.toLowerCase().match(/d\d+/);
+    let formula = arme.system.degats || "1d8";
+    const dieMatch = formula.toLowerCase().match(/d\d+/);
     const die = dieMatch ? `1${dieMatch[0]}` : "1d8";
 
-    let formula = bonus ? `${baseFormula} + ${bonus}` : baseFormula;
     let flavorText = `Dégâts : <b>${arme.type === "arcanotech" ? `${arme.name} (Arcanotech)` : arme.name}</b> contre <b>${targetName}</b><br><span style="font-size:12px; font-style: italic; color: #555;">Degré : ${degree} (multiplicateur x${multiplier})</span>`;
 
-    // --- NOUVEAUTÉ : GESTION DES DÉGÂTS ARCANOTECH ---
+    // --- CORRECTION DU BUG ARCANOTECH ---
     if (arme.type === "arcanotech") {
       const isFortune = arme.system.fortune;
       const isAdversite = arme.system.adversite;
 
       if (isFortune) {
-        formula += ` + ${die}[fortune]`;
+        formula = `(${formula}) + ${die}[fortune]`;
         flavorText += `<br><span style="color:#2a7b36; font-size:11px; font-weight:bold;">[+ Fortune Arcanique]</span>`;
       }
       
       if (isAdversite) {
-        // L'adversité réduit le bonus de dégâts, sans jamais tomber sous 0, tout en gardant le dé de base
-        formula = `${baseFormula} + max(0, ${bonus} - ${die}[adversite])${isFortune ? ` + ${die}[fortune]` : ""}`;
+        formula = `(${formula}) - ${die}[adversite]`;
         flavorText += `<br><span style="color:#b32424; font-size:11px; font-weight:bold;">[- Adversité (Mal identifié)]</span>`;
       }
     }
 
-    // Évaluation du jet
-    const roll = await new Roll(formula).evaluate();
+const roll = await new Roll(formula, this.getRollData()).evaluate();
     
-    // Application des couleurs Dice So Nice! sur les jets de dégâts
     for (const term of roll.dice) {
-      if (term.flavor === "fortune") {
-        term.options ??= {};
-        term.options.colorset = "fortune";
-      } else if (term.flavor === "adversite") {
-        term.options ??= {};
-        term.options.colorset = "adversite";
+      if (term.flavor === "fortune") term.options.colorset = "fortune";
+      else if (term.flavor === "adversite") term.options.colorset = "adversite";
+    }
+
+    let baseDamage = roll.total;
+
+    // --- APPLICATION DU TRAIT MAIN LOURDE ---
+    if (this.flags?.mainLourde) {
+      const isMelee = (arme.type === "arme" && arme.system.typeArme === "melee") || 
+                      (arme.type === "arcanotech" && arme.system.sousType === "armeMelee");
+      
+      const isUnarmed = arme.name.toLowerCase().includes("mains nues") || 
+                        arme.name.toLowerCase().includes("poings d'acier") || 
+                        arme.name.toLowerCase().includes("morsure");
+      
+      // S'applique aux armes de mêlée, mais PAS aux attaques naturelles
+      if (isMelee && !isUnarmed) {
+        baseDamage = Math.ceil(baseDamage * 1.5);
+        flavorText += `<br><span style="color:#b32424; font-size:11px; font-weight:bold;">[+ Main Lourde (Dégâts x1,5)]</span>`;
       }
     }
 
-    const adjustedTotal = Math.ceil(roll.total * Number(multiplier));
+    // Calcul final avec le multiplicateur de degré de réussite
+    const adjustedTotal = Math.max(0, Math.ceil(baseDamage * Number(multiplier)));
     const rollHtml = await roll.render();
 
     ChatMessage.create({
@@ -678,130 +621,32 @@ async rollArmeDegats(itemId, targetName, degree, multiplier) {
 
     const roll = new Roll(formula);
     for (const term of roll.terms) {
-      if (term.flavor === "fortune") {
-        term.options ??= {};
-        term.options.colorset = "fortune";
-      } else if (term.flavor === "adversite") {
-        term.options ??= {};
-        term.options.colorset = "adversite";
-      }
+      if (term.flavor === "fortune") term.options.colorset = "fortune";
+      else if (term.flavor === "adversite") term.options.colorset = "adversite";
     }
 
     await roll.evaluate();
-    roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this }),
-      flavor: flavorText
-    });
+    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: flavorText });
   }
 
-  /**
-   * Lance un Sortilège (Sorcellerie ou Discernement en repli)
-   * avec gestion de la règle "Excéder ses Points de Magie"
-   * @param {string} itemId - ID du sortilège
-   */
   async rollSortilege(itemId) {
     const sortilege = this.items.get(itemId);
     if (!sortilege || sortilege.type !== "sortilege") return;
 
-    // 1. Calcul du coût et vérification de la ressource vitale
-    const coutPM = sortilege.system.typeMagie === "rituelle"
-      ? Number(sortilege.system.coutTotal || sortilege.system.coutPM || 1)
-      : Number(sortilege.system.coutPM || 1);
+    // --- 1. GESTION DES POINTS DE MAGIE EXTERNALISÉE ---
+    const pmData = await this._gererDepensePM(sortilege);
+    if (!pmData.continue) return; 
 
-    const currentPM = Number(this.system.secondaires?.pm?.value || 0);
-    const currentPV = Number(this.system.secondaires?.pv?.value || 0);
-    const currentRDC = Number(this.system.secondaires?.rdc?.value || 0);
-
-    let coutAffiche = `<b>${coutPM} PM</b>`;
-
-    // GESTION DU DÉPASSEMENT DE POINTS DE MAGIE
-    if (coutPM > currentPM) {
-      const deficit = coutPM - currentPM;
-      
-      const proceed = await new Promise((resolve) => {
-        new Dialog({
-          title: "⚠️ Épuisement Magique",
-          content: `
-            <div style="text-align: center; margin-bottom: 10px;">
-              <h3 style="color: #b32424; margin-bottom: 5px;">Dépassement de PM !</h3>
-              <p>Ce sortilège requiert <b>${coutPM} PM</b>, mais il ne vous en reste que <b>${currentPM}</b>.</p>
-              <p>Selon la règle d'<i>Excès de Points de Magie</i>, le déficit de <b>${deficit} points</b> sera prélevé sur votre force vitale (PV, puis RDC) !</p>
-              <p style="margin-top: 10px;"><i>Êtes-vous sûr de vouloir sacrifier votre santé pour lancer ce sort ?</i></p>
-            </div>
-          `,
-          buttons: {
-            yes: {
-              icon: '<i class="fas fa-skull"></i>',
-              label: "Sacrifier ma santé",
-              callback: () => resolve(true)
-            },
-            no: {
-              icon: '<i class="fas fa-times"></i>',
-              label: "Annuler le sort",
-              callback: () => resolve(false)
-            }
-          },
-          default: "no"
-        }, { width: 450 }).render(true);
-      });
-
-      if (!proceed) return; // Le joueur a annulé, on stoppe tout !
-
-      // Calcul des nouvelles valeurs vitales et des alertes de statut
-      let newPV = currentPV;
-      let newRDC = currentRDC;
-      let avertissementSante = "";
-
-      if (deficit <= currentPV) {
-        newPV -= deficit;
-        coutAffiche = `<b>${currentPM} PM</b> et <span style="color:#b32424; font-weight:bold;">${deficit} PV sacrifiés</span>`;
-        if (newPV === 0) {
-          avertissementSante = "<br><span style='color:#b32424;'>Le personnage tombe <b>HORS DE COMBAT</b> !</span>";
-        }
-      } else {
-        const deficitRDC = deficit - currentPV;
-        newPV = 0;
-        newRDC = Math.max(0, currentRDC - deficitRDC);
-        coutAffiche = `<b>${currentPM} PM</b>, <span style="color:#b32424; font-weight:bold;">${currentPV} PV</span> et <span style="color:#800000; font-weight:bold;">${deficitRDC} RDC sacrifiés</span>`;
-        
-        if (newRDC > 0) {
-          avertissementSante = "<br><span style='color:#b32424;'>Le personnage tombe <b>INCONSCIENT</b> !</span>";
-        } else {
-          avertissementSante = "<br><span style='color:#800000; font-weight:bold; text-transform:uppercase;'>État Critique : Aux portes de la mort !</span>";
-        }
-      }
-
-      await this.update({
-        "system.secondaires.pm.value": 0,
-        "system.secondaires.pv.value": newPV,
-        "system.secondaires.rdc.value": newRDC
-      });
-
-      // Ajout de l'alerte à l'étiquette affichée dans le chat
-      coutAffiche += avertissementSante;
-
-    } else {
-      // Le personnage a assez de PM, déduction normale
-      await this.update({ "system.secondaires.pm.value": currentPM - coutPM });
-    }
-
-    // 2. Recherche de la capacité Sorcellerie ou repli sur Discernement
-    const competence = this.items.find(item =>
-      item.type === "capacite" && item.name.toLowerCase().includes("sorcellerie")
-    );
+    // 2. Recherche de la capacité Sorcellerie
+    const competence = this.items.find(item => item.type === "capacite" && item.name.toLowerCase().includes("sorcellerie"));
     const attribut = this.system.attributs.discernement || { total: 0, finalFortune: false, finalAdversite: false };
     const score = competence ? Number(competence.system.valeur || 0) : 0;
     const usesAttribute = !competence || score <= 0;
-    const baseScore = usesAttribute ? Number(attribut.total || attribut.value || 0) : score;
+    const baseScore = usesAttribute ? Number(attribut.total || 0) : score;
     const die = usesAttribute ? "d6" : "d10";
 
-    // Gestion Fortune / Adversité
-    let isFortune = competence
-      ? competence.system.fortune || attribut.finalFortune
-      : attribut.finalFortune;
-    let isAdversite = competence
-      ? competence.system.adversite || attribut.finalAdversite
-      : attribut.finalAdversite;
+    let isFortune = competence ? competence.system.fortune || attribut.finalFortune : attribut.finalFortune;
+    let isAdversite = competence ? competence.system.adversite || attribut.finalAdversite : attribut.finalAdversite;
 
     if (this.flags?.fortuneSorcellerie) isFortune = true;
 
@@ -811,32 +656,40 @@ async rollArmeDegats(itemId, targetName, degree, multiplier) {
 
     const roll = new Roll(formula);
     for (const term of roll.dice) {
-      if (term.flavor === "fortune") {
-        term.options ??= {};
-        term.options.colorset = "fortune";
-      } else if (term.flavor === "adversite") {
-        term.options ??= {};
-        term.options.colorset = "adversite";
-      }
+      if (term.flavor === "fortune") term.options.colorset = "fortune";
+      else if (term.flavor === "adversite") term.options.colorset = "adversite";
     }
 
     await roll.evaluate();
 
-    // 3. Détermination des Cibles et des Degrés de réussite
-    const isIllusoire = sortilege.system.typeMagie === "illusoire";
-    const resistanceKey = isIllusoire ? "resMent" : "resMag";
+    // 3. Détermination de la Difficulté et Cibles
     const isAttack = sortilege.system.sortAttaque === true;
-
+    const nomSort = sortilege.name.toLowerCase();
     const targets = [...(game.user.targets || [])];
     let targetResults = "";
 
     if (targets.length > 0) {
       targetResults = targets.map(token => {
         const targetActor = token.actor;
-        const resistance = Number(targetActor?.system?.secondaires?.[resistanceKey]?.value || 0);
-        const result = this._getDegreeOfSuccess(roll, resistance, die);
         const targetLabel = targetActor?.name || token.name;
+        
+        let difficulteValue = 0;
+        let difficulteNom = "";
 
+        if (nomSort.includes("brise-os")) {
+          difficulteNom = "Résistance physique (x2)";
+          difficulteValue = Number(targetActor?.system?.secondaires?.resPhys?.value || 0) * 2;
+        } else if (nomSort.includes("éclaboussure") || nomSort.includes("eclaboussure") || nomSort.includes("grêlons") || nomSort.includes("grelons") || nomSort.includes("projectile brûlant") || nomSort.includes("projectile brulant")) {
+          difficulteNom = "Résistance physique";
+          difficulteValue = Number(targetActor?.system?.secondaires?.resPhys?.value || 0);
+        } else {
+          const isIllusoire = sortilege.system.typeMagie === "illusoire";
+          const resKey = isIllusoire ? "resMent" : "resMag";
+          difficulteNom = isIllusoire ? "Résistance mentale" : "Résistance magique";
+          difficulteValue = Number(targetActor?.system?.secondaires?.[resKey]?.value || 0);
+        }
+
+        const result = this._getDegreeOfSuccess(roll, difficulteValue, die);
         let damageButton = "";
         if (isAttack && result.damageMultiplier > 0) {
           damageButton = `<button type="button" class="lnl-sort-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${sortilege.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-wand-magic-sparkles"></i> Lancer les dégâts magiques</button>`;
@@ -857,29 +710,21 @@ async rollArmeDegats(itemId, targetName, degree, multiplier) {
       }
     }
 
-    const skillLabel = competence
-      ? `Capacité : <b>Sorcellerie</b>`
-      : `Attribut : <b>Discernement</b> (sans Sorcellerie)`;
+    const skillLabel = competence ? `Capacité : <b>Sorcellerie</b>` : `Attribut : <b>Discernement</b> (sans Sorcellerie)`;
 
     roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      flavor: `Sortilège : <b>${sortilege.name}</b> (${sortilege.system.typeMagie})<br>${skillLabel} | Coût : ${coutAffiche}<br>${targetResults}`
+      flavor: `Sortilège : <b>${sortilege.name}</b> (${sortilege.system.typeMagie})<br>${skillLabel} | Coût : ${pmData.coutAffiche}<br>${targetResults}`
     });
   }
 
-  /**
-   * Effectue le jet de dégâts magiques
-   */
   async rollSortilegeDegats(itemId, targetName, degree, multiplier) {
     const sortilege = this.items.get(itemId);
     if (!sortilege) return;
 
-    const baseFormula = sortilege.system.degatsBase || "1d8";
-    const bonus = Number(sortilege.system.degatsBonus || 0);
-    const formula = bonus ? `${baseFormula} + ${bonus}` : baseFormula;
-
-    const roll = await new Roll(formula).evaluate();
-    const adjustedTotal = Math.ceil(roll.total * Number(multiplier));
+    const formula = sortilege.system.degats || "1d8";
+    const roll = await new Roll(formula, this.getRollData()).evaluate();
+    const adjustedTotal = Math.max(0, Math.ceil(roll.total * Number(multiplier)));
     const rollHtml = await roll.render();
 
     ChatMessage.create({
@@ -896,42 +741,136 @@ async rollArmeDegats(itemId, targetName, degree, multiplier) {
     });
   }
 
-  /**
-   * Ouvre la boîte de dialogue pour les dégâts magiques manuels
-   */
   async promptManualSortilegeDamage(itemId) {
     const sortilege = this.items.get(itemId);
     if (!sortilege) return;
 
-    const dialogContent = `
-      <div style="text-align: center; margin-bottom: 10px;">
-        <p>Le sortilège <b>${sortilege.name}</b> a touché !</p>
-        <p style="font-size: 12px; color: #555;">Choisissez le degré de réussite obtenu :</p>
-      </div>
-    `;
+    const dialogContent = `<div style="text-align: center; margin-bottom: 10px;"><p>Le sortilège <b>${sortilege.name}</b> a touché !</p><p style="font-size: 12px; color: #555;">Choisissez le degré de réussite obtenu :</p></div>`;
 
     new Dialog({
       title: "✨ Dégâts magiques manuels",
       content: dialogContent,
       buttons: {
-        partial: {
-          label: "Partielle (x0.5)",
-          callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite partielle", 0.5)
-        },
-        standard: {
-          label: "Standard (x1)",
-          callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite standard", 1)
-        },
-        major: {
-          label: "Majeure (x1.5)",
-          callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite majeure", 1.5)
-        },
-        spectacular: {
-          label: "Spectaculaire (x2)",
-          callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite spectaculaire", 2)
-        }
+        partial: { label: "Partielle (x0.5)", callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite partielle", 0.5) },
+        standard: { label: "Standard (x1)", callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite standard", 1) },
+        major: { label: "Majeure (x1.5)", callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite majeure", 1.5) },
+        spectacular: { label: "Spectaculaire (x2)", callback: () => this.rollSortilegeDegats(itemId, "Cible Inconnue", "Réussite spectaculaire", 2) }
       },
       default: "standard"
     }, { width: 500 }).render(true);
+  }
+
+  // =========================================================================
+  // MÉTHODES PRIVÉES (Aident à alléger le code principal)
+  // =========================================================================
+
+  /**
+   * @private
+   * Vérifie et déduit les munitions pour une arme à distance
+   */
+  async _gererMunitions(arme) {
+    const isDistance = arme.type === "arme" ? arme.system.typeArme === "distance" : arme.system.sousType === "armeTir";
+    
+    if (!isDistance || arme.system.munitionsMax <= 0) return { continue: true, isRafale: false };
+
+    const currentAmmo = arme.system.munitionsActuelles || 0;
+    if (currentAmmo <= 0) {
+      ui.notifications.warn(`Le chargeur de ${arme.name} est vide !`);
+      return { continue: false, isRafale: false };
+    }
+
+    let isRafale = false;
+    if (arme.system.rafale) {
+      const choice = await new Promise(resolve => {
+        new Dialog({
+          title: `Tir avec ${arme.name}`,
+          content: `<div style="text-align: center; margin-bottom: 10px;">
+                      <p>Choisissez votre mode de tir :</p>
+                      <p><i>Munitions actuelles : <b>${currentAmmo} / ${arme.system.munitionsMax}</b></i></p>
+                    </div>`,
+          buttons: {
+            normal: { icon: '<i class="fas fa-crosshairs"></i>', label: "Tir Normal (-1)", callback: () => resolve("normal") },
+            rafale: { icon: '<i class="fas fa-meteor"></i>', label: "Rafale (-4)", callback: () => resolve("rafale") }
+          },
+          default: "normal",
+          close: () => resolve(null)
+        }, { width: 350 }).render(true);
+      });
+
+      if (!choice) return { continue: false, isRafale: false };
+      isRafale = choice === "rafale";
+    }
+
+    const ammoCost = isRafale ? 4 : 1;
+    if (currentAmmo < ammoCost) {
+      ui.notifications.warn(`Pas assez de munitions pour tirer en rafale !`);
+      return { continue: false, isRafale: false };
+    }
+    
+    await arme.update({ "system.munitionsActuelles": currentAmmo - ammoCost });
+    return { continue: true, isRafale };
+  }
+
+  /**
+   * @private
+   * Vérifie et gère la perte de PV/RDC si le sortilège excède les PM
+   */
+  async _gererDepensePM(sortilege) {
+    const coutPM = sortilege.system.typeMagie === "rituelle"
+      ? Number(sortilege.system.coutTotal || sortilege.system.coutPM || 1)
+      : Number(sortilege.system.coutPM || 1);
+
+    const currentPM = Number(this.system.secondaires?.pm?.value || 0);
+    const currentPV = Number(this.system.secondaires?.pv?.value || 0);
+    const currentRDC = Number(this.system.secondaires?.rdc?.value || 0);
+
+    let coutAffiche = `<b>${coutPM} PM</b>`;
+
+    if (coutPM <= currentPM) {
+      await this.update({ "system.secondaires.pm.value": currentPM - coutPM });
+      return { continue: true, coutAffiche };
+    }
+
+    const deficit = coutPM - currentPM;
+    const proceed = await new Promise((resolve) => {
+      new Dialog({
+        title: "⚠️ Épuisement Magique",
+        content: `
+          <div style="text-align: center; margin-bottom: 10px;">
+            <h3 style="color: #b32424; margin-bottom: 5px;">Dépassement de PM !</h3>
+            <p>Ce sortilège requiert <b>${coutPM} PM</b>, mais il ne reste que <b>${currentPM}</b>.</p>
+            <p>Le déficit de <b>${deficit} points</b> sera prélevé sur votre force vitale !</p>
+            <p style="margin-top: 10px;"><i>Êtes-vous sûr de sacrifier votre santé ?</i></p>
+          </div>
+        `,
+        buttons: {
+          yes: { icon: '<i class="fas fa-skull"></i>', label: "Sacrifier ma santé", callback: () => resolve(true) },
+          no: { icon: '<i class="fas fa-times"></i>', label: "Annuler le sort", callback: () => resolve(false) }
+        },
+        default: "no"
+      }, { width: 450 }).render(true);
+    });
+
+    if (!proceed) return { continue: false, coutAffiche: "" };
+
+    let newPV = currentPV;
+    let newRDC = currentRDC;
+    let avertissementSante = "";
+
+    if (deficit <= currentPV) {
+      newPV -= deficit;
+      coutAffiche = `<b>${currentPM} PM</b> et <span style="color:#b32424; font-weight:bold;">${deficit} PV sacrifiés</span>`;
+      if (newPV === 0) avertissementSante = "<br><span style='color:#b32424;'>Le personnage tombe <b>HORS DE COMBAT</b> !</span>";
+    } else {
+      const deficitRDC = deficit - currentPV;
+      newPV = 0;
+      newRDC = Math.max(0, currentRDC - deficitRDC);
+      coutAffiche = `<b>${currentPM} PM</b>, <span style="color:#b32424; font-weight:bold;">${currentPV} PV</span> et <span style="color:#800000; font-weight:bold;">${deficitRDC} RDC sacrifiés</span>`;
+      if (newRDC > 0) avertissementSante = "<br><span style='color:#b32424;'>Le personnage tombe <b>INCONSCIENT</b> !</span>";
+      else avertissementSante = "<br><span style='color:#800000; font-weight:bold; text-transform:uppercase;'>État Critique : Aux portes de la mort !</span>";
+    }
+
+    await this.update({ "system.secondaires.pm.value": 0, "system.secondaires.pv.value": newPV, "system.secondaires.rdc.value": newRDC });
+    return { continue: true, coutAffiche: coutAffiche + avertissementSante };
   }
 }

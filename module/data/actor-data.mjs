@@ -72,7 +72,10 @@ export class PNJData extends PersonnageData {
         nom: new StringField({ initial: "" }),
         cd: new NumberField({ initial: 0, integer: true })
       })),
-      indiceDanger: new foundry.data.fields.NumberField({ initial: 0, min: 0, integer: true })
+      indiceDanger: new foundry.data.fields.NumberField({ initial: 0, min: 0, integer: true }),
+      pouvoirsPNJ: new ArrayField(new SchemaField({
+        nom: new StringField({ initial: "" })
+      })),
     };
   }
 }

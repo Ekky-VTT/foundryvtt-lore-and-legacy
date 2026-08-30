@@ -75,13 +75,19 @@
     }
 
     /* ZONES POUVOIRS ET SORTILÈGES */
+    .pnj-powers { display: flex; flex-direction: column; min-width: 0; min-height: 220px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px; }
+    .pnj-powers h3 { border-bottom: none !important; box-shadow: none; text-decoration: none; }
+    .pnj-power-row { display: flex; align-items: center; gap: 5px; padding: 5px 0; border-bottom: 1px dotted #ccc; }
+    .pnj-power-row input { min-width: 0; border: 1px solid #ccc; font-weight: bold; flex: 1; }
+    .pnj-power-delete { color: #b32424; cursor: pointer; }
+    /* à supprimer ? 
     .pnj-pouvoirs-section { display: flex; flex-direction: column; flex: 0 0 auto; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(0,0,0,0.05); padding: 8px; min-height: 60px; }
     .pnj-pouvoirs-section h3 { flex: 0 0 auto; margin: 0 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; color: #0e3a47; font-size: 14px; text-transform: uppercase; }
     .pnj-pouvoirs-list { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; align-items: center; }
     .pnj-pouvoir-badge { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #1a7692 0%, #0e3a47 100%); color: white; padding: 4px 10px 4px 4px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid #6ccdeb; }
     .pnj-pouvoir-badge img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid white; background: white; }
     .pnj-pouvoir-badge .item-name { font-weight: bold; letter-spacing: 0.5px; cursor: pointer; }
-    .pnj-pouvoir-badge .item-delete { color: #ff8c8c; cursor: pointer; margin-left: 4px; display: flex; align-items: center; }
+    .pnj-pouvoir-badge .item-delete { color: #ff8c8c; cursor: pointer; margin-left: 4px; display: flex; align-items: center; }*/
   </style>
 
   <header style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px;">
@@ -213,19 +219,21 @@
   </div>
 
   <!-- NOUVELLE ZONE POUVOIRS & SORTILÈGES -->
-  <section class="pnj-pouvoirs-section">
-    <h3>Pouvoirs & Sortilèges</h3>
-    <div class="pnj-pouvoirs-list">
-      {{#each pouvoirs as |pouvoir id|}}
-      <div class="pnj-pouvoir-badge item" data-item-id="{{pouvoir._id}}">
-        <img src="{{pouvoir.img}}" />
-        <span class="item-name" title="Cliquer pour voir la description">{{pouvoir.name}}</span>
-        <a class="item-delete" title="Oublier ce pouvoir"><i class="fas fa-times-circle"></i></a>
+    <section class="pnj-powers">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #c19a5b;">
+        <h3 style="flex: 0 0 auto; margin: 0; padding: 0; color: #0e3a47; font-size: 14px;">POUVOIRS & SORTILÈGES</h3>
+        <a class="pnj-pouvoir-add" title="Ajouter un pouvoir" role="button" tabindex="0" style="font-size: 22px; line-height: 18px; font-weight: bold; color: #0e3a47; cursor: pointer;">+</a>
       </div>
-      {{else}}
-      <p style="width: 100%; text-align: center; color: #888; font-style: italic; font-size: 12px; margin: 0;">Glissez un Pouvoir ou un Sortilège ici.</p>
-      {{/each}}
-    </div>
-  </section>
+      <div style="flex: 1 1 auto; overflow-y: auto;">
+        {{#each system.pouvoirsPNJ as |pouvoir index|}}
+        <div class="pnj-power-row">
+          <input type="text" class="pnj-pouvoir-field pnj-power-name" data-index="{{index}}" value="{{pouvoir.nom}}" title="Description du pouvoir ou sortilège" placeholder="Ex: Souffle de feu (2 PM) - 1D8+2"/>
+          <a class="pnj-pouvoir-delete pnj-power-delete" data-index="{{index}}" title="Supprimer ce pouvoir"><i class="fas fa-trash"></i></a>
+        </div>
+        {{else}}
+        <p style="margin: 8px 0; text-align: center; color: #888; font-style: italic;">Aucun pouvoir ajouté.</p>
+        {{/each}}
+      </div>
+    </section>
 
 </form>

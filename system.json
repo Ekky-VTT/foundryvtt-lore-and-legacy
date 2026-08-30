@@ -63,6 +63,13 @@
       "system": "lore-and-legacy"
     },
     {
+      "name": "traits-speciaux",
+      "label": "Traits spéciaux",
+      "path": "packs/traits-speciaux",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
 		"name": "capacites",
 		"label": "Capacités des personnages",
 		"path": "packs/capacites",
@@ -75,7 +82,42 @@
       "path": "packs/tables-lore-and-legacy",
       "type": "RollTable",
       "system": "lore-and-legacy"
-    }
+    },
+    {
+      "name": "armes",
+      "label": "Armes",
+      "path": "packs/armes-armures/armes",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
+      "name": "armures",
+      "label": "Armures",
+      "path": "packs/armes-armures/armures",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
+      "name": "magie-Illusoire",
+      "label": "Sortileges de magie illusoire",
+      "path": "packs/sortileges/magie-illusoire",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
+      "name": "magie-Materielle",
+      "label": "Sortileges de magie materielle",
+      "path": "packs/sortileges/magie-materielle",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    },
+    {
+      "name": "magie-Rituelle",
+      "label": "Sortileges de magie rituelle",
+      "path": "packs/sortileges/magie-rituelle",
+      "type": "Item",
+      "system": "lore-and-legacy"
+    }    
   ],
   "url": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy",
   "manifest": "https://github.com/Ekky-VTT/foundryvtt-lore-and-legacy/releases/latest/download/system.json",

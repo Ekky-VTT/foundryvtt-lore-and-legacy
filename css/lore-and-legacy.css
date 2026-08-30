@@ -219,29 +219,52 @@
 /* --- CARACTÉRISTIQUES SECONDAIRES --- */
 .derived-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .derived-item {
   background: #fff;
   border: 1px solid #dcd3c8;
-  padding: 6px 10px;
   border-radius: 4px;
+  padding: 4px 6px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-height: 46px;
 }
 
 .derived-item .label {
   font-size: 12px;
+  line-height: 1.1;
   color: #333;
 }
 
 .derived-item .value {
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.2;
   font-weight: bold;
   color: #0e3a47;
+}
+
+.defense-toggle-wrap .fa-shield-alt {
+  color: #ccc;
+  font-size: 11px;
+}
+
+.defense-toggle-wrap.is-active .fa-shield-alt,
+.derived-item .value.shield-active {
+  color: #2a7b36;
+  font-weight: bold;
+}
+
+@media (max-width: 1100px) {
+  .derived-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 /* --- CAPACITÉS --- */
 .capacities-block .block-header {

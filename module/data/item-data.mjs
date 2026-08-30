@@ -140,9 +140,12 @@ export class ArmeData extends EquipementBaseData {
     return {
       ...baseSchema,
       typeArme: new StringField({ initial: "melee" }), // 'melee' ou 'distance'
-      degatsBase: new StringField({ initial: "1D8" }),
-      degatsBonus: new NumberField({ initial: 0, integer: true }), // Le "+ X"
+      degats: new StringField({ initial: "1D8" }), // Le champ qui combine les deux précédents, ex: "1D8+2"
       mains: new StringField({ initial: "1M" }), // 1M (une main) ou 2M (deux mains)
+      // NOUVEAUX CHAMPS POUR LES ARMES À DISTANCE
+      munitionsMax: new NumberField({ initial: 0, min: 0, integer: true }),
+      munitionsActuelles: new NumberField({ initial: 0, min: 0, integer: true }),
+      rafale: new BooleanField({ initial: false }),
       porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
       porteeMax: new NumberField({ initial: 40, min: 0, integer: true })
     };
@@ -190,9 +193,7 @@ export class ArcanotechData extends EquipementBaseData {
       mystere: new NumberField({ initial: 10, min: 0, integer: true }),
       identifie: new BooleanField({ initial: false }), // Doit être identifié avant usage
       sousType: new StringField({ initial: "armeMelee" }), // 'armeMelee', 'armeTir', ou 'artefact'
-      // Si c'est une arme, on ajoute de quoi stocker les dégâts
-      degatsBase: new StringField({ initial: "1D8" }),
-      degatsBonus: new NumberField({ initial: 0, integer: true }),
+      degats: new StringField({ initial: "1D8" }), // Le champ qui combine les deux précédents, ex: "1D8+2"
       mains: new StringField({ initial: "1M" }),
       porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
       porteeMax: new NumberField({ initial: 40, min: 0, integer: true }),
