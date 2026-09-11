@@ -62,19 +62,21 @@
                     </select>
                 </div>
                 {{#if (eq system.typeArme "distance")}}
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-weight: bold; color: #0e3a47;">P. Moy. (m) :</label>
-                        <input type="number" name="system.porteeMoyenne" value="{{system.porteeMoyenne}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-weight: bold; color: #0e3a47;">P. Max. (m) :</label>
-                        <input type="number" name="system.porteeMax" value="{{system.porteeMax}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
-                    </div>
+                <div style="display: flex; align-items: center; gap: 5px;" title="Laissez vide pour la mêlée">
+                    <label style="font-weight: bold;">Portée :</label>
+                    <input type="text" name="system.portee" value="{{system.portee}}" placeholder="Vig x2/x4" style="width: 90px; text-align: center; font-size: 12px;"/>
                 </div>
                 <div style="display: flex; flex-basis: 100%; gap: 10px; align-items: center; border-top: 1px dotted #c19a5b; padding-top: 8px; margin-top: 8px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 3px;">
                     <label style="font-weight: bold; color: #0e3a47;">Munitions:</label>
-                    <input type="number" name="system.munitionsActuelles" value="{{system.munitionsActuelles}}" style="width: 45px; text-align: center; border: 1px solid #c19a5b;"/>
+                    <select name="system.typeMunition" style="width: 110px;">
+                        <option value="aucune" {{#if (eq system.typeMunition "aucune")}}selected{{/if}}>Aucune</option>
+                        <option value="balles" {{#if (eq system.typeMunition "balles")}}selected{{/if}}>Balles</option>
+                        <option value="carreaux" {{#if (eq system.typeMunition "carreaux")}}selected{{/if}}>Carreaux</option>
+                        <option value="fleches" {{#if (eq system.typeMunition "fleches")}}selected{{/if}}>Flèches</option>
+                        <option value="flechettes" {{#if (eq system.typeMunition "flechettes")}}selected{{/if}}>Fléchettes</option>
+                        <option value="grenades" {{#if (eq system.typeMunition "grenades")}}selected{{/if}}>Grenades</option>
+                    </select>
+                    <input type="number" name="system.munitionsActuelles" value="{{system.munitionsActuelles}}" style="width: 45px; text-align: center; border: 1px solid #c19a5b; margin-left: 5px;"/>
                     <span style="font-weight: bold;">/</span>
                     <input type="number" name="system.munitionsMax" value="{{system.munitionsMax}}" style="width: 45px; text-align: center; border: 1px solid #c19a5b;"/>
                     

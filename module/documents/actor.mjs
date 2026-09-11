@@ -18,6 +18,54 @@ export class LoreAndLegacyActor extends Actor {
     }
   }
 
+  /** @override */
+  async _preUpdate(changed, options, user) {
+    await super._preUpdate(changed, options, user);
+    if (this.type !== "personnage" && this.type !== "pnj") return;
+  }
+
+  /** @override */
+  _onUpdate(changed, options, userId) {
+    super._onUpdate(changed, options, userId);
+    if (game.user.id !== userId) return;
+
+    if (this.type === "personnage" || this.type === "pnj") {
+      this._syncStatusEffects();
+    }
+  }
+
+  async _syncStatusEffects() {
+    const etats = this.system.status?.etats || {};
+    
+    // Mapping statut -> ID Foundry v11+
+    const statusMap = {
+      "immobilise": "stun",
+      "paralyse": "paralysis",
+      "renverse": "prone",
+      "etatCritique": "dead"
+    };
+
+    for (const [etatKey, effectId] of Object.entries(statusMap)) {
+      const isActive = etats[etatKey] === true;
+      const hasEffect = this.statuses.has(effectId);
+      if (isActive && !hasEffect) {
+        await this.toggleStatusEffect(effectId, { active: true });
+      } else if (!isActive && hasEffect) {
+        await this.toggleStatusEffect(effectId, { active: false });
+      }
+    }
+
+    // Traitement spécial pour Inconscient / Hors de Combat (qui partagent "unconscious")
+    const shouldBeUnconscious = etats.horsCombat === true || etats.inconscient === true;
+    const hasUnconscious = this.statuses.has("unconscious");
+    
+    if (shouldBeUnconscious && !hasUnconscious) {
+      await this.toggleStatusEffect("unconscious", { active: true });
+    } else if (!shouldBeUnconscious && hasUnconscious) {
+      await this.toggleStatusEffect("unconscious", { active: false });
+    }
+  }
+
  /** @private */
   _preparePersonnageData(systemData) {
     const attr = systemData.attributs;
@@ -144,7 +192,10 @@ export class LoreAndLegacyActor extends Actor {
           this.flags.adversiteArcanotech = true;
           this.flags.adversiteMecanique = true;
         }
-
+        if (nom.includes("biomécanique")) {
+          bonusResPhysTraits += 2;
+          bonusPVTraits += 2;
+        }
         if (nom.includes("bête de somme")) bonusBagageTraits += 3;
         if (nom.includes("blindé")) bonusResPhysTraits += 3; 
         if (nom.includes("cuir solide")) bonusResPhysTraits += 2;
@@ -166,100 +217,206 @@ export class LoreAndLegacyActor extends Actor {
       }
     }
     
+    const etats = systemData.status?.etats || {};
+    const isImmobilise = etats.immobilise === true;
+
     for (let key in attr) {
       attr[key].finalFortune = attr[key].fortune || attr[key].traitFortune;
-      attr[key].finalAdversite = attr[key].adversite || attr[key].traitAdversite;
+      
+      // Variables Tampon pour l'Adversité
+      attr[key].forceAdversite = false;
+      attr[key].forceAdversiteSources = [];
+
+      if (attr[key].traitAdversite) {
+        attr[key].forceAdversite = true;
+        attr[key].forceAdversiteSources.push("Trait");
+      }
+
+      if (isImmobilise) {
+        attr[key].forceAdversite = true;
+        attr[key].forceAdversiteSources.push("Immobilisé");
+      }
+
+      attr[key].forceAdversiteSourceLabel = attr[key].forceAdversiteSources.join(", ");
+      attr[key].finalAdversite = attr[key].adversite || attr[key].forceAdversite;
     }
     
     sec.distanceSaut = baseSaut;
     
     // --- 2. CALCUL DES CARACTÉRISTIQUES SECONDAIRES ---
-    sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance + bonusPVTraits;
-    sec.pm.max = (caractere + discernement) * 2 + bonusConcentration + (bonusMysticisme * 2) + bonusPMTraits;
-    sec.sb.value = (robustesse * 2) + bonusEndurance;
-    sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration + bonusResMagTraits;
-    sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique + bonusResMentTraits;
-/*
-    let resPhysBase = (robustesse * 3) + bonusEsquive + bonusResPhysTraits;
-    if (eq?.armureLegere) resPhysBase += bonusArmureLegere;
-    if (eq?.armureLourde) resPhysBase += bonusArmureLourde;
-    if (eq?.bouclier) resPhysBase += bonusBouclier;
-    sec.resPhys.value = resPhysBase;
-*/
-// --- 2.5 CALCUL DES PROTECTIONS ÉQUIPÉES ET RÉSISTANCE PHYSIQUE ---
-    let bonusResPhysArmures = 0;
-    let hasArmureLegere = false;
-    let hasArmureLourde = false;
-    let hasBouclier = false;
+    // On n'écrase automatiquement ces valeurs que s'il s'agit d'un Personnage Joueur !
+    if (this.type === "personnage") {
+      sec.pv.max = (robustesse + vigueur) * 2 + bonusEndurance + bonusPVTraits;
+      sec.pm.max = (caractere + discernement) + bonusConcentration + (bonusMysticisme * 2) + bonusPMTraits;
+      sec.sb.value = (robustesse * 2) + bonusEndurance;
+      sec.resMag.value = (discernement + maitrise) * 2 + bonusConcentration + bonusResMagTraits + bonusEsquive;
+      sec.resMent.value = (caractere + prestance) * 2 + bonusEspritCritique + bonusResMentTraits;
+      
+      // --- 2.5 CALCUL DES PROTECTIONS ÉQUIPÉES ET RÉSISTANCE PHYSIQUE ---
+      let bonusResPhysAutres = 0;
+      let baseLegere = 0;
+      let baseLourde = 0;
+      let baseBouclier = 0;
 
-    // 2.5.1. On parcourt l'inventaire pour trouver les armures équipées
-    for (let item of this.items) {
-      if (item.type === "armure" && item.system?.equipe) {
-        // On additionne le score de défense brut de l'objet
-        bonusResPhysArmures += Number(item.system.bonusResPhys || 0);
-        
-        // On détecte les types d'armure pour les bonus de capacités passives
-        if (item.system.type === "legere") hasArmureLegere = true;
-        if (item.system.type === "lourde") hasArmureLourde = true;
-        if (item.system.type === "bouclier") hasBouclier = true;
+      let bonusResMagArmures = 0; 
+      let bonusResMentArmures = 0;
+      let modRapiditeArmures = 0; 
+      let hasArmureLegere = false;
+      let isArmureLegereEndommage = false;
+      let hasArmureLourde = false;
+      let isArmureLourdeEndommage = false;
+      let hasBouclier = false;
+      let isBouclierEndommage = false;
+
+      for (let item of this.items) {
+        if (item.type === "armure" && item.system?.equipe) {
+          let currentBonusPhys = Number(item.system.bonusResPhys || 0);
+          
+          modRapiditeArmures += Number(item.system.modRapidite || 0);
+          if (item.system.type === "legere") {
+            hasArmureLegere = true;
+            baseLegere += currentBonusPhys;
+            if (item.system.endommage) isArmureLegereEndommage = true;
+          } else if (item.system.type === "lourde") {
+            hasArmureLourde = true;
+            baseLourde += currentBonusPhys;
+            if (item.system.endommage) isArmureLourdeEndommage = true;
+          } else if (item.system.type === "bouclier") {
+            hasBouclier = true;
+            baseBouclier += currentBonusPhys;
+            if (item.system.endommage) isBouclierEndommage = true;
+          } else {
+            // "accessoire" ou autre type inconnu
+            if (item.system.endommage) {
+              currentBonusPhys = Math.ceil(currentBonusPhys / 2);
+            }
+            bonusResPhysAutres += currentBonusPhys;
+          }
+
+          // ANALYSE TEXTUELLE INTELLIGENTE DES EFFETS (Regex)
+          if (item.system.effet) {
+            const effStr = String(item.system.effet).toLowerCase();
+            
+            // Cherche un motif "Magique" associé à un chiffre positif
+            const matchMag = effStr.match(/(?:magique|mag).*\+\s*(\d+)/) || effStr.match(/\+\s*(\d+).*(?:magique|mag)/);
+            if (matchMag) bonusResMagArmures += Number(matchMag[1]);
+
+            // Cherche un motif "Mentale" associé à un chiffre positif
+            const matchMent = effStr.match(/(?:mentale|mental|ment).*\+\s*(\d+)/) || effStr.match(/\+\s*(\d+).*(?:mentale|mental|ment)/);
+            if (matchMent) bonusResMentArmures += Number(matchMent[1]);
+          }
+          // ANALYSE TEXTUELLE INTELLIGENTE DES EFFETS ARCANOTECH (Regex/Mots-clés)
+          if (item.type === "arcanotech" && item.system?.equipe && item.system?.effet) {
+            const effStr = String(item.system.effet).toLowerCase();
+              
+            // Détecte les Serres adamantines ou tout objet donnant un bonus similaire
+            if (effStr.includes("escalade") && effStr.includes("fortune")) {
+              this.flags.fortuneEscalade = true;
+            }
+          }
+        }
       }
-    }
 
-    // 2.5.2. Base Résistance Physique = (Robustesse * 3) + Esquive + Traits (Blindé, etc.) + Défense des Armures
-    let resPhysBase = (robustesse * 3) + bonusEsquive + (typeof bonusResPhysTraits !== 'undefined' ? bonusResPhysTraits : 0) + bonusResPhysArmures;
-    
-    // 2.5.3. Application des bonus de capacités passives si le bon type d'armure est équipé
-    if (hasArmureLegere) resPhysBase += bonusArmureLegere;
-    if (hasArmureLourde) resPhysBase += bonusArmureLourde;
-    if (hasBouclier) resPhysBase += bonusBouclier;
+      // On calcule la masse corporelle uniquement sur la Robustesse pure et les mutations physiques (Traits)
+      let resPhysNaturelle = (robustesse * 3) + (typeof bonusResPhysTraits !== 'undefined' ? bonusResPhysTraits : 0);
+      // Le poids est défini AVANT d'ajouter l'agilité (Esquive) et l'équipement
+      sec.poids.value = (resPhysNaturelle * 10) + bonusPoidsTraits;
 
-    sec.resPhys.value = resPhysBase;
+      let resPhysBase = resPhysNaturelle + bonusEsquive + bonusResPhysAutres;
+      
+      let totalLegere = hasArmureLegere ? baseLegere + bonusArmureLegere : 0;
+      if (isArmureLegereEndommage) totalLegere = Math.ceil(totalLegere / 2);
+      
+      let totalLourde = hasArmureLourde ? baseLourde + bonusArmureLourde : 0;
+      if (isArmureLourdeEndommage) totalLourde = Math.ceil(totalLourde / 2);
+      
+      let totalBouclier = hasBouclier ? baseBouclier + bonusBouclier : 0;
+      if (isBouclierEndommage) totalBouclier = Math.ceil(totalBouclier / 2);
 
-    // --- APPLICATION DE LA DÉFENSE TOTALE ---
-    if (this.flags["lore-and-legacy"]?.defenseTotale) {
-      sec.resPhys.value *= 2;
-    }
+      resPhysBase += totalLegere + totalLourde + totalBouclier;
 
-    // --- CALCUL DU BAGAGE ---
-    // Bagage Max = Base de 9 + Optimisation + Traits - Plafonné à 18
-    sec.bagage = sec.bagage || {};
-    sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
-    
-    // Calcul de l'encombrement actuel (Valeur)
-    sec.bagage.value = this.items.reduce((total, item) => {
-      if (item.system && item.system.encombrement !== undefined) {
-        // On récupère l'encombrement, et si la quantité n'existe pas, on considère qu'il y en a 1 seul.
-        const encombrement = Number(item.system.encombrement) || 0;
-        const quantite = item.system.quantite !== undefined ? Number(item.system.quantite) : 1;
-        
-        return total + (encombrement * quantite);
+      sec.resPhys.value = resPhysBase;
+      // On injecte les bonus trouvés par le Regex directement dans les valeurs finales
+      sec.resMag.value += bonusResMagArmures;
+      sec.resMent.value += bonusResMentArmures;
+
+      // --- APPLICATION DE LA DÉFENSE TOTALE ---
+      if (this.flags["lore-and-legacy"]?.defenseTotale) {
+        sec.resPhys.value *= 2;
       }
-      return total;
-    }, 0);
 
-    // Indicateur de surcharge (Vrai si on dépasse le max)
-    sec.bagage.surcharge = sec.bagage.value > sec.bagage.max;
+      // --- CALCUL DU BAGAGE ---
+      sec.bagage = sec.bagage || {};
+      sec.bagage.max = Math.min(18, 9 + bonusOptimisation + bonusBagageTraits);
+      
+      sec.bagage.value = this.items.reduce((total, item) => {
+        if (item.system && item.system.encombrement !== undefined) {
+          const encombrement = Number(item.system.encombrement) || 0;
+          const quantite = item.system.quantite !== undefined ? Number(item.system.quantite) : 1;
+          return total + (encombrement * quantite);
+        }
+        return total;
+      }, 0);
 
-    // Reste des statistiques
-    sec.rdc.max = (fortune + vigueur) * multRDC;
-    sec.rapidite.value = maitrise + vigueur + bonusRapiditeTraits;
-    sec.sprint.value = sec.rapidite.value * 2;
-    
-    // NOUVEAU : Application de la surcharge de bagage sur la rapidité
-    if (sec.bagage.surcharge) {
-      sec.rapidite.value = Math.max(1, Math.floor(sec.rapidite.value / 2));
+      sec.bagage.surcharge = sec.bagage.value > sec.bagage.max;
+
+      // Reste des statistiques
+      sec.rdc.max = (fortune + vigueur) * multRDC;
+      sec.rapidite.value = maitrise + vigueur + bonusRapiditeTraits + modRapiditeArmures;
       sec.sprint.value = sec.rapidite.value * 2;
+      // On s'assure que la Rapidité ne tombe pas sous zéro à cause d'une armure trop lourde
+      sec.rapidite.value = Math.max(0, sec.rapidite.value);
+
+      // Application de la surcharge de bagage sur la rapidité
+      if (sec.bagage.surcharge) {
+        sec.rapidite.value = Math.max(1, Math.floor(sec.rapidite.value / 2));
+        sec.sprint.value = sec.rapidite.value * 2;
+      }
     }
+
+    // --- VARIABLE D'INITIATIVE POUR LE COMBAT TRACKER ---
+    // En dehors de la condition, car le Combat Tracker a aussi besoin de lire l'initiative d'un PNJ !
+    const tieBreaker = this.type === "personnage" ? 0.1 : 0;
+    // On sécurise avec Number() pour garantir que la valeur saisie manuellement par le MJ soit bien un chiffre
+    sec.rapidite.initiative = Number(sec.rapidite.value || 0) + tieBreaker;
 
     // --- 3. STOCKAGE DES BONUS DE MUSCULATION ---
     sec.bonusDegatsCaC = bonusMusculation;
     sec.bonusChargeEffort = Math.ceil(bonusMusculation / 2);
   }
 
+/**
+   * Effectue un jet de Capacité (ou d'Attribut en repli)
+   * @param {string} itemId - L'ID de l'objet Capacité cliqué
+   * @param {Object} options - Options du jet (fortune, adversite, malus)
+   */
   async rollCapacite(itemId, options = {}) {
     const capacite = this.items.get(itemId);
     if (!capacite || capacite.type !== "capacite") return;
 
+    const nomCapa = capacite.name.toLowerCase();
+
+    // --- REDIRECTION DES ATTAQUES VERS LES ARMES ÉQUIPÉES ---
+    if (nomCapa.includes("combat rapproché") || nomCapa.includes("combat à distance")) {
+      const isDistance = nomCapa.includes("combat à distance");
+      const isMelee = nomCapa.includes("combat rapproché");
+
+      const armesEquipees = this.items.filter(i => {
+        if (!i.system.equipe) return false;
+        if (isDistance && ((i.type === "arme" && i.system.typeArme === "distance") || i.system.sousType === "armeTir")) return true;
+        if (isMelee && ((i.type === "arme" && i.system.typeArme === "melee") || (i.type === "arcanotech" && i.system.sousType === "armeMelee"))) return true;
+        return false;
+      });
+
+      if (armesEquipees.length > 0) {
+        return this.rollArme(armesEquipees[0].id);
+      }
+    }
+
+    return this._continueRollCapacite(capacite, nomCapa, options);
+  }
+
+  async _continueRollCapacite(capacite, nomCapa, options) {
     const capaciteValue = capacite.system.valeur;
     const attributLieKey = capacite.system.attributLie; 
     
@@ -267,11 +424,12 @@ export class LoreAndLegacyActor extends Actor {
     const attributValue = attributParent ? attributParent.total : 0;
     const attributNom = attributLieKey ? attributLieKey.charAt(0).toUpperCase() + attributLieKey.slice(1) : "Aucun";
 
-    let isFortune = options.fortune !== undefined ? options.fortune : capacite.system.fortune || (attributParent && attributParent.finalFortune);
-    let isAdversite = options.adversite !== undefined ? options.adversite : capacite.system.adversite || (attributParent && attributParent.finalAdversite);
-    
-    const nomCapa = capacite.name.toLowerCase();
+    // --- HÉRITAGE DYNAMIQUE FORTUNE / ADVERSITÉ ---
+    // On fusionne les valeurs de la fiche avec celles cochées dans le popup (options)
+    let isFortune = capacite.system.fortune || (attributParent && attributParent.finalFortune) || options.fortune;
+    let isAdversite = capacite.system.adversite || (attributParent && attributParent.finalAdversite) || options.adversite;
 
+    // VÉRIFICATION DES BONUS DE TRAITS SUR LES CAPACITÉS
     if (nomCapa.includes("acrobatie") && this.flags?.fortuneAcrobatie) isFortune = true;
     if (nomCapa.includes("escalade") && this.flags?.fortuneEscalade) isFortune = true;
     if (nomCapa.includes("sorcellerie") && this.flags?.fortuneSorcellerie) isFortune = true;
@@ -280,17 +438,38 @@ export class LoreAndLegacyActor extends Actor {
     if (nomCapa.includes("arcanotech") && this.flags?.fortuneArcanotech) isFortune = true;
     if (nomCapa.includes("mécanique") && this.flags?.fortuneMecanique) isFortune = true;
     
+    // VÉRIFICATION DES MALUS DE TRAITS SUR LES CAPACITÉS
     if (nomCapa.includes("arcanotech") && this.flags?.adversiteArcanotech) isAdversite = true;
     if (nomCapa.includes("mécanique") && this.flags?.adversiteMecanique) isAdversite = true;
 
+    // Cas spécifique du Zazou
     const socialCapacites = ["charme", "intimidation", "provocation", "marchandage", "présence apaisante", "rhétorique", "représentation"];
     if (this.flags?.adversiteSociale && socialCapacites.some(c => nomCapa.includes(c))) {
       isAdversite = true;
     }
-
-    if (options.fortune !== undefined) isFortune = options.fortune;
-    if (options.adversite !== undefined) isAdversite = options.adversite;
     
+    // --- LECTURE DE LA CIBLE ---
+    const targets = Array.from(game.user.targets);
+    let cibleHTML = "";
+    
+    if (targets.length > 0) {
+      const targetActor = targets[0].actor;
+      const targetSec = targetActor.system.secondaires;
+      const isPJ = targetActor.type === "personnage";
+      const displayResPhys = isPJ ? targetSec.resPhys.value : "???";
+      const displayResMag = isPJ ? targetSec.resMag.value : "???";
+      
+      if (nomCapa.includes("combat rapproché") || nomCapa.includes("combat à distance") || nomCapa.includes("charge")) {
+        cibleHTML = `<div style="margin-top: 6px; padding: 4px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; font-size: 12px; color: #0e3a47;">
+          🎯 <b>${targetActor.name}</b> (RÉS. PHYSIQUE : <b>${displayResPhys}</b>)
+        </div>`;
+      } else if (nomCapa.includes("arcanotech")) {
+        cibleHTML = `<div style="margin-top: 6px; padding: 4px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; font-size: 12px; color: #0e3a47;">
+          🎯 <b>${targetActor.name}</b> (RÉS. MAGIQUE : <b>${displayResMag}</b>)
+        </div>`;
+      }
+    }
+
     let formula = "";
     let flavorText = "";
     let typeDeDe = "d6";
@@ -298,22 +477,39 @@ export class LoreAndLegacyActor extends Actor {
     if (capaciteValue > 0) {
       typeDeDe = "d10";
       formula = `1d10 + ${capaciteValue}`;
-      flavorText = options.sortilegeName ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (Sorcellerie)` : `Jet de Capacité : <b>${capacite.name}</b>`;
+      flavorText = `Jet de Capacité : <b>${capacite.name}</b>`;
     } else {
       typeDeDe = "d6";
       formula = `1d6 + ${attributValue}`;
-      flavorText = options.sortilegeName ? `Jet de Sortilège : <b>${options.sortilegeName}</b> (repli sans Sorcellerie) : Attribut <b>${attributNom}</b>` : `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
+      flavorText = `Jet de repli (sans <b>${capacite.name}</b>) : Attribut <b>${attributNom}</b>`;
+    }
+
+    // --- APPLICATION DU BONUS DE MUSCULATION (Charge / Effort) ---
+    const bonusChargeEffort = Number(this.system.secondaires?.bonusChargeEffort || 0);
+    if ((nomCapa.includes("charge") || nomCapa.includes("effort")) && bonusChargeEffort > 0) {
+      formula += ` + ${bonusChargeEffort}`;
+      flavorText += ` <span style="color:#0e3a47; font-size:11px; font-weight:bold;">[+ Musculation (+${bonusChargeEffort})]</span>`;
     }
 
     if (isFortune) {
       formula += ` + 1${typeDeDe}[fortune]`;
-      flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fortune]</span>`;
+      flavorText += ` <span style="color:#2a7b36; font-weight:bold;">[+ Fort.]</span>`;
     }
 
     if (isAdversite) {
-      formula = `1${typeDeDe} + max(0, ${capaciteValue > 0 ? capaciteValue : attributValue} - 1${typeDeDe}[adversite])${isFortune ? ` + 1${typeDeDe}[fortune]` : ""}`;
-      flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adversité]</span>`;
+      formula += ` - 1${typeDeDe}[adversite]`;
+      flavorText += ` <span style="color:#b32424; font-weight:bold;">[- Adv.]</span>`;
     }
+
+    // --- APPLICATION DU MALUS D'ATTAQUE MULTIPLE ---
+    const malus = options.malus || 0;
+    if (malus > 0) {
+      formula += ` - ${malus}`;
+      flavorText += ` <span style="color:#b32424; font-weight:bold;">[-${malus} Attaque Multiple]</span>`;
+    }
+
+    // Ajout du bloc de cible à la fin du message
+    flavorText += cibleHTML;
 
     let roll = new Roll(formula);
 
@@ -328,7 +524,37 @@ export class LoreAndLegacyActor extends Actor {
     }
 
     await roll.evaluate();
-    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: flavorText });
+
+    if (nomCapa.includes("charge") && targets.length > 0) {
+      const targetToken = targets[0];
+      const targetActor = targetToken.actor;
+      const resistance = Number(targetActor?.system?.secondaires?.resPhys?.value || 0);
+      const result = this._getDegreeOfSuccess(roll, resistance, typeDeDe);
+      
+      let extraText = `<div style="margin-top: 6px; padding: 4px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; font-size: 12px; color: #0e3a47;">
+        <p><b>${targetActor.name}</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span></p>`;
+
+      if (result.success) {
+        if (["standard", "major", "spectacular"].includes(result.degree)) {
+          extraText += `<p style="color: #b32424; font-weight: bold; font-size: 11px;">💥 Cible RENVERSÉE !</p>`;
+          // Toggle status 'prone' onto target if they don't have it already
+          if (!targetActor.statuses.has("prone")) {
+             await targetActor.toggleStatusEffect("prone", { active: true });
+          }
+        } else if (result.degree === "partial") {
+          extraText += `<p style="color: #555; font-style: italic; font-size: 11px;">Dégâts uniquement, la cible n'est pas renversée.</p>`;
+        }
+      } else {
+         extraText += `<p style="color: #555; font-style: italic; font-size: 11px;">La charge échoue.</p>`;
+      }
+      extraText += `</div>`;
+      flavorText += extraText;
+    }
+
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      flavor: flavorText
+    });
   }
 
   async rollAttribut(attrKey, options = {}) {
@@ -372,15 +598,77 @@ export class LoreAndLegacyActor extends Actor {
     roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this }), flavor: flavorText });
   }
 
-  async rollArme(itemId) {
+async rollArme(itemId) {
     const arme = this.items.get(itemId);
     if (!arme || !arme.system.equipe) return;
 
-    // --- 1. GESTION DES MUNITIONS EXTERNALISÉE ---
-    const tirData = await this._gererMunitions(arme);
-    if (!tirData.continue) return; 
-    const isRafale = tirData.isRafale;
+    let isRafale = false;
+    let isLonguePortee = false;
+    const isDistance = arme.type === "arme" ? arme.system.typeArme === "distance" : arme.system.sousType === "armeTir";
 
+    // --- 1. GESTION DE LA PORTÉE ET DES MUNITIONS ---
+    if (isDistance) {
+      const vig = Number(this.system.attributs.vigueur.total || 0);
+      const porteeStr = arme.system.portee || "0/0";
+      const parts = porteeStr.split('/');
+      
+      // Traducteur : convertit "Vig x2" ou "20m" en un chiffre exploitable
+      const parsePortee = (str) => {
+        if (!str) return 0;
+        let s = str.toLowerCase().replace(/m/g, '').trim();
+        if (s.includes('vig')) {
+          let mult = s.match(/x\s*(\d+)/);
+          return mult ? vig * parseInt(mult[1]) : vig;
+        }
+        return parseInt(s) || 0;
+      };
+
+      const porteeMoyenne = parsePortee(parts[0]);
+      const porteeMax = parsePortee(parts[1] || parts[0]);
+
+      // Vérification des tokens sur la carte
+      const activeToken = this.getActiveTokens()[0];
+      const targets = [...(game.user.targets || [])];
+      const canAutoCalc = activeToken && targets.length > 0;
+
+     if (canAutoCalc) {
+        let maxDist = 0;
+        for (let t of targets) {
+           let dist = 0;
+           
+           // Nouvelle méthode (Foundry V12+)
+           if (canvas.grid.measurePath) {
+             dist = canvas.grid.measurePath([activeToken.center, t.center]).distance;
+           } 
+           // Ancienne méthode (Foundry V11 et inférieur)
+           else if (canvas.grid.measureDistances) {
+             const ray = new Ray(activeToken.center, t.center);
+             dist = canvas.grid.measureDistances([{ ray }], { gridSpaces: true })[0];
+           }
+           
+           if (dist > maxDist) maxDist = dist;
+        }
+        
+        // Bloque le tir si la cible est trop loin (et que la portée max est renseignée)
+        if (maxDist > porteeMax && porteeMax > 0) {
+           ui.notifications.error(`Cible hors de portée (${Math.round(maxDist)}m > ${porteeMax}m) !`);
+           return;
+        } else if (maxDist > porteeMoyenne && porteeMoyenne > 0) {
+           isLonguePortee = true;
+        }
+      }
+
+      const tirData = await this._gererTirDistance(arme, canAutoCalc);
+      if (!tirData.continue) return; 
+      
+      isRafale = tirData.isRafale;
+      // Si pas de calcul auto, on prend la valeur de la case à cocher
+      if (!canAutoCalc && tirData.isLonguePortee) {
+         isLonguePortee = true;
+      }
+    }
+
+    // --- 2. PRÉPARATION DES STATISTIQUES ---
     const isArcanotech = arme.type === "arcanotech";
     const skillName = isArcanotech ? "arcanotech" : arme.system.typeArme === "distance" ? "combat à distance" : "combat rapproché";
     const competence = this.items.find(item => item.type === "capacite" && item.name.toLowerCase().includes(skillName));
@@ -398,28 +686,30 @@ export class LoreAndLegacyActor extends Actor {
     if (isArcanotech && this.flags?.fortuneArcanotech) isFortune = true;
     if (isArcanotech && this.flags?.adversiteArcanotech) isAdversite = true;
 
-// Détermination du nombre de tirs à effectuer
+    // --- 3. LANCEMENT DES DÉS ---
     const nbTirs = isRafale ? 2 : 1;
 
     for (let tir = 1; tir <= nbTirs; tir++) {
-      let currentAdversite = isAdversite;
       let extraFlavor = "";
+      
+      // On cumule l'Adversité du personnage avec l'Adversité de la longue portée
+      let currentAdversite = isAdversite || isLonguePortee;
 
-      // Si c'est une rafale, on personnalise l'affichage et le 2e tir
+      if (isLonguePortee && tir === 1) {
+        extraFlavor += `<br><span style="color:#b32424; font-weight:bold; font-size:12px;">[🎯 LONGUE PORTÉE : Adversité]</span>`;
+      }
+
       if (isRafale) {
         if (tir === 1) {
-          extraFlavor = `<br><span style="color:#0e3a47; font-weight:bold; font-size:12px;">[🔥 TIR EN RAFALE : 1er Tir]</span>`;
+          extraFlavor += `<br><span style="color:#0e3a47; font-weight:bold; font-size:12px;">[🔥 TIR EN RAFALE : 1er Tir]</span>`;
         } else if (tir === 2) {
-          currentAdversite = true; // On force l'adversité pour le recul
+          currentAdversite = true; // Recul de l'arme
           extraFlavor = `<br><span style="color:#b32424; font-weight:bold; font-size:12px;">[🔥 TIR EN RAFALE : 2e Tir (Recul)]</span>`;
         }
       }
 
-      // Construction de la formule dynamique
       let formula = `1${die} + ${baseScore}`;
       if (isFortune) formula += ` + 1${die}[fortune]`;
-      
-      // La variable 'die' contient déjà "d10" ou "d6", le dé d'adversité s'adaptera donc automatiquement !
       if (currentAdversite) {
         formula = `1${die} + max(0, ${baseScore} - 1${die}[adversite])${isFortune ? ` + 1${die}[fortune]` : ""}`;
       }
@@ -437,7 +727,6 @@ export class LoreAndLegacyActor extends Actor {
 
       await roll.evaluate();
 
-      // Résolution des cibles pour ce tir spécifique
       const targets = [...(game.user.targets || [])];
       const resistanceKey = isArcanotech ? "resMag" : "resPhys";
       const targetResults = targets.map(token => {
@@ -446,7 +735,7 @@ export class LoreAndLegacyActor extends Actor {
         const result = this._getDegreeOfSuccess(roll, resistance, die);
         const targetLabel = targetActor?.name || token.name;
         const damageButton = result.damageMultiplier > 0
-          ? `<button type="button" class="lnl-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-dice-d8"></i> Lancer les dégâts</button>`
+          ? `<button type="button" class="lnl-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${arme.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-target-uuid="${token.document.uuid}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-dice-d8"></i> Lancer les dégâts</button>`
           : "";
         return `<p><b>${targetLabel}</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span>${damageButton}</p>`;
       }).join("");
@@ -528,7 +817,7 @@ export class LoreAndLegacyActor extends Actor {
     return { degree, degreeLabel: finalLabel, damageMultiplier: multipliers[degree], success: !["failure", "disastrous"].includes(degree) };
   }
 
-  async rollArmeDegats(itemId, targetName, degree, multiplier) {
+async rollArmeDegats(itemId, targetName, degree, multiplier, targetUuid = null) {
     const arme = this.items.get(itemId);
     if (!arme) return;
 
@@ -537,6 +826,23 @@ export class LoreAndLegacyActor extends Actor {
     const die = dieMatch ? `1${dieMatch[0]}` : "1d8";
 
     let flavorText = `Dégâts : <b>${arme.type === "arcanotech" ? `${arme.name} (Arcanotech)` : arme.name}</b> contre <b>${targetName}</b><br><span style="font-size:12px; font-style: italic; color: #555;">Degré : ${degree} (multiplicateur x${multiplier})</span>`;
+
+    // --- DÉTECTION DU TYPE D'ARME (Déplacée en haut pour servir à tout le monde) ---
+    const isMelee = (arme.type === "arme" && arme.system.typeArme === "melee") || 
+                    (arme.type === "arcanotech" && arme.system.sousType === "armeMelee");
+
+    // --- APPLICATION DE LA MUSCULATION ---
+    const bonusMusculation = Number(this.system.secondaires?.bonusDegatsCaC || 0);
+    if (isMelee && bonusMusculation > 0) {
+      formula = `(${formula}) + ${bonusMusculation}`;
+      flavorText += `<br><span style="color:#0e3a47; font-size:11px; font-weight:bold;">[+ Musculation (+${bonusMusculation})]</span>`;
+    }
+
+    // --- GESTION DE L'ARME ENDOMMAGÉE ---
+    if (arme.system.endommage) {
+      formula = `(${formula}) - ${die}[adversite]`;
+      flavorText += `<br><span style="color:#b32424; font-size:11px; font-weight:bold;">[- Adversité (Arme endommagée)]</span>`;
+    }
 
     // --- CORRECTION DU BUG ARCANOTECH ---
     if (arme.type === "arcanotech") {
@@ -554,7 +860,7 @@ export class LoreAndLegacyActor extends Actor {
       }
     }
 
-const roll = await new Roll(formula, this.getRollData()).evaluate();
+    const roll = await new Roll(formula, this.getRollData()).evaluate();
     
     for (const term of roll.dice) {
       if (term.flavor === "fortune") term.options.colorset = "fortune";
@@ -565,14 +871,12 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
 
     // --- APPLICATION DU TRAIT MAIN LOURDE ---
     if (this.flags?.mainLourde) {
-      const isMelee = (arme.type === "arme" && arme.system.typeArme === "melee") || 
-                      (arme.type === "arcanotech" && arme.system.sousType === "armeMelee");
-      
       const isUnarmed = arme.name.toLowerCase().includes("mains nues") || 
                         arme.name.toLowerCase().includes("poings d'acier") || 
                         arme.name.toLowerCase().includes("morsure");
       
       // S'applique aux armes de mêlée, mais PAS aux attaques naturelles
+      // La variable isMelee est lue directement depuis le haut de la méthode
       if (isMelee && !isUnarmed) {
         baseDamage = Math.ceil(baseDamage * 1.5);
         flavorText += `<br><span style="color:#b32424; font-size:11px; font-weight:bold;">[+ Main Lourde (Dégâts x1,5)]</span>`;
@@ -592,6 +896,7 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
         <div style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed #b32424; text-align: center; background: rgba(179,36,36,0.1); border-radius: 3px; padding-bottom: 5px;">
           <span style="font-size:12px; font-weight:bold; color:#0e3a47; text-transform: uppercase;">Dégâts Finaux Appliqués</span><br>
           <span style="font-size:28px; font-weight:bold; color:#b32424; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">${adjustedTotal}</span>
+          ${targetUuid ? `<button type="button" class="lnl-apply-damage" data-target-uuid="${targetUuid}" data-damage="${adjustedTotal}" style="margin-top: 8px; background: #b32424; color: white; border: none; padding: 5px; border-radius: 3px;"><i class="fas fa-heart-broken"></i> Appliquer aux PV</button>` : ""}
         </div>
       `
     });
@@ -663,12 +968,45 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
     await roll.evaluate();
 
     // 3. Détermination de la Difficulté et Cibles
+    const isMagiePersonnelle = sortilege.system.typeMagie === "magie-personnelle";
     const isAttack = sortilege.system.sortAttaque === true;
     const nomSort = sortilege.name.toLowerCase();
     const targets = [...(game.user.targets || [])];
     let targetResults = "";
 
-    if (targets.length > 0) {
+    if (isMagiePersonnelle) {
+      const difficulteValue = Number(sortilege.system.difficulte || 8);
+      const result = this._getDegreeOfSuccess(roll, difficulteValue, die);
+      
+      targetResults = `<p><b>Cible : Lui-même</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span></p>`;
+
+      if (result.success && result.damageMultiplier > 0) {
+        if (nomSort.includes("lien éthérique") || nomSort.includes("lien etherique")) {
+          const degatsBase = sortilege.system.degatsBase || "1d8";
+          const degatsBonus = Number(sortilege.system.degatsBonus) || 0;
+          const sign = degatsBonus > 0 ? "+" : "";
+          const formulaHeal = `${degatsBase}${degatsBonus ? sign + degatsBonus : ""}`;
+          
+          const rollHeal = await new Roll(formulaHeal, this.getRollData()).evaluate();
+          const finalHeal = Math.max(0, Math.ceil(rollHeal.total * result.damageMultiplier));
+          
+          const currentPM = this.system.secondaires?.pm?.value || 0;
+          const maxPM = this.system.secondaires?.pm?.max || 0;
+          const newPM = Math.min(maxPM, currentPM + finalHeal);
+          await this.update({ "system.secondaires.pm.value": newPM });
+          
+          const rollHtml = await rollHeal.render();
+          targetResults += `
+            <div style="margin-top: 5px; font-size: 13px; border-top: 1px dotted #ccc; padding-top: 5px;">
+              <b>Effet (Lien éthérique) :</b>
+              ${rollHtml}
+              <div style="margin-top: 4px; text-align: center; font-weight: bold; color: #2b7a4b; font-size: 14px;">
+                + ${finalHeal} PM restaurés !
+              </div>
+            </div>`;
+        }
+      }
+    } else if (targets.length > 0) {
       targetResults = targets.map(token => {
         const targetActor = token.actor;
         const targetLabel = targetActor?.name || token.name;
@@ -692,7 +1030,7 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
         const result = this._getDegreeOfSuccess(roll, difficulteValue, die);
         let damageButton = "";
         if (isAttack && result.damageMultiplier > 0) {
-          damageButton = `<button type="button" class="lnl-sort-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${sortilege.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-wand-magic-sparkles"></i> Lancer les dégâts magiques</button>`;
+          damageButton = `<button type="button" class="lnl-sort-damage-roll" data-actor-uuid="${this.uuid}" data-item-id="${sortilege.id}" data-target-name="${encodeURIComponent(targetLabel)}" data-target-uuid="${token.document.uuid}" data-degree="${result.degree}" data-multiplier="${result.damageMultiplier}"><i class="fas fa-wand-magic-sparkles"></i> Lancer les dégâts magiques</button>`;
         }
 
         return `<p><b>${targetLabel}</b> → <span style="color:${result.success ? "#2b7a4b" : "#b32424"}; font-weight:bold;">${result.degreeLabel}</span>${damageButton}</p>`;
@@ -718,11 +1056,15 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
     });
   }
 
-  async rollSortilegeDegats(itemId, targetName, degree, multiplier) {
+  async rollSortilegeDegats(itemId, targetName, degree, multiplier, targetUuid = null) {
     const sortilege = this.items.get(itemId);
     if (!sortilege) return;
 
-    const formula = sortilege.system.degats || "1d8";
+    let formula = sortilege.system.degatsBase || "1d8";
+    if (sortilege.system.degatsBonus) {
+      const sign = sortilege.system.degatsBonus > 0 ? "+" : "";
+      formula += `${sign}${sortilege.system.degatsBonus}`;
+    }
     const roll = await new Roll(formula, this.getRollData()).evaluate();
     const adjustedTotal = Math.max(0, Math.ceil(roll.total * Number(multiplier)));
     const rollHtml = await roll.render();
@@ -734,13 +1076,92 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
       content: `
         ${rollHtml}
         <div style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed #4a2c66; text-align: center; background: rgba(74,44,102,0.1); border-radius: 3px; padding-bottom: 5px;">
-          <span style="font-size:12px; font-weight:bold; color:#0e3a47; text-transform: uppercase;">Dégâts Magiques Appliqués</span><br>
+          <span style="font-size:12px; font-weight:bold; color:#0e3a47; text-transform: uppercase;">Dégâts Magiques Finaux</span><br>
           <span style="font-size:28px; font-weight:bold; color:#4a2c66; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">${adjustedTotal}</span>
+          ${targetUuid ? `<button type="button" class="lnl-apply-damage" data-target-uuid="${targetUuid}" data-damage="${adjustedTotal}" style="margin-top: 8px; background: #4a2c66; color: white; border: none; padding: 5px; border-radius: 3px;"><i class="fas fa-heart-broken"></i> Appliquer aux PV</button>` : ""}
         </div>
       `
     });
   }
 
+  async rollInvocation(itemId) {
+    const invocation = this.items.get(itemId);
+    if (!invocation || invocation.type !== "invocation") return;
+
+    // --- 1. GESTION DES POINTS DE MAGIE ---
+    // (On réutilise la même méthode intelligente que pour les sorts)
+    const pmData = await this._gererDepensePM(invocation);
+    if (!pmData.continue) return; 
+
+    // --- 2. RECHERCHE DE LA CAPACITÉ SPIRITISME ---
+    const competence = this.items.find(item => item.type === "capacite" && item.name.toLowerCase().includes("spiritisme"));
+    const attributKey = competence?.system.attributLie || "discernement"; // Repli par défaut sur Discernement
+    const attribut = this.system.attributs[attributKey] || { total: 0, finalFortune: false, finalAdversite: false };
+    
+    const score = competence ? Number(competence.system.valeur || 0) : 0;
+    const usesAttribute = !competence || score <= 0;
+    const baseScore = usesAttribute ? Number(attribut.total || 0) : score;
+    const die = usesAttribute ? "d6" : "d10";
+
+    let isFortune = competence ? competence.system.fortune || attribut.finalFortune : attribut.finalFortune;
+    let isAdversite = competence ? competence.system.adversite || attribut.finalAdversite : attribut.finalAdversite;
+
+    // Application du Trait Animiste (qui donne un drapeau fortuneSpiritisme)
+    if (this.flags?.fortuneSpiritisme) isFortune = true;
+
+    // --- 3. LANCEMENT DES DÉS ---
+    let formula = `1${die} + ${baseScore}`;
+    if (isFortune) formula += ` + 1${die}[fortune]`;
+    if (isAdversite) formula = `1${die} + max(0, ${baseScore} - 1${die}[adversite])${isFortune ? ` + 1${die}[fortune]` : ""}`;
+
+    const roll = await new Roll(formula, this.getRollData()).evaluate();
+    for (const term of roll.dice) {
+      if (term.flavor === "fortune") term.options.colorset = "fortune";
+      else if (term.flavor === "adversite") term.options.colorset = "adversite";
+    }
+
+    // --- 4. CALCUL DU DEGRÉ DE RÉUSSITE ---
+    const difficulte = Number(invocation.system.difficulte || 10);
+    const result = this._getDegreeOfSuccess(roll, difficulte, die);
+
+    // --- 5. ADAPTATION DE LA DURÉE ---
+    const baseDuree = invocation.system.duree || "1 action";
+    let finalDuree = "";
+    let successColor = "#0e3a47";
+
+    if (result.degree === "failure" || result.degree === "disastrous") {
+      finalDuree = "Échec de l'invocation.";
+      successColor = "#b32424";
+    } else {
+      successColor = "#2b7a4b";
+      if (result.degree === "partial") {
+        finalDuree = `<b>${baseDuree}</b> (Divisée par 2)`;
+      } else if (result.degree === "standard") {
+        finalDuree = `<b>${baseDuree}</b> (Normale)`;
+      } else if (result.degree === "major") {
+        finalDuree = `<b>${baseDuree}</b> (Multipliée par 1,5)`;
+      } else if (result.degree === "spectacular") {
+        finalDuree = `<b>${baseDuree}</b> (Multipliée par 2)`;
+      }
+    }
+
+    // --- 6. AFFICHAGE DANS LE CHAT ---
+    const skillLabel = competence ? `Capacité : <b>Spiritisme</b>` : `Attribut : <b>${attributKey.charAt(0).toUpperCase() + attributKey.slice(1)}</b> (sans Spiritisme)`;
+    const rollHtml = await roll.render();
+    
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      flavor: `Invocation : <b>${invocation.name}</b><br>${skillLabel} | Coût : ${pmData.coutAffiche}`,
+      content: `
+        ${rollHtml}
+        <div style="margin-top: 8px; padding: 5px; border-top: 2px dashed ${successColor}; text-align: center; background: ${successColor}1A; border-radius: 3px;">
+          <span style="font-size:14px; font-weight:bold; color:${successColor};">${result.degreeLabel}</span><br>
+          <span style="font-size:12px; font-weight:bold; color:#0e3a47;">Durée résultante : <br>${finalDuree}</span>
+        </div>
+      `
+    });
+  }
+  
   async promptManualSortilegeDamage(itemId) {
     const sortilege = this.items.get(itemId);
     if (!sortilege) return;
@@ -760,55 +1181,206 @@ const roll = await new Roll(formula, this.getRollData()).evaluate();
     }, { width: 500 }).render(true);
   }
 
+/*
+* =========================================================================
+* MÉTHODE POUR LES CONSOMMABLES (FIOLES, POTIONS, RATIONS, ETC.)
+* =========================================================================
+*/  
+async rollConsommable(itemId) {
+    const item = this.items.get(itemId);
+    if (!item || item.type !== "consommable") return;
+
+    const effetStr = String(item.system.effet || "").toUpperCase();
+    const isPV = effetStr.includes("PV");
+    const isPM = effetStr.includes("PM");
+
+    let rollTotal = 0;
+
+    // Extraction intelligente de la formule (ex: "+ (1d8+2) PV" -> "1d8+2")
+    const formulaMatch = effetStr.match(/[\d\s\+\-dD\(\)\*\/]+/);
+    
+    if (formulaMatch) {
+      // On conserve les parenthèses, et on nettoie uniquement le signe "+" isolé au début
+      const rawFormula = formulaMatch[0].replace(/^\s*\+\s*/, "").trim();
+      
+      if (rawFormula) {
+        const roll = await new Roll(rawFormula, this.getRollData()).evaluate();
+        rollTotal = roll.total;
+        
+        const targetLabel = isPV ? "Points de Vie" : (isPM ? "Points de Magie" : "Effet");
+        const color = isPV ? "#b32424" : (isPM ? "#4a2c66" : "#0e3a47");
+
+        const rollHtml = await roll.render();
+        ChatMessage.create({
+          speaker: ChatMessage.getSpeaker({ actor: this }),
+          flavor: `🧪 <b>${this.name}</b> utilise <b>${item.name}</b>`,
+          content: `
+            ${rollHtml}
+            <div style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed ${color}; text-align: center; background: ${color}1A; border-radius: 3px; padding-bottom: 5px;">
+              <span style="font-size:12px; font-weight:bold; color:#0e3a47; text-transform: uppercase;">${targetLabel} Restaurés</span><br>
+              <span style="font-size:28px; font-weight:bold; color:${color}; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">${rollTotal}</span>
+            </div>
+          `
+        });
+      }
+    } else {
+      // S'il n'y a pas de formule chiffrée, on affiche juste un message narratif
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `🧪 <b>${this.name}</b> utilise <b>${item.name}</b> !`
+      });
+    }
+
+    // --- APPLICATION AUTOMATIQUE DES SOINS ---
+    if (isPV && rollTotal > 0) {
+      const pv = this.system.secondaires.pv;
+      await this.update({ "system.secondaires.pv.value": Math.min(pv.max, pv.value + rollTotal) });
+    }
+    if (isPM && rollTotal > 0) {
+      const pm = this.system.secondaires.pm;
+      await this.update({ "system.secondaires.pm.value": Math.min(pm.max, pm.value + rollTotal) });
+    }
+
+    // --- GESTION DE LA SUPPRESSION ---
+    if (item.system.illimite) return;
+
+    const charges = Number(item.system.charges) || 1;
+    const quantite = Number(item.system.quantite) || 1;
+
+    // Si la fiole contient plusieurs utilisations (rations, élixirs multiples)
+    if (charges > 1) {
+      await item.update({ "system.charges": charges - 1 });
+    } 
+    // Au cas où tu empilerais plusieurs fioles sur la même ligne plus tard
+    else if (quantite > 1) {
+      await item.update({ "system.quantite": quantite - 1 });
+    } 
+    // Sinon, on détruit l'objet (bouteille vide)
+    else {
+      await item.delete();
+    }
+
+    // Si l'objet est une ration / des vivres
+    if (item.system.typeConsommable === "vivres") {
+      const isRaffine = item.system.qualite === "raffine";
+      const formule = isRaffine ? "1d8+4" : "1d8+2";
+      
+      const repasRoll = await new Roll(formule).evaluate({async: true});
+      const soin = repasRoll.total;
+      
+      // Soin des PV et PM sans dépasser le maximum
+      const sec = this.system.secondaires;
+      const nouveauxPV = Math.min(sec.pv.value + soin, sec.pv.max);
+      const nouveauxPM = Math.min(sec.pm.value + soin, sec.pm.max);
+      
+      await this.update({
+        "system.secondaires.pv.value": nouveauxPV,
+        "system.secondaires.pm.value": nouveauxPM
+      });
+
+      // Affichage stylisé dans le Chat
+      const rollHtml = await repasRoll.render();
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        flavor: `🏕️ <b>${this.name}</b> consomme <b>${item.name}</b> lors d'un Bivouac`,
+        content: `
+          ${rollHtml}
+          <div style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed #2b7a4b; text-align: center; background: rgba(43,122,75,0.1); border-radius: 3px; padding-bottom: 5px;">
+            <span style="font-size:12px; font-weight:bold; color:#0e3a47;">RESTAURATION (PV & PM)</span><br>
+            <span style="font-size:28px; font-weight:bold; color:#2b7a4b;">${soin}</span>
+          </div>
+        `
+      });
+
+      // Déduction de la charge de vivres
+      const charges = Number(item.system.charges) || 1;
+      if (charges > 1) {
+        await item.update({ "system.charges": charges - 1 });
+      } else {
+        await item.delete();
+      }
+      return; // Fin de l'exécution pour les vivres
+    }
+  }
+
   // =========================================================================
   // MÉTHODES PRIVÉES (Aident à alléger le code principal)
   // =========================================================================
 
   /**
    * @private
-   * Vérifie et déduit les munitions pour une arme à distance
+   * Vérifie les munitions et la portée (automatique ou manuelle via boîte de dialogue)
    */
-  async _gererMunitions(arme) {
-    const isDistance = arme.type === "arme" ? arme.system.typeArme === "distance" : arme.system.sousType === "armeTir";
-    
-    if (!isDistance || arme.system.munitionsMax <= 0) return { continue: true, isRafale: false };
-
+  async _gererTirDistance(arme, autoCalcActive) {
+    const hasAmmo = arme.system.munitionsMax > 0;
     const currentAmmo = arme.system.munitionsActuelles || 0;
-    if (currentAmmo <= 0) {
+
+    if (hasAmmo && currentAmmo <= 0) {
       ui.notifications.warn(`Le chargeur de ${arme.name} est vide !`);
-      return { continue: false, isRafale: false };
+      return { continue: false };
     }
 
+    const canRafale = arme.system.rafale;
+    // On ouvre la boîte de dialogue si la rafale est possible OU si le calcul automatique est impossible
+    const needsDialog = canRafale || !autoCalcActive;
+
     let isRafale = false;
-    if (arme.system.rafale) {
+    let isLonguePortee = false;
+
+    if (needsDialog) {
       const choice = await new Promise(resolve => {
+        let ammoHtml = hasAmmo ? `<p><i>Munitions actuelles : <b>${currentAmmo} / ${arme.system.munitionsMax}</b></i></p>` : "";
+        
+        let porteeHtml = "";
+        if (!autoCalcActive) {
+          // Si pas de tokens sur la grille, on demande au joueur d'évaluer la distance
+          porteeHtml = `
+            <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 3px; border: 1px solid #c19a5b;">
+              <label style="display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: bold; cursor: pointer; color: #b32424;">
+                <input type="checkbox" id="longue-portee-check"/>
+                Cible à longue portée (Adversité)
+              </label>
+            </div>
+          `;
+        } else {
+          porteeHtml = `<p style="font-size: 11px; color: #555; margin-top: 5px;"><i>Distance calculée sur la carte.</i></p>`;
+        }
+
+        let buttons = {};
+        if (canRafale && hasAmmo) {
+           buttons.normal = { icon: '<i class="fas fa-crosshairs"></i>', label: "Tir Normal (-1)", callback: (html) => resolve({ mode: "normal", html }) };
+           buttons.rafale = { icon: '<i class="fas fa-meteor"></i>', label: "Rafale (-4)", callback: (html) => resolve({ mode: "rafale", html }) };
+        } else if (hasAmmo) {
+           buttons.normal = { icon: '<i class="fas fa-crosshairs"></i>', label: "Tirer (-1)", callback: (html) => resolve({ mode: "normal", html }) };
+        } else {
+           buttons.normal = { icon: '<i class="fas fa-crosshairs"></i>', label: "Tirer", callback: (html) => resolve({ mode: "normal", html }) };
+        }
+
         new Dialog({
           title: `Tir avec ${arme.name}`,
-          content: `<div style="text-align: center; margin-bottom: 10px;">
-                      <p>Choisissez votre mode de tir :</p>
-                      <p><i>Munitions actuelles : <b>${currentAmmo} / ${arme.system.munitionsMax}</b></i></p>
-                    </div>`,
-          buttons: {
-            normal: { icon: '<i class="fas fa-crosshairs"></i>', label: "Tir Normal (-1)", callback: () => resolve("normal") },
-            rafale: { icon: '<i class="fas fa-meteor"></i>', label: "Rafale (-4)", callback: () => resolve("rafale") }
-          },
+          content: `<div style="text-align: center; margin-bottom: 10px;">${ammoHtml}${porteeHtml}</div>`,
+          buttons: buttons,
           default: "normal",
           close: () => resolve(null)
         }, { width: 350 }).render(true);
       });
 
-      if (!choice) return { continue: false, isRafale: false };
-      isRafale = choice === "rafale";
+      if (!choice) return { continue: false };
+      isRafale = choice.mode === "rafale";
+      isLonguePortee = choice.html.find('#longue-portee-check').is(':checked');
     }
 
-    const ammoCost = isRafale ? 4 : 1;
-    if (currentAmmo < ammoCost) {
-      ui.notifications.warn(`Pas assez de munitions pour tirer en rafale !`);
-      return { continue: false, isRafale: false };
+    // Déduction des munitions
+    if (hasAmmo) {
+      const ammoCost = isRafale ? 4 : 1;
+      if (currentAmmo < ammoCost) {
+        ui.notifications.warn(`Pas assez de munitions pour ce tir !`);
+        return { continue: false };
+      }
+      await arme.update({ "system.munitionsActuelles": currentAmmo - ammoCost });
     }
-    
-    await arme.update({ "system.munitionsActuelles": currentAmmo - ammoCost });
-    return { continue: true, isRafale };
+
+    return { continue: true, isRafale, isLonguePortee };
   }
 
   /**

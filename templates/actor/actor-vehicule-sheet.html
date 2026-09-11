@@ -1,0 +1,139 @@
+<form class="{{cssClass}} flexcol vehicle-sheet" autocomplete="off" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+    <style>
+        .vehicle-sheet { height: 100%; padding: 10px; background: rgba(255,255,255,0.7); border: 2px solid #0e3a47; border-radius: 5px; display: flex; flex-direction: column; }
+        .vehicle-header { display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 2px solid #c19a5b; padding-bottom: 10px; flex: 0 0 auto; }
+        .vehicle-header img { width: 80px; height: 80px; border-radius: 5px; object-fit: cover; border: 1px solid #c19a5b; }
+        .vehicle-title { font-size: 24px; font-weight: bold; background: transparent; border: none; border-bottom: 1px dashed #0e3a47; color: #0e3a47; margin-bottom: 5px; width: 100%; }
+        .vehicle-meta { display: flex; gap: 15px; font-weight: bold; color: #555; }
+        
+        .vehicle-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 15px; text-align: center; flex: 0 0 auto; }
+        .vehicle-stat-box { padding: 5px; border-radius: 3px; border: 1px solid #c19a5b; }
+        .vehicle-stat-box.primary { background: #0e3a47; color: white; }
+        .vehicle-stat-box.primary .label { color: #e2c98d; }
+        .vehicle-stat-box.secondary { background: rgba(0,0,0,0.05); }
+        .vehicle-stat-box .label { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
+        .vehicle-stat-box input { width: 100%; text-align: center; font-weight: bold; font-size: 16px; margin-top: 2px; background: transparent; border: none; }
+        .vehicle-stat-box.primary input { width: 35px; background: white; color: black; border-radius: 2px; }
+        .vehicle-stat-box .hp-row { display: flex; align-items: center; justify-content: center; gap: 3px; }
+        
+        .vehicule-weapons, .vehicule-cargo { margin-top: 10px; border: 1px solid #c19a5b; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 3px; flex: 0 0 auto; }
+        .vehicule-header-panel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #c19a5b; }
+        .vehicule-header-panel h3 { margin: 0; color: #0e3a47; font-size: 14px; font-weight: bold; }
+        .vehicule-arme-add { font-size: 18px; font-weight: bold; color: #0e3a47; cursor: pointer; }
+        .vehicule-arme-row { display: flex; align-items: center; gap: 5px; padding: 5px 0; border-bottom: 1px dotted #ccc; }
+        .vehicule-arme-row input { border: 1px solid #ccc; padding: 2px; }
+        
+        .cargo-status { font-size: 12px; font-weight: bold; }
+        .cargo-status.cargo-overflow { color: #b32424; text-shadow: 0 0 3px rgba(179,36,36,0.3); }
+        .cargo-status.cargo-ok { color: #2a7b36; }
+        
+        .vehicule-cargo .items-list { max-height: 150px; overflow-y: auto; }
+        .vehicule-cargo .items-list .item { display: flex; align-items: center; gap: 8px; padding: 4px; border-bottom: 1px dotted #ccc; }
+        .vehicule-cargo .items-list .item img { width: 24px; height: 24px; border-radius: 3px; }
+        .vehicule-cargo .items-list .item .name { flex: 2; font-weight: bold; font-size: 13px; color: #0e3a47; }
+        .vehicule-cargo .items-list .item .stat { flex: 0.5; text-align: center; font-size: 11px; color: #555; font-weight: bold; }
+
+        /* LE HACK CSS POUR L'ÉDITEUR */
+        .lore-editor-fix { flex: 1 1 auto; display: flex; flex-direction: column; width: 100%; min-height: 200px; margin-top: 10px; }
+        .lore-editor-fix .editor-container { flex: 1 1 auto; position: relative; height: 100%; display: flex; flex-direction: column; width: 100%; }
+        .lore-editor-fix .editor { flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 150px; width: 100%; }
+        .lore-editor-fix .editor-content { flex: 1; overflow-y: auto; padding: 5px; border: 1px solid #c19a5b; border-radius: 3px; background: rgba(255,255,255,0.5); min-height: 150px; width: 100%; }
+        .lore-editor-fix .tox-tinymce { height: 100% !important; width: 100% !important; }
+        .lore-editor-fix .proseMirror { height: 100% !important; width: 100% !important; overflow-y: auto; }
+    </style>
+    
+    <!-- EN-TÊTE -->
+    <header class="vehicle-header">
+        <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <input class="vehicle-title" name="name" type="text" value="{{actor.name}}" placeholder="Nom du Véhicule"/>
+            <div class="vehicle-meta">
+                <label>Valeur : <input type="number" name="system.valeur" value="{{system.valeur}}" style="width: 60px; text-align: center; border: 1px solid #ccc;"/> Taels</label>
+                <label>Poids : <input type="number" name="system.poids" value="{{system.poids}}" style="width: 60px; text-align: center; border: 1px solid #ccc;"/> kg</label>
+            </div>
+        </div>
+    </header>
+
+    <!-- STATISTIQUES TECHNIQUES -->
+    <section class="vehicle-stat-grid">
+        <div class="vehicle-stat-box primary">
+            <div class="label">POINTS DE VIE</div>
+            <div class="hp-row">
+                <input type="number" name="system.pv.value" value="{{system.pv.value}}"/>
+                <span>/</span>
+                <input type="number" name="system.pv.max" value="{{system.pv.max}}"/>
+            </div>
+        </div>
+        <div class="vehicle-stat-box secondary">
+            <div class="label">DURABILITÉ</div>
+            <input type="number" name="system.durabilite" value="{{system.durabilite}}"/>
+        </div>
+        <div class="vehicle-stat-box secondary">
+            <div class="label">RAPIDITÉ</div>
+            <input type="number" name="system.rapidite" value="{{system.rapidite}}"/>
+        </div>
+        <div class="vehicle-stat-box secondary">
+            <div class="label">MANIABILITÉ</div>
+            <input type="number" name="system.maniabilite" value="{{system.maniabilite}}"/>
+        </div>
+        <div class="vehicle-stat-box secondary">
+            <div class="label">BAGAGE MAX</div>
+            <input type="number" name="system.bagage" value="{{system.bagage}}"/>
+        </div>
+    </section>
+
+    <!-- SYSTÈMES D'ARMEMENT (Manuel) -->
+    <section class="vehicule-weapons">
+        <div class="vehicule-header-panel">
+            <h3>SYSTÈMES D'ARMEMENT</h3>
+            <a class="vehicule-arme-add" title="Ajouter une arme">+</a>
+        </div>
+        <div style="max-height: 100px; overflow-y: auto;">
+            {{#each system.armesVehicule as |arme index|}}
+            <div class="vehicule-arme-row">
+                <input type="text" class="vehicule-arme-field" data-index="{{index}}" data-field="nom" value="{{arme.nom}}" placeholder="Nom de l'arme" style="flex: 2;"/>
+                <input type="text" class="vehicule-arme-field" data-index="{{index}}" data-field="degats" value="{{arme.degats}}" placeholder="ex: 2d10" style="flex: 1; text-align: center;"/>
+                <a class="vehicule-arme-roll" data-index="{{index}}" title="Lancer les dégâts"><i class="fas fa-dice-d20" style="color: #0e3a47; font-size: 16px;"></i></a>
+                <a class="vehicule-arme-delete" data-index="{{index}}" title="Supprimer l'arme"><i class="fas fa-trash" style="color: #b32424; margin-left: 5px;"></i></a>
+            </div>
+            {{else}}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 5px 0;">Aucune arme montée.</p>
+            {{/each}}
+        </div>
+    </section>
+
+    <!-- SOUTE & CARGAISON (Drag & Drop interactif) -->
+    <section class="vehicule-cargo">
+        <div class="vehicule-header-panel">
+            <h3>SOUTE & CARGAISON</h3>
+            <span class="cargo-status {{#if surcharge}}cargo-overflow{{else}}cargo-ok{{/if}}">
+                Charge Actuelle : {{chargeActuelle}} / {{system.bagage}}
+            </span>
+        </div>
+        <div class="items-list">
+            {{#each equipements as |item id|}}
+            <div class="item flexrow" data-item-id="{{item._id}}">
+                <img src="{{item.img}}"/>
+                <span class="name">{{item.name}}</span>
+                <span class="stat">Qté: {{item.system.quantite}}</span>
+                <span class="stat">Enc: {{item.system.encombrement}}</span>
+                <div style="flex: 0.5; text-align: center;">
+                    <a class="item-edit" title="Modifier l'objet"><i class="fas fa-edit" style="color: #0e3a47;"></i></a>
+                    <a class="item-delete" title="Retirer de la soute"><i class="fas fa-trash" style="color: #b32424; margin-left: 8px;"></i></a>
+                </div>
+            </div>
+            {{else}}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 5px 0;">La soute est vide. Glissez des objets de l'inventaire ici.</p>
+            {{/each}}
+        </div>
+    </section>
+
+    <!-- DESCRIPTION -->
+    <section class="lore-editor-fix">
+        <h3 style="font-size: 14px; font-weight: bold; color: #0e3a47; border-bottom: 1px solid #c19a5b; margin: 0 0 5px 0; padding-bottom: 3px;">DESCRIPTION & NOTES</h3>
+        <div class="editor-container">
+            {{editor enrichedDescription target="system.description" button=true owner=owner editable=editable engine="prosemirror"}}
+        </div>
+    </section>
+
+</form>

@@ -30,9 +30,15 @@
     <div class="sheet-content" style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; overflow-y: hidden;">
         
         <!-- SPÉCIFICITÉS MATÉRIEL -->
-        <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
-            <label style="font-weight: bold;">Usages max :</label>
-            <input type="number" name="system.usagesMax" value="{{system.usagesMax}}" style="width: 40px; text-align: center; background: rgba(0, 0, 0, 0.2); border: 1px solid transparent;"/>
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-around; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-weight: bold;">Usages max :</label>
+                <input type="number" name="system.usagesMax" value="{{system.usagesMax}}" style="width: 40px; text-align: center; background: rgba(0, 0, 0, 0.2); border: 1px solid transparent;"/>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;" title="Cocher pour un objet qui ne s'épuise jamais">
+                <label style="font-weight: bold; color: #2b7a4b;">Illimité :</label>
+                <input type="checkbox" name="system.illimite" {{checked system.illimite}} />
+            </div>
         </div>
 
         <!-- ZONE DE DESCRIPTION ÉTIRABLE -->

@@ -26,8 +26,9 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const dropZone = event.target.closest?.("[data-drop-type]");
     if (dropZone) {
       const allowedType = dropZone.dataset.dropType;
-      if (item.type !== allowedType) {
-        ui.notifications.warn(`Cette zone accepte uniquement : ${allowedType === "traitSpecial" ? "Trait Spécial" : "Capacité"}.`);
+      const isTraitAutorise = (allowedType === "traitSpecial" && item.type === "trait");
+      if (item.type !== allowedType && !isTraitAutorise) {
+        ui.notifications.warn(`Cette zone accepte uniquement : ${allowedType === "traitSpecial" ? "Trait Spécial ou Trait classique" : "Capacité"}.`);
         return false;
       }
     }
@@ -63,7 +64,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const materiels = [];
     const divers = [];
     const sortileges = [];
-    const pouvoirs = [];
+    const invocations = [];
     const attributs = this.actor.system.attributs;
 
     for (let item of this.actor.items) {
@@ -71,8 +72,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
 
       if (item.type === "capacite") {
         const attrLie = item.system.attributLie;
-        const parentFortune = (attrLie && attributs[attrLie]) ? attributs[attrLie].fortune : false;
-        const parentAdversite = (attrLie && attributs[attrLie]) ? attributs[attrLie].adversite : false;
+        const parentFortune = (attrLie && attributs[attrLie]) ? (attributs[attrLie].fortune || attributs[attrLie].traitFortune) : false;
+        const parentAdversite = (attrLie && attributs[attrLie]) ? (attributs[attrLie].adversite || attributs[attrLie].traitAdversite) : false;
 
         itemData.displayFortune = item.system.fortune || parentFortune;
         itemData.displayAdversite = item.system.adversite || parentAdversite;
@@ -81,10 +82,22 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
 
         capacities.push(itemData);
       }
+
+      if (item.type === "invocation") {
+        invocations.push(itemData);
+      }
       
-      if (item.type === "trait") traits.push(itemData);
+      // --- LES TRAITS ---
+      if (item.type === "trait") {
+        if (this.actor.type === "pnj") {
+          // Si c'est un PNJ, on l'envoie dans le tableau des Traits Spéciaux pour l'affichage visuel
+          traitsSpeciaux.push(itemData); 
+        } else {
+          // Si c'est un PJ, comportement classique
+          traits.push(itemData);
+        }
+      }
       if (item.type === "traitSpecial") traitsSpeciaux.push(itemData);
-      if (item.type === "sortilege") sortileges.push(itemData);
 
       // --- LES ARMES CLASSIQUES ---
       if (item.type === "arme") {
@@ -92,7 +105,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
         
         // Calcul du libellé de portée pour le tableau
         if (item.system.typeArme === "distance") {
-          itemData.porteeAffichee = `${item.system.porteeMoyenne || 0} / ${item.system.porteeMax || 0} m`;
+          itemData.porteeAffichee = item.system.portee || "0";
         } else {
           itemData.porteeAffichee = "Mêlée";
         }
@@ -106,7 +119,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
           itemData.name = itemData.name + " (Arcanotech)";
           itemData.typeArmeLabel = item.system.sousType === "armeTir" ? "Distance" : "Mêlée";
           itemData.porteeAffichee = item.system.sousType === "armeTir"
-            ? `${item.system.porteeMoyenne || 0} / ${item.system.porteeMax || 0} m`
+            ? (item.system.portee || "0")
             : "Mêlée";
           armes.push(itemData);
         } else {
@@ -136,8 +149,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
 
       if (item.type === "composant") divers.push(itemData);
 
-      if (item.type === "pouvoir" || item.type === "sortilege") {
-        pouvoirs.push(itemData);
+      if (item.type === "sortilege") {
+        sortileges.push(itemData);
       }
     }
     
@@ -181,7 +194,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     context.materiels = materiels.sort((a, b) => a.name.localeCompare(b.name));
     context.divers = divers.sort((a, b) => a.name.localeCompare(b.name));
     context.sortileges = sortileges.sort((a, b) => a.name.localeCompare(b.name));
-    context.pouvoirs = pouvoirs.sort((a, b) => a.name.localeCompare(b.name));
+    context.invocations = invocations.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /**
@@ -189,13 +202,10 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
    * Le "Drop" en lui-même est géré par Foundry en amont.
    * @override
    */
-/**
-   * Intercepte uniquement la CRÉATION finale des objets déposés.
-   * @override
-   */
+
   async _onDropItemCreate(itemData) {
     let itemsToCreate = Array.isArray(itemData) ? foundry.utils.deepClone(itemData) : [foundry.utils.deepClone(itemData)];
-    let extraItems = []; // Stockera les armes naturelles générées à la volée
+    let extraItems = []; // Stockera les armes naturelles et traits générés à la volée
 
     if (itemsToCreate.some(data => data.type === "traitSpecial") && this.actor.type !== "pnj") {
       ui.notifications.warn("Les Traits Spéciaux sont réservés aux PNJ.");
@@ -206,18 +216,13 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     for (const data of itemsToCreate) {
       delete data._id;
 
-      if (["consommable", "materiel"].includes(data.type)) {
-        const maxUsages = data.type === "consommable" ? data.system?.charges : data.system?.usagesMax;
-        foundry.utils.setProperty(data, "flags.lore-and-legacy.usagesActuels", maxUsages ?? 0);
-      }
+      // Plus de création de flag "usagesActuels" pour les consommables et matériels
 
       // 1. AUTOMATISATION : Trait "Poings d'acier"
       if (data.type === "trait" && data.name.toLowerCase().includes("poings d'acier")) {
-        // On supprime l'arme "Mains nues" si elle est présente
         const mainsNues = this.actor.items.find(i => i.name.toLowerCase().includes("mains nues"));
         if (mainsNues) await this.actor.deleteEmbeddedDocuments("Item", [mainsNues.id]);
         
-        // On génère la nouvelle arme
         extraItems.push({
           name: "Poings d'acier",
           type: "arme",
@@ -230,19 +235,24 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const peupleItemData = itemsToCreate.find(i => i.type === "peuple");
     
     if (peupleItemData) {
+      // Nettoyage de l'ancien Peuple, de ses Traits raciaux et de ses Traits linguistiques
       const existingPeuples = this.actor.items.filter(i => i.type === "peuple");
-      const existingRacialTraits = this.actor.items.filter(i => i.getFlag("lore-and-legacy", "isRacialTrait"));
+      const existingRacialAndLangTraits = this.actor.items.filter(i => 
+        i.getFlag("lore-and-legacy", "isRacialTrait") || 
+        i.getFlag("lore-and-legacy", "isLinguisticTrait")
+      );
       
       const idsToDelete = [
         ...existingPeuples.map(i => i.id),
-        ...existingRacialTraits.map(i => i.id)
+        ...existingRacialAndLangTraits.map(i => i.id)
       ];
 
       if (idsToDelete.length > 0) {
         await this.actor.deleteEmbeddedDocuments("Item", idsToDelete);
-        ui.notifications.info("L'ancien Peuple et ses Traits ont été remplacés.");
+        ui.notifications.info("L'ancien Peuple, ses Traits raciaux et ses Langues ont été remplacés.");
       }
 
+      // --- A. IMPORT DES TRAITS RACIAUX DU PEUPLE ---
       const traitsUuids = peupleItemData.system?.traits || [];
       for (let uuid of traitsUuids) {
         const traitUuid = this._normalizeTraitUuid(uuid);
@@ -255,7 +265,8 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
         }
       }
 
-      // 2. AUTOMATISATION : L'arme "Mains nues" par défaut
+
+      // --- C. AUTOMATISATION : L'arme "Mains nues" par défaut ---
       const hasMainsNues = this.actor.items.some(i => i.name.toLowerCase().includes("mains nues"));
       const hasPoingsAcier = this.actor.items.some(i => i.name.toLowerCase().includes("poings d'acier")) || itemsToCreate.some(i => i.type === "trait" && i.name.toLowerCase().includes("poings d'acier"));
       
@@ -268,7 +279,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
         });
       }
 
-      // 3. AUTOMATISATION : La "Morsure" des Orcs
+      // --- D. AUTOMATISATION : La "Morsure" des Orcs ---
       if (peupleItemData.name.toLowerCase().includes("orc") || peupleItemData.name.toLowerCase().includes("orque")) {
         const hasMorsure = this.actor.items.some(i => i.name.toLowerCase().includes("morsure"));
         if (!hasMorsure) {
@@ -282,7 +293,7 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       }
     }
 
-    // On ajoute toutes les armes naturelles à la liste des objets à créer sur le personnage
+    // On fusionne tous les éléments générés
     itemsToCreate = itemsToCreate.concat(extraItems);
 
     return super._onDropItemCreate(itemsToCreate);
@@ -309,7 +320,67 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     html.find('.item-valeur').change(this._onItemValueChange.bind(this));
     html.find('.defense-toggle').change(this._onToggleDefenseTotale.bind(this));
     html.find('.attribut-roll').click(this._onRollAttribut.bind(this));
+    html.find('.invocation-roll').click(this._onRollInvocation.bind(this));
     
+    html.find('.item-reload').click(async ev => {
+      ev.preventDefault();
+      const itemId = $(ev.currentTarget).closest('.item').data('item-id');
+      const item = this.actor.items.get(itemId);
+      if (!item) return;
+
+      const typeMunition = item.system.typeMunition;
+      if (!typeMunition || typeMunition === "aucune") return;
+
+      const maxAmmo = item.system.munitionsMax || 0;
+      const currentAmmo = item.system.munitionsActuelles || 0;
+      const missingAmmo = maxAmmo - currentAmmo;
+
+      if (missingAmmo <= 0) {
+        ui.notifications.info("L'arme est déjà chargée au maximum.");
+        return;
+      }
+
+      const stock = this.actor.system.munitions?.[typeMunition] || 0;
+      if (stock <= 0) {
+        ui.notifications.warn(`Vous n'avez plus de ${typeMunition} en réserve !`);
+        return;
+      }
+
+      const toReload = Math.min(missingAmmo, stock);
+      const newStock = stock - toReload;
+      const newAmmo = currentAmmo + toReload;
+
+      await this.actor.update({ [`system.munitions.${typeMunition}`]: newStock });
+      await item.update({ "system.munitionsActuelles": newAmmo });
+
+      ui.notifications.info(`Rechargement de ${toReload} ${typeMunition} dans ${item.name}. (Reste ${newStock} en réserve)`);
+    });
+    
+    // NOUVEAU : Clic ou modification directe de la quantité de consommable/matériel
+    html.find('.item-usage-input').change(async ev => {
+      ev.preventDefault();
+      const itemId = $(ev.currentTarget).closest('.item').data('item-id');
+      const item = this.actor.items.get(itemId);
+      if (!item) return;
+
+      const newValue = Number(ev.currentTarget.value) || 0;
+      if (item.type === "consommable") {
+        if (newValue <= 0) await item.delete();
+        else await item.update({ "system.charges": newValue });
+      } else if (item.type === "materiel") {
+        if (newValue <= 0) await item.delete();
+        else await item.update({ "system.usagesMax": newValue });
+      }
+    });
+    
+    // Clic sur l'icône de consommation
+    html.find('.item-consume').click(ev => {
+      ev.preventDefault();
+      const li = $(ev.currentTarget).parents(".item");
+      const itemId = li.data("item-id"); // Assure-toi que ton <li> ou <tr> d'inventaire possède bien data-item-id="{{item._id}}"
+      this.actor.rollConsommable(itemId);
+    });
+
     // Ouverture de la fiche de l'objet via un double-clic
     html.find('.item').dblclick(ev => {
       ev.preventDefault();
@@ -329,21 +400,36 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       if (item) item.sheet.render(true);
     });
 
-// --- GESTION DU BOUTON BIVOUAC ---
+    // --- GESTION DU BOUTON BIVOUAC ---
     html.find('.action-bivouac').click(ev => {
       ev.preventDefault();
       
       const actor = this.actor;
       
-      // Contenu HTML de la boîte de dialogue
+      // NOUVEAU : On détecte si le clic provient d'une ligne d'inventaire spécifique
+      const clickedItemId = $(ev.currentTarget).closest('.item').data('item-id');
+      
+      // 1. SCAN DE L'INVENTAIRE : Récupération dynamique des vivres
+      const vivres = actor.items.filter(i => i.type === "consommable" && i.system.typeConsommable === "vivres");
+      
+      // 2. CRÉATION DES OPTIONS DU MENU DÉROULANT
+      let optionsHtml = `<option value="rien">Rien / Jeûne (Aucun soin)</option>`;
+      vivres.forEach(v => {
+        const qualiteTxt = v.system.qualite === "raffine" ? "Raffiné (1d8+4)" : "Ordinaire (1d8+2)";
+        const usagesMax = v.system.charges || 1;
+        const usagesActuels = v.getFlag("lore-and-legacy", "usagesActuels") ?? usagesMax;
+        const isSelected = (v.id === clickedItemId) ? "selected" : "";
+        
+        optionsHtml += `<option value="${v.id}" ${isSelected}>${v.name} - ${qualiteTxt} [${usagesActuels} portion(s)]</option>`;
+      });
+
+      // Contenu HTML de la boîte de dialogue 
       const dialogContent = `
       <form autocomplete="off">
         <div class="form-group" style="margin-bottom: 10px;">
-          <label style="font-weight: bold; color:black;">Repas partagé :</label>
+          <label style="font-weight: bold; color:black;">Repas consommé :</label>
           <select id="repas-choice" style="width: 100%;">
-            <option value="rien">Rien / Jeûne (Aucun soin)</option>
-            <option value="normal">Repas Normal (Gain: 1D8 + 2)</option>
-            <option value="raffine">Mets Raffinés (Gain: 1D8 + 4)</option>
+            ${optionsHtml}
           </select>
         </div>
         <div class="form-group" style="margin-bottom: 10px;">
@@ -368,38 +454,51 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
             icon: '<i class="fas fa-campground"></i>',
             label: "Se reposer",
             callback: async (html) => {
-              // On uniformise les noms de variables !
-              const repas = html.find('#repas-choice').val();
+              const repasId = html.find('#repas-choice').val();
               const lieu = html.find('#lieu-choice').val();
               const passion = html.find('#passion-check').is(':checked');
 
-              // On utilise bien chatContent partout
               let chatContent = `<h3 style="border-bottom: 2px solid #c19a5b; padding-bottom: 5px; margin-bottom: 10px;">🏕️ Bivouac de ${actor.name}</h3>`;
 
-              // --- 1. GESTION DU REPAS (Soins Aléatoires) ---
-              if (repas !== "rien") {
-                const formule = repas === "normal" ? "1d8+2" : "1d8+4";
-                // L'ajout de {async: true} sécurise la compatibilité de Foundry
-                const repasRoll = await new Roll(formule).evaluate({async: true});
-                const soin = repasRoll.total;
+              // --- 1. GESTION DU REPAS (Liaison avec l'inventaire) ---
+              if (repasId !== "rien") {
+                const repasItem = actor.items.get(repasId);
                 
-                chatContent += `<p>🍽️ <b>Repas :</b> ${repas === "normal" ? "Normal" : "Raffiné"}<br>Gain de <b>${soin}</b> PV et PM.</p>`;
-                
-                // Mise à jour de la fiche sans dépasser le Maximum
-                const sec = actor.system.secondaires;
-                const nouveauxPV = Math.min(sec.pv.value + soin, sec.pv.max);
-                const nouveauxPM = Math.min(sec.pm.value + soin, sec.pm.max);
-                
-                await actor.update({
-                  "system.secondaires.pv.value": nouveauxPV,
-                  "system.secondaires.pm.value": nouveauxPM
-                });
-                
-                // Affiche le jet de soin dans le Chat
-                await repasRoll.toMessage({ 
-                  speaker: ChatMessage.getSpeaker({ actor: actor }), 
-                  flavor: `Soin du Bivouac (${repas === "normal" ? "Repas Normal" : "Mets Raffinés"})` 
-                });
+                if (repasItem) {
+                  const isRaffine = repasItem.system.qualite === "raffine";
+                  const formule = isRaffine ? "1d8+4" : "1d8+2";
+                  
+                  const repasRoll = await new Roll(formule).evaluate({async: true});
+                  const soin = repasRoll.total;
+                  
+                  chatContent += `<p>🍽️ <b>Repas :</b> ${repasItem.name} (${isRaffine ? "Raffiné" : "Ordinaire"})<br>Gain de <b>${soin}</b> PV et PM.</p>`;
+                  
+                  // Mise à jour de la fiche sans dépasser le Maximum
+                  const sec = actor.system.secondaires;
+                  const nouveauxPV = Math.min(sec.pv.value + soin, sec.pv.max);
+                  const nouveauxPM = Math.min(sec.pm.value + soin, sec.pm.max);
+                  
+                  await actor.update({
+                    "system.secondaires.pv.value": nouveauxPV,
+                    "system.secondaires.pm.value": nouveauxPM
+                  });
+                  
+                  // Affiche le jet de soin dans le Chat
+                  await repasRoll.toMessage({ 
+                    speaker: ChatMessage.getSpeaker({ actor: actor }), 
+                    flavor: `Soin du Bivouac (${repasItem.name})` 
+                  });
+
+                  // CORRECTION : DÉDUCTION DE L'INVENTAIRE (Sur le flag actuel)
+                  const usagesMax = repasItem.system.charges || 1;
+                  const usagesActuels = repasItem.getFlag("lore-and-legacy", "usagesActuels") ?? usagesMax;
+                  
+                  if (usagesActuels > 1) {
+                    await repasItem.setFlag("lore-and-legacy", "usagesActuels", usagesActuels - 1);
+                  } else {
+                    await repasItem.delete();
+                  }
+                }
               } else {
                 chatContent += `<p>🍽️ <b>Repas :</b> Aucun (Jeûne).</p>`;
               }
@@ -408,7 +507,6 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
               if (passion) {
                 const diff = lieu === "tranquille" ? 6 : 12;
                 
-                // On cherche la capacité "Passion" pour récupérer son score (s'il l'a augmentée)
                 const passionItem = actor.items.find(i => i.type === "capacite" && i.name.toLowerCase().includes("passion"));
                 const scorePassion = passionItem ? passionItem.system.valeur : 0;
                 
@@ -425,7 +523,6 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
                   chatContent += `<span style="color: #b32424; font-weight: bold;">Échec.</span> L'esprit tourmenté, aucune Fortune n'est récupérée.</p>`;
                 }
                 
-                // Affiche le jet de Passion dans le Chat
                 await passionRoll.toMessage({ 
                   speaker: ChatMessage.getSpeaker({ actor: actor }), 
                   flavor: `Jet de Passion (Lieu ${lieu})` 
@@ -449,7 +546,14 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     });
   }
 
-  
+  async _onRollInvocation(event) {
+    event.preventDefault();
+    const itemId = $(event.currentTarget).closest('.item').data('item-id');
+    
+    // Appel à la machinerie de l'Actor
+    await this.actor.rollInvocation(itemId);
+  }
+
   async _onRollCapacite(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
@@ -602,6 +706,36 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     await this.actor.update({ "system.armesPNJ": armes });
   }
 
+  async _onPNJPouvoirAdd(event) {
+    event.preventDefault();
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    pouvoirs.push({ nom: "" });
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+  }
+
+  async _onPNJPouvoirDelete(event) {
+    event.preventDefault();
+    const index = Number(event.currentTarget.dataset.index);
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    
+    if (!Number.isInteger(index) || index < 0 || index >= pouvoirs.length) return;
+    
+    pouvoirs.splice(index, 1);
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+  }
+
+  async _onPNJPouvoirChange(event) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    const index = Number(input.dataset.index);
+    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
+    
+    if (!Number.isInteger(index) || !pouvoirs[index]) return;
+
+    pouvoirs[index].nom = input.value;
+    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+  }
+
   async _onToggleCheckbox(event) {
     event.preventDefault();
     const target = event.currentTarget;
@@ -618,7 +752,10 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
       // On détecte la physiologie et les talents du personnage
       const peuple = this.actor.peupleNom ? this.actor.peupleNom.toLowerCase() : "";
       const isAgamide = peuple.includes("agamide");
-      const hasAmbidextrie = this.actor.items.some(i => i.type === "capacite" && i.name.toLowerCase().includes("ambidextrie") && i.system.valeur > 0);
+      const hasAmbidextrie = this.actor.items.some(i => 
+        (i.type === "capacite" && i.name.toLowerCase().includes("ambidextrie") && i.system.valeur > 0) ||
+        (i.type === "trait" && i.name.toLowerCase().includes("ambidextre"))
+      );
       
       const isWeapon = item.type === "arme" || (item.type === "arcanotech" && ["armeMelee", "armeTir"].includes(item.system.sousType));
       const isShield = item.type === "armure" && item.system.type === "bouclier";
@@ -630,12 +767,15 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
         const itemCat = item.system.type; 
         const isMainArmor = ["legere", "lourde"].includes(itemCat);
 
-        for (let otherItem of this.actor.items) {
-          if (otherItem.id === item.id) continue;
-          if (otherItem.type === "armure" && otherItem.system.equipe) {
-            const otherCat = otherItem.system.type;
-            if ((isMainArmor && ["legere", "lourde"].includes(otherCat)) || (!isMainArmor && otherCat === itemCat)) {
-              updates.push({ _id: otherItem.id, "system.equipe": false });
+        // NOUVEAU : On applique la règle d'exclusivité uniquement si ce n'est PAS un accessoire
+        if (itemCat !== "accessoire") {
+          for (let otherItem of this.actor.items) {
+            if (otherItem.id === item.id) continue;
+            if (otherItem.type === "armure" && otherItem.system.equipe) {
+              const otherCat = otherItem.system.type;
+              if ((isMainArmor && ["legere", "lourde"].includes(otherCat)) || (!isMainArmor && otherCat === itemCat)) {
+                updates.push({ _id: otherItem.id, "system.equipe": false });
+              }
             }
           }
         }
@@ -729,7 +869,19 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
     const item = this.actor.items.get(itemId);
-    if (item) await item.delete();
+    if (item) {
+      if (item.type === "trait" || item.type === "capacite") {
+        Dialog.confirm({
+          title: "Confirmation de suppression",
+          content: `<p>Êtes-vous sûr de vouloir supprimer <b>${item.name}</b> ?</p>`,
+          yes: () => item.delete(),
+          no: () => {},
+          defaultYes: false
+        });
+      } else {
+        await item.delete();
+      }
+    }
   }
 
   async _onItemUse(event) {
@@ -738,14 +890,20 @@ export class LoreAndLegacyActorSheet extends ActorSheet {
     const item = this.actor.items.get(itemId);
     if (!item) return;
 
-    const usagesMax = item.type === "consommable" ? item.system.charges : item.system.usagesMax;
-    const usages = item.getFlag("lore-and-legacy", "usagesActuels") ?? usagesMax;
-    if (usages <= 1) {
-      await item.delete();
+    if (item.system.illimite) {
+      ui.notifications.info(`${item.name} est illimité et ne se consomme pas.`);
       return;
     }
 
-    await item.setFlag("lore-and-legacy", "usagesActuels", usages - 1);
+    if (item.type === "consommable") {
+      const usages = item.system.charges || 0;
+      if (usages <= 1) await item.delete();
+      else await item.update({ "system.charges": usages - 1 });
+    } else if (item.type === "materiel") {
+      const usages = item.system.usagesMax || 0;
+      if (usages <= 1) await item.delete();
+      else await item.update({ "system.usagesMax": usages - 1 });
+    }
   }
 }
 
@@ -779,12 +937,13 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
     html.find('.pnj-arme-delete').click(this._onPNJArmeDelete.bind(this));
     html.find('.pnj-arme-roll').click(this._onPNJArmeRoll.bind(this));
     html.find('.pnj-arme-field').change(this._onPNJArmeChange.bind(this));
+    // Gestion des Pouvoirs & Sortilèges du PNJ
     html.find('.pnj-pouvoir-add').click(this._onPNJPouvoirAdd.bind(this));
     html.find('.pnj-pouvoir-delete').click(this._onPNJPouvoirDelete.bind(this));
     html.find('.pnj-pouvoir-field').change(this._onPNJPouvoirChange.bind(this));
   }
 
-  async _onRollCapacite(event) {
+async _onRollCapacite(event) {
     event.preventDefault();
     const itemId = $(event.currentTarget).closest('.item').data('item-id');
     const capacite = this.actor.items.get(itemId);
@@ -793,15 +952,18 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
     new Dialog({
       title: `Jet de capacité : ${capacite.name}`,
       content: `
-        <form>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
+        <form autocomplete="off">
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
             <label style="display: flex; align-items: center; gap: 8px;">
-              <input type="checkbox" name="fortune"/>
-              Dé de Fortune (+1D10)
+              <input type="checkbox" name="fortune"/> Dé de Fortune (+1D10)
             </label>
             <label style="display: flex; align-items: center; gap: 8px;">
-              <input type="checkbox" name="adversite"/>
-              Dé d'Adversité (-1D10)
+              <input type="checkbox" name="adversite"/> Dé d'Adversité (-1D10)
+            </label>
+            <hr style="margin: 2px 0; border: 0; border-top: 1px solid #c19a5b;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+              <b>Malus (Attaque multiple) :</b>
+              <input type="number" name="malus" value="0" min="0" style="width: 45px; text-align: center; border: 1px solid #ccc;"/>
             </label>
           </div>
         </form>
@@ -813,7 +975,8 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
           callback: async html => {
             await this.actor.rollCapacite(itemId, {
               fortune: html.find('[name="fortune"]').prop('checked'),
-              adversite: html.find('[name="adversite"]').prop('checked')
+              adversite: html.find('[name="adversite"]').prop('checked'),
+              malus: Number(html.find('[name="malus"]').val()) || 0
             });
           }
         },
@@ -912,33 +1075,104 @@ export class LoreAndLegacyPNJSheet extends LoreAndLegacyActorSheet {
       default: "roll"
     }).render(true);
   }
-/**   
- * * Gestionnaire pour l'ajout d'un Pouvoir PNJ
-   */
-  async _onPNJPouvoirAdd(event) {
-    event.preventDefault();
-    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
-    pouvoirs.push({ nom: "Nouveau pouvoir" });
-    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+}
+
+/**
+ * Fiche pour les Véhicules
+ */
+export class LoreAndLegacyVehiculeSheet extends LoreAndLegacyActorSheet {
+  
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      classes: ["lore-and-legacy", "sheet", "actor", "vehicule"],
+      template: "systems/lore-and-legacy/templates/actor/actor-vehicule-sheet.html",
+      width: 600,
+      height: 750,
+      tabs: [] // Fiche simple sans onglets
+    });
   }
 
-  async _onPNJPouvoirDelete(event) {
+  async getData() {
+    const context = await super.getData();
+    context.system = this.actor.system;
+
+    // NOUVEAU : Préparation du texte enrichi pour l'affichage ---
+    const descriptionBrute = this.actor.system.description || "";
+    context.enrichedDescription = await TextEditor.enrichHTML(descriptionBrute, { async: true });
+    
+    // Préparation de la soute (Inventaire déposé)
+    const equipements = [];
+    let chargeActuelle = 0;
+    
+    for (let item of this.actor.items) {
+      let itemData = item.toObject(false);
+      equipements.push(itemData);
+      
+      const encombrement = Number(item.system.encombrement || 0);
+      const quantite = Number(item.system.quantite || 1);
+      chargeActuelle += (encombrement * quantite);
+    }
+    
+    context.equipements = equipements.sort((a, b) => a.name.localeCompare(b.name));
+    context.chargeActuelle = chargeActuelle;
+    context.surcharge = chargeActuelle > (this.actor.system.bagage || 0);
+
+    return context;
+  }
+
+  activateListeners(html) {
+    super.activateListeners(html);
+    if (!this.isEditable) return;
+
+    // Écouteurs pour le tableau d'armes manuel
+    html.find('.vehicule-arme-add').click(this._onVehiculeArmeAdd.bind(this));
+    html.find('.vehicule-arme-delete').click(this._onVehiculeArmeDelete.bind(this));
+    html.find('.vehicule-arme-field').change(this._onVehiculeArmeChange.bind(this));
+    html.find('.vehicule-arme-roll').click(this._onVehiculeArmeRoll.bind(this));
+  }
+
+  // --- MÉTHODES DU TABLEAU D'ARMES MANUEL ---
+  async _onVehiculeArmeAdd(event) {
+    event.preventDefault();
+    const armes = (this.actor.system.armesVehicule || []).map(a => ({ nom: a.nom, degats: a.degats }));
+    armes.push({ nom: "Nouveau canon", degats: "1d8" });
+    await this.actor.update({ "system.armesVehicule": armes });
+  }
+
+  async _onVehiculeArmeDelete(event) {
     event.preventDefault();
     const index = Number(event.currentTarget.dataset.index);
-    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
-    if (!Number.isInteger(index) || index < 0 || index >= pouvoirs.length) return;
-    pouvoirs.splice(index, 1);
-    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+    const armes = (this.actor.system.armesVehicule || []).map(a => ({ nom: a.nom, degats: a.degats }));
+    if (!Number.isInteger(index) || index < 0 || index >= armes.length) return;
+    armes.splice(index, 1);
+    await this.actor.update({ "system.armesVehicule": armes });
   }
 
-  async _onPNJPouvoirChange(event) {
+  async _onVehiculeArmeChange(event) {
     event.preventDefault();
     const input = event.currentTarget;
     const index = Number(input.dataset.index);
-    const pouvoirs = (this.actor.system.pouvoirsPNJ || []).map(p => ({ nom: p.nom }));
-    if (!Number.isInteger(index) || !pouvoirs[index]) return;
+    const field = input.dataset.field;
+    const armes = (this.actor.system.armesVehicule || []).map(a => ({ nom: a.nom, degats: a.degats }));
+    if (!Number.isInteger(index) || !armes[index]) return;
 
-    pouvoirs[index].nom = input.value;
-    await this.actor.update({ "system.pouvoirsPNJ": pouvoirs });
+    if (field === "nom") armes[index].nom = input.value;
+    if (field === "degats") armes[index].degats = input.value;
+    await this.actor.update({ "system.armesVehicule": armes });
+  }
+
+  async _onVehiculeArmeRoll(event) {
+    event.preventDefault();
+    const index = Number(event.currentTarget.dataset.index);
+    const arme = this.actor.system.armesVehicule?.[index];
+    if (!arme || !arme.nom) return;
+
+    // Le jet intègre le nom du véhicule et tire les dégâts bruts de l'arme
+    const formula = arme.degats || "1d8";
+    const roll = await new Roll(formula, this.actor.getRollData()).evaluate();
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+      flavor: `Tir du véhicule : <b>${arme.nom}</b>`
+    });
   }
 }

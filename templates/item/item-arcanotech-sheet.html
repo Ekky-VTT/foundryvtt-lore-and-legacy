@@ -43,7 +43,7 @@
         <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.05); border: 1px solid #c19a5b; border-radius: 3px; padding: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <label style="font-weight: bold; color: black;">Mystère :</label>
+                    <label style="font-weight: bold; color: black;">Mystère:</label>
                     <input type="number" name="system.mystere" value="{{system.mystere}}" min="0" style="width: 40px; text-align: center; border: 1px solid #4a2c66;"/>
                 </div>
                 
@@ -62,8 +62,14 @@
                 </div>
                 {{/if}}
 
+                <!-- NOUVELLE LIGNE DES EFFETS -->
+                <div style="display: flex; align-items: center; gap: 5px; padding-top: 5px;">
+                    <label style="font-weight: bold; white-space: nowrap;">Effets:</label>
+                    <input type="text" name="system.effet" value="{{system.effet}}" placeholder="Ex: Dé de fortune sur Escalade..." style="flex: 1; border: 1px solid #ccc; padding: 2px 5px;"/>
+                </div>
+ 
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <label style="font-weight: bold;">Type :</label>
+                    <label style="font-weight: bold;">Type:</label>
                     <select name="system.sousType" style="width: 130px;">
                         <option value="armeMelee" {{#if (eq system.sousType "armeMelee")}}selected{{/if}}>Arme de Mêlée</option>
                         <option value="armeTir" {{#if (eq system.sousType "armeTir")}}selected{{/if}}>Arme de Tir</option>
@@ -73,11 +79,11 @@
             </div>
             <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
                 <div style="display: flex; align-items: center; gap: 5px; flex: 1;" title="Formule de dégâts. Exemples : 1d8+2 ou (1d8 + @attributs.vigueur.total)/2">
-                    <label style="font-weight: bold;">Dégâts :</label>
+                    <label style="font-weight: bold;">Dégâts:</label>
                     <input type="text" name="system.degats" value="{{system.degats}}" placeholder="ex: 1d8+2" style="width: 100%; text-align: center; font-family: monospace;"/>
                 </div>
                 <div style="display: flex; align-items: center; gap: 5px;" title="Nombre de mains nécessaires">
-                    <label style="font-weight: bold;">Prise :</label>
+                    <label style="font-weight: bold;">Prise:</label>
                     <select name="system.mains" style="width: 80px;">
                         <option value="1M" {{#if (eq system.mains "1M")}}selected{{/if}}>1 Main</option>
                         <option value="2M" {{#if (eq system.mains "2M")}}selected{{/if}}>2 Mains</option>
@@ -85,13 +91,13 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 5px;" title="Utilisé si l'objet est un artefact (fragile)">
                     {{#if (eq system.sousType "armeTir")}}
-                    <label style="font-weight: bold; color: #0e3a47;">P. Moy. (m) :</label>
-                    <input type="number" name="system.porteeMoyenne" value="{{system.porteeMoyenne}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
-                    <label style="font-weight: bold; color: #0e3a47;">P. Max. (m) :</label>
-                    <input type="number" name="system.porteeMax" value="{{system.porteeMax}}" min="0" style="width: 50px; text-align: center; font-weight: bold;"/>
+                    <div style="display: flex; align-items: center; gap: 5px;" title="Laissez vide pour la mêlée">
+                        <label style="font-weight: bold;">Portée:</label>
+                        <input type="text" name="system.portee" value="{{system.portee}}" placeholder="Vig x2/x4" style="width: 90px; text-align: center; font-size: 12px;"/>
+                    </div> 
                     {{/if}}
                 </div>
-            </div>
+           </div>
         </div>
 
         <!-- ZONE DE DESCRIPTION ÉTIRABLE -->

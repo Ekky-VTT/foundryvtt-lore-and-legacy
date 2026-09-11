@@ -10,7 +10,7 @@ export class CapaciteData extends foundry.abstract.TypeDataModel {
       attributLie: new StringField({ initial: "caractere" }),
       fortune: new BooleanField({ initial: false }),
       adversite: new BooleanField({ initial: false }),
-      passif: new BooleanField({ initial: false }), 
+      passif: new BooleanField({ initial: false }),
       description: new HTMLField({ initial: "" })
     };
   }
@@ -28,9 +28,6 @@ export class SortilegeData extends foundry.abstract.TypeDataModel {
       duree: new StringField({ initial: "" }),
       description: new HTMLField({ initial: "" }),
       difficulte: new StringField({ initial: "" }),
-      /* --- ANCIEN CHAMP POUR LES DÉGÂTS ---
-      degats: new NumberField({ initial: 0, min: 0, integer: true }),
-      */
       participantsRecommandes: new NumberField({ initial: 1, min: 1, integer: true }),
       coutParParticipant: new NumberField({ initial: 0, min: 0, integer: true }),
       coutTotal: new NumberField({ initial: 0, min: 0, integer: true }),
@@ -41,6 +38,21 @@ export class SortilegeData extends foundry.abstract.TypeDataModel {
     };
   }
 }
+
+/**
+ * Modèle de données pour les Invocations
+ */
+export class InvocationData extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      coutPM: new NumberField({ initial: 0, min: 0, integer: true }),
+      duree: new StringField({ initial: "CARACTERE" }),
+      description: new HTMLField({ initial: "" }),
+      difficulte: new StringField({ initial: "" })
+    };
+  }
+}
+
 
 /**
  * Modèle de données pour les Traits
@@ -61,7 +73,7 @@ export class TraitData extends foundry.abstract.TypeDataModel {
  */
 export class TraitSpecialData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
-    
+
     return {
       description: new HTMLField({ initial: "" })
     };
@@ -88,16 +100,16 @@ export class PeupleData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     // NOUVEAU : On importe ArrayField en plus du reste
     const { HTMLField, NumberField, StringField, ArrayField } = foundry.data.fields;
-    
+
     return {
       description: new HTMLField({ initial: "" }),
-      
+
       // NOUVEAU : Le tableau qui va stocker les UUIDs (Identifiants Uniques) des Traits
-      traits: new ArrayField(new StringField()), 
-      
+      traits: new ArrayField(new StringField()),
+
       // On peut garder l'ancien champ texte pour le moment si tu avais déjà tapé des choses, 
       // ou pour ajouter des notes purement textuelles
-      traitsRaciaux: new StringField({ initial: "" }), 
+      traitsRaciaux: new StringField({ initial: "" }),
 
       // Les bonus de base
       bonusCaractere: new NumberField({ initial: 0, min: 0, integer: true }),
@@ -119,11 +131,12 @@ export class EquipementBaseData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       description: new HTMLField({ initial: "" }),
-      encombrement: new NumberField({ initial: 1, min: 0, integer: true }), // Le "Bagage"
+      encombrement: new NumberField({ initial: 0, min: 0, integer: true }), // Le "Bagage"
       quantite: new NumberField({ initial: 1, min: 0, integer: true }), // Nombre d'objets identiques
       prix: new NumberField({ initial: 0, min: 0, integer: true }), // En Taels
       durabilite: new NumberField({ initial: 10, min: 0, integer: true }), // Durabilité de l'objet
-      equipe: new BooleanField({ initial: false }) // Case à cocher "Équipé"
+      equipe: new BooleanField({ initial: false }), // Case à cocher "Équipé"
+      endommage: new BooleanField({ initial: false }) // Objet endommagé ou détérioré
     };
   }
 }
@@ -134,8 +147,8 @@ export class EquipementBaseData extends foundry.abstract.TypeDataModel {
 export class ArmeData extends EquipementBaseData {
   static defineSchema() {
     // On récupère les champs de la classe mère (encombrement, quantite, etc.)
-    const baseSchema = super.defineSchema(); 
-    
+    const baseSchema = super.defineSchema();
+
     // Et on y ajoute les spécificités des armes de Lore & Legacy
     return {
       ...baseSchema,
@@ -143,11 +156,12 @@ export class ArmeData extends EquipementBaseData {
       degats: new StringField({ initial: "1D8" }), // Le champ qui combine les deux précédents, ex: "1D8+2"
       mains: new StringField({ initial: "1M" }), // 1M (une main) ou 2M (deux mains)
       // NOUVEAUX CHAMPS POUR LES ARMES À DISTANCE
+      typeMunition: new StringField({ initial: "aucune" }),
       munitionsMax: new NumberField({ initial: 0, min: 0, integer: true }),
       munitionsActuelles: new NumberField({ initial: 0, min: 0, integer: true }),
       rafale: new BooleanField({ initial: false }),
-      porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
-      porteeMax: new NumberField({ initial: 40, min: 0, integer: true })
+      // Remplacement des deux champs numériques par un seul champ texte
+      portee: new foundry.data.fields.StringField({ initial: "20 / 40" }),
     };
   }
 }
@@ -161,7 +175,9 @@ export class ArmureData extends EquipementBaseData {
     return {
       ...baseSchema,
       bonusResPhys: new NumberField({ initial: 0, integer: true }),
-      type: new StringField({ initial: "legere" }) // 'legere', 'lourde', 'bouclier' ou 'accessoire'
+      type: new StringField({ initial: "legere" }), // 'legere', 'lourde', 'bouclier' ou 'accessoire'
+      effet: new foundry.data.fields.StringField({ initial: "" }),
+      modRapidite: new foundry.data.fields.NumberField({ initial: 0, integer: true })
     };
   }
 }
@@ -176,8 +192,12 @@ export class ConsommableData extends EquipementBaseData {
       ...baseSchema,
       typeConsommable: new StringField({ initial: "potion" }),
       nocivite: new NumberField({ initial: 0, min: 0, integer: true }),
+      pouvoirAddictogene: new NumberField({ initial: 0, min: 0, integer: true }),
       effet: new StringField({ initial: "" }), // Ex: "+ (1D8+2) PV"
-      charges: new NumberField({ initial: 1, min: 0, integer: true }) // Nombre d'utilisations (ex: rations, potions)
+      charges: new NumberField({ initial: 1, min: 0, integer: true }), // Nombre d'utilisations (ex: rations, potions)
+      qualite: new StringField({ initial: "ordinaire" }), // "ordinaire" ou "raffine"
+      conservation: new NumberField({ initial: 5, min: 0, integer: true }), // Durée en jours avant péremption
+      illimite: new BooleanField({ initial: false }) // NOUVEAU : Illimité
     };
   }
 }
@@ -195,13 +215,13 @@ export class ArcanotechData extends EquipementBaseData {
       sousType: new StringField({ initial: "armeMelee" }), // 'armeMelee', 'armeTir', ou 'artefact'
       degats: new StringField({ initial: "1D8" }), // Le champ qui combine les deux précédents, ex: "1D8+2"
       mains: new StringField({ initial: "1M" }),
-      porteeMoyenne: new NumberField({ initial: 20, min: 0, integer: true }),
-      porteeMax: new NumberField({ initial: 40, min: 0, integer: true }),
+      portee: new foundry.data.fields.StringField({ initial: "20 / 40" }),
       // Si c'est un artefact, on stocke la durabilité
       durabilite: new NumberField({ initial: 10, min: 0, integer: true }),
       // POUR LES JETS DE DÉGÂTS ---
       fortune: new BooleanField({ initial: false }),
-      adversite: new BooleanField({ initial: false })
+      adversite: new BooleanField({ initial: false }),
+      effet: new StringField({ initial: "" })
     };
   }
 }
@@ -215,7 +235,8 @@ export class MaterielData extends EquipementBaseData {
     const baseSchema = super.defineSchema();
     return {
       ...baseSchema,
-      usagesMax: new NumberField({ initial: 3, min: 0, integer: true })
+      usagesMax: new NumberField({ initial: 3, min: 0, integer: true }),
+      illimite: new BooleanField({ initial: false }) // NOUVEAU : Illimité
     };
   }
 }

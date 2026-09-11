@@ -39,7 +39,8 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
       context.typeMagieLabel = {
         illusoire: "Magie Illusoire",
         materielle: "Magie Matérielle",
-        rituelle: "Magie Rituelle"
+        rituelle: "Magie Rituelle",
+        "magie-personnelle": "Magie Personnelle"
       }[item.system.typeMagie] || "Sortilège";
     }
       
@@ -80,23 +81,61 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     if (this.item.type === "sortilege") {
       const updateSortilegeFields = typeMagie => {
         html.find(".sortilege-cout-pm").toggle(typeMagie !== "rituelle");
-        html.find(".sortilege-materiel").toggleClass("is-visible", ["materielle", "rituelle"].includes(typeMagie));
+        html.find(".sortilege-materiel").toggleClass("is-visible", ["materielle", "rituelle", "magie-personnelle"].includes(typeMagie));
         html.find(".sortilege-rituel").toggleClass("is-visible", typeMagie === "rituelle");
+
+        const cibleSelect = html.find('select[name="system.cible"]');
+        const difficulteInput = html.find('input[name="system.difficulte"]');
+
+        if (typeMagie === "magie-personnelle") {
+          cibleSelect.val("personnelle").css("pointer-events", "none").css("opacity", "0.6");
+          difficulteInput.val("8").css("pointer-events", "none").css("opacity", "0.6");
+        } else {
+          cibleSelect.css("pointer-events", "auto").css("opacity", "1");
+          difficulteInput.css("pointer-events", "auto").css("opacity", "1");
+        }
       };
 
       const typeSelect = html.find('select[name="system.typeMagie"]');
       updateSortilegeFields(typeSelect.val());
-      typeSelect.change(event => updateSortilegeFields(event.currentTarget.value));
+      
+      typeSelect.change(event => {
+        const newType = event.currentTarget.value;
+        if (newType === "magie-personnelle") {
+            this.item.update({
+                "system.typeMagie": "magie-personnelle",
+                "system.cible": "personnelle",
+                "system.difficulte": "8"
+            });
+        } else {
+            updateSortilegeFields(newType);
+        }
+      });
     }
 
     // NOUVEAU : Supprimer un Trait du Peuple
     html.find('.trait-delete').click(async ev => {
       const uuidToRemove = ev.currentTarget.dataset.uuid;
-      const currentTraits = this.item.system.traits || [];
-      // On garde tous les UUIDs SAUF celui qu'on veut supprimer
-      const newTraits = currentTraits.filter(uuid => uuid !== uuidToRemove);
-      await this.item.update({ "system.traits": newTraits });
+      Dialog.confirm({
+        title: "Confirmation de suppression",
+        content: `<p>Êtes-vous sûr de vouloir supprimer ce trait ?</p>`,
+        yes: async () => {
+          const currentTraits = this.item.system.traits || [];
+          // On garde tous les UUIDs SAUF celui qu'on veut supprimer
+          const newTraits = currentTraits.filter(uuid => uuid !== uuidToRemove);
+          await this.item.update({ "system.traits": newTraits });
+        },
+        no: () => {},
+        defaultYes: false
+      });
     });
+  }
+
+  _normalizeTraitUuid(uuid) {
+    if (typeof uuid !== "string" || !uuid) return null;
+    if (uuid.startsWith("Compendium.")) return uuid;
+    if (uuid.startsWith("Item.")) return `Compendium.lore-and-legacy.traits.${uuid}`;
+    return uuid;
   }
 
   /**
@@ -118,10 +157,15 @@ export class LoreAndLegacyItemSheet extends ItemSheet {
     // Si on lâche un Trait sur un Peuple
     if (this.item.type === "peuple" && droppedItem.type === "trait") {
       const currentTraits = this.item.system.traits || [];
+      const normalizedDroppedUuid = this._normalizeTraitUuid(droppedItem.uuid);
+      
+      // On normalise les traits existants pour vérifier les doublons
+      const normalizedCurrentTraits = currentTraits.map(uuid => this._normalizeTraitUuid(uuid));
       
       // On évite les doublons
-      if (!currentTraits.includes(droppedItem.uuid)) {
-        const newTraits = [...currentTraits, droppedItem.uuid];
+      if (!normalizedCurrentTraits.includes(normalizedDroppedUuid)) {
+        // Optionnel : on peut nettoyer la liste des doublons au passage
+        const newTraits = [...new Set(currentTraits), droppedItem.uuid];
         await this.item.update({ "system.traits": newTraits });
       } else {
         ui.notifications.warn("Ce Trait est déjà assigné à ce Peuple.");

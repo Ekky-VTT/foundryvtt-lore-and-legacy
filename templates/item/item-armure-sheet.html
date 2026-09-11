@@ -39,6 +39,10 @@
                 <span style="font-weight: bold;">+</span>
                 <input type="number" name="system.bonusResPhys" value="{{system.bonusResPhys}}" style="width: 50px; text-align: center;"/>
             </div>
+            <div style="display: flex; align-items: center; gap: 5px;" title="Peut être négatif (malus) ou positif (bonus)">
+                    <label style="font-weight: bold;">Mod. Rap. :</label>
+                    <input type="number" name="system.modRapidite" value="{{system.modRapidite}}" style="width: 40px; text-align: center;"/>
+            </div>
             <div style="display: flex; align-items: center; gap: 5px;">
                 <label style="font-weight: bold;">Type :</label>
                 <select name="system.type" style="width: 130px;">
@@ -49,7 +53,11 @@
                 </select>
             </div>
         </div>
-
+        <!-- LIGNE DES EFFETS MAGIQUES / MENTAUX / ENVIRONNEMENTAUX -->
+        <div style="display: flex; align-items: center; gap: 5px; border-top: 1px dotted #c19a5b; padding-top: 5px;">
+            <label style="font-weight: bold; white-space: nowrap;">Effets & Protections :</label>
+            <input type="text" name="system.effet" value="{{system.effet}}" placeholder="Ex: +2 Magique, Résistance Mentale +1, Froid..." style="flex: 1; border: 1px solid #ccc; padding: 2px 5px;"/>
+        </div>
         <!-- ZONE DE DESCRIPTION ÉTIRABLE -->
         <div class="form-group lore-editor-fix">
             <label style="font-weight: bold; margin-bottom: 5px; flex: 0 0 auto; color: #0e3a47; border-bottom: 1px solid #c19a5b;">Description & Effets :</label>
